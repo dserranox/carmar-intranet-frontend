@@ -1,0 +1,47 @@
+@use '@angular/material' as mat;
+
+$theme: mat.define-theme((color: (theme-type: light,
+        primary: mat.$azure-palette,
+        tertiary: mat.$red-palette )));
+
+@include mat.core();
+@include mat.color-variants-backwards-compatibility($theme);
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background-color: #f1f3f6;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  @include mat.all-component-themes($theme);
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px lightgray;
+  border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  height: 20px;
+  background: rgb(92, 92, 92);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  height: 20px;
+  background: rgb(117, 117, 117);
+  border-radius: 10px;
+}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

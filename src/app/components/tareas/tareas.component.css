@@ -1,0 +1,74 @@
+.tareas-container {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.tareas-container h1 {
+  font-size: 2rem;
+  color: #1E3A5F;
+}
+
+.tareas-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.tareas-container li {
+  cursor: pointer;
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin: 5px 0;
+  border-radius: 5px;
+}
+
+.tareas-container li:hover {
+  background-color: #f0f0f0;
+}
+
+.pdf-viewer {
+  position: absolute;
+  /* top: 0; */
+  /* left: 0; */
+  width: 100%;
+  height: 100%;
+  /* background: #fff; */
+  z-index: 1000;
+}
+
+.pdf-viewer iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.url-input-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.url-input-container label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.url-input-container input {
+  flex: 1;
+  padding: 5px;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.url-input-container button {
+  padding: 5px 10px;
+  background-color: #2176ae;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.url-input-container button:hover {
+  background-color: #1a5c8a;
+}

@@ -1,0 +1,20 @@
+<div class="tareas-container">
+  <!-- <h1>Lista de PDFs</h1> -->
+  <!-- <ul>
+    @for (pdf of pdfs; track pdf.id) {
+      <li (click)="selectPdf(pdf.name)">
+      {{ pdf.name }}
+      </li>
+    }
+  </ul> -->
+  <div class="url-input-container">
+    <input id="pdfUrl" type="text" [(ngModel)]="inputPdfUrl" placeholder="Ingrese la URL del PDF" />
+    <button (click)="openPdfFromInput()">Abrir PDF</button>
+  </div>
+
+  @if (selectedPdfUrl) {
+    <div class="pdf-viewer">
+      <iframe [src]="selectedPdfUrl"></iframe>
+    </div>
+  }
+</div>
