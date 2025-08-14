@@ -1,0 +1,114 @@
+<section class="orders-wrapper">
+  <header class="toolbar">
+    <h2>Órdenes {{year}}</h2>
+    <div class="actions">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Filtrar</mat-label>
+        <input matInput placeholder="Buscar..." [(ngModel)]="filterValue" (ngModelChange)="applyFilter()">
+        <button mat-icon-button matSuffix *ngIf="filterValue" (click)="clearFilter()" aria-label="Limpiar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="year-field">
+        <mat-label>Año</mat-label>
+        <input matInput type="number" [(ngModel)]="year" (change)="load()" min="2000" max="2100">
+      </mat-form-field>
+
+      <button mat-flat-button (click)="load()">
+        <mat-icon>refresh</mat-icon>
+        Recargar
+      </button>
+    </div>
+  </header>
+
+  <div class="table-container" *ngIf="!loading; else loadingTpl">
+    <table mat-table [dataSource]="dataSource" matSort>
+      <!-- Nro plan -->
+      <ng-container matColumnDef="ordNroPlan">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Nro plan</th>
+        <td mat-cell *matCellDef="let row">{{ row.ordNroPlan }}</td>
+      </ng-container>
+
+      <!-- Cliente -->
+      <ng-container matColumnDef="clienteId">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Cliente</th>
+        <td mat-cell *matCellDef="let row">{{ row.clienteId }}</td>
+      </ng-container>
+
+      <!-- Producto solicitado -->
+      <ng-container matColumnDef="productoDescripcion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Producto solicitado</th>
+        <td mat-cell *matCellDef="let row">{{ row.productoDescripcion }}</td>
+      </ng-container>
+
+      <!-- Código -->
+      <ng-container matColumnDef="productoCodigo">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Código</th>
+        <td mat-cell *matCellDef="let row">{{ row.productoCodigo }}</td>
+      </ng-container>
+
+      <!-- Fecha Inicio -->
+      <ng-container matColumnDef="fechaInicio">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Inicio</th>
+        <td mat-cell *matCellDef="let row">{{ row.fechaInicio | date:'yyyy-MM-dd' }}</td>
+      </ng-container>
+
+      <!-- Cantidad -->
+      <ng-container matColumnDef="cantidad">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Cantidad</th>
+        <td mat-cell *matCellDef="let row">{{ row.cantidad ?? '-' }}</td>
+      </ng-container>
+
+      <!-- Hoja -->
+      <ng-container matColumnDef="hoja">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Hoja</th>
+        <td mat-cell *matCellDef="let row">{{ row.hoja ?? '-' }}</td>
+      </ng-container>
+
+      <!-- Etiqueta -->
+      <ng-container matColumnDef="etiqueta">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Etiqueta</th>
+        <td mat-cell *matCellDef="let row">{{ row.etiqueta ?? '-' }}</td>
+      </ng-container>
+
+      <!-- Situación -->
+      <ng-container matColumnDef="situacionClave">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Situación</th>
+        <td mat-cell *matCellDef="let row">{{ row.situacionClave }}</td>
+      </ng-container>
+
+      <!-- Fecha Finalización -->
+      <ng-container matColumnDef="fechaFinalizacion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Finalización</th>
+        <td mat-cell *matCellDef="let row">{{ row.fechaFinalizacion | date:'yyyy-MM-dd' }}</td>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-icon-button matTooltip="Abrir documentos" [disabled]="!(row.ordenesDocumentosDTOs?.length)"
+                  (click)="openDocs(row)">
+            <mat-icon>description</mat-icon>
+          </button>
+
+          <button mat-icon-button matTooltip="Acción 1" (click)="onActionClick('A1', row)">
+            <mat-icon>more_horiz</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5,10,25,50]"></mat-paginator>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading">
+      <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    </div>
+  </ng-template>
+</section>
