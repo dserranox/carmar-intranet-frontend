@@ -33,3 +33,32 @@ table {
   justify-content: center;
   padding: 24px;
 }
+
+.status {
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+
+.status.revisar-plano {
+  color: #a67c00;
+}
+
+.status.planificado {
+  color: #0277bd;
+}
+
+.status.en-proceso {
+  color: #ef6c00;
+}
+
+.status.terminado {
+  color: #2e7d32;
+}
+
+.status.falta-material {
+  color: #c62828;
+}
+
+.status.otro {
+  color: #616161;
+}

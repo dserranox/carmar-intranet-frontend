@@ -12,7 +12,9 @@
   border-radius: 16px;
 }
 
-.full { width: 100%; }
+.full {
+  width: 100%;
+}
 
 .error-message {
   color: #b00020;

@@ -17,9 +17,13 @@
           <mat-icon matSuffix>lock</mat-icon>
         </mat-form-field>
 
-        <button mat-flat-button color="primary" class="full" type="submit">Ingresar</button>
+        <button mat-flat-button color="primary" class="full" type="submit" [disabled]="loading">
+          {{ loading ? 'Ingresando...' : 'Ingresar' }}
+        </button>
 
-        <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
+        @if (errorMessage) {
+          <p class="error-message" >{{ errorMessage }}</p>
+        }
       </form>
     </mat-card-content>
   </mat-card>

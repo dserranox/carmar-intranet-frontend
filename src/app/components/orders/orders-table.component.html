@@ -75,7 +75,9 @@
       <!-- Situación -->
       <ng-container matColumnDef="situacionClave">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Situación</th>
-        <td mat-cell *matCellDef="let row">{{ row.situacionClave }}</td>
+        <td mat-cell *matCellDef="let row">
+          <span [ngClass]="statusClass(row.situacionClave)">{{ row.situacionClave }}</span>
+        </td>
       </ng-container>
 
       <!-- Fecha Finalización -->

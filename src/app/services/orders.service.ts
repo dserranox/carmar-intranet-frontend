@@ -9,6 +9,6 @@ export class OrdersService {
   private baseUrl = environment.apiUrl;
 
   listByYear(year: number) {
-    return this.http.get<OrdenResponseDTO[]>(`${this.baseUrl}/api/orders`, { params: { year } as any });
+    return this.http.get<OrdenResponseDTO[]>(`${this.baseUrl}/orders`, { params: { year } as any });
   }
 }

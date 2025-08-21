@@ -1,28 +1,46 @@
-import { Injectable } from '@angular/core';
+
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
+
+export interface LoginResponse {
+  token?: string;
+  access_token?: string;
+  username?: string;
+  roles?: string[];
+  [k: string]: any;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private isAuthenticated = false;
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private readonly AUTH_ENDPOINT = `${environment.apiUrl}/auth/login`;
 
-  constructor(private router: Router) {}
-
-  login(username: string, password: string): boolean {
-    if (username === 'admin' && password === '1234') {
-      this.isAuthenticated = true;
-      localStorage.setItem('user', JSON.stringify({ username }));
-      return true;
-    }
-    return false;
+  login(username: string, password: string) {
+    return this.http.post<LoginResponse>(this.AUTH_ENDPOINT, { username, password });
   }
 
-  logout(): void {
-    this.isAuthenticated = false;
+  persistSession(resp: LoginResponse, usernameFallback: string) {
+    const token = resp.token || resp.access_token;
+    if (!token) throw new Error('No token in response');
+    const username = resp.username || usernameFallback;
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify({ username, roles: resp.roles || [] }));
+  }
+
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('token');
+  }
+
+  logout() {
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     this.router.navigate(['/login']);
   }
 
-  isLoggedIn(): boolean {
-    return this.isAuthenticated || !!localStorage.getItem('user');
+  getToken(): string | null {
+    return localStorage.getItem('token');
   }
 }

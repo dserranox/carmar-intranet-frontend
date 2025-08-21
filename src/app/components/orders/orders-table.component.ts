@@ -36,48 +36,71 @@ export class OrdersTableComponent implements OnInit {
   loading = false;
   filterValue = '';
 
+  isAdmin = false;
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   ngOnInit(): void {
+    this.resolveIsAdmin();
     this.load();
+  }
+
+  private resolveIsAdmin() {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) { this.isAdmin = false; return; }
+      const obj = JSON.parse(raw);
+      const username = (obj?.username || '').toString().toLowerCase();
+      const roles: string[] = Array.isArray(obj?.roles) ? obj.roles.map((r:any)=>String(r).toUpperCase()) : [];
+      this.isAdmin = username === 'admin' || roles.includes('ADMIN') || roles.includes('ROLE_ADMIN');
+    } catch {
+      this.isAdmin = false;
+    }
   }
 
   load() {
     this.loading = true;
     this.ordersSvc.listByYear(this.year).subscribe({
       next: (orders) => {
-        this.dataSource.data = orders;
+        let data = orders || [];
+        if (!this.isAdmin) {
+          data = data.filter(o => (o.situacionClave || '').toUpperCase() === 'EN PROCESO');
+        }
+        this.dataSource = new MatTableDataSource<OrdenResponseDTO>(data);
         this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.sort;
-        this.dataSource.filterPredicate = (data, filter) => {
-          const blob = `${data.ordNroPlan} ${data.clienteId} ${data.productoDescripcion} ${data.productoCodigo} ${data.situacionClave}`.toLowerCase();
+        this.dataSource.filterPredicate = (row, filter) => {
+          const blob = `${row.ordNroPlan} ${row.clienteId} ${row.productoDescripcion} ${row.productoCodigo} ${row.situacionClave}`.toLowerCase();
           return blob.includes(filter.trim().toLowerCase());
         };
+        if (this.filterValue) this.applyFilter();
       },
       error: (err) => console.error(err),
       complete: () => this.loading = false
     });
   }
 
-  applyFilter() {
-    this.dataSource.filter = this.filterValue;
-  }
-
-  clearFilter() {
-    this.filterValue = '';
-    this.applyFilter();
-  }
+  applyFilter() { this.dataSource.filter = this.filterValue; }
+  clearFilter() { this.filterValue = ''; this.applyFilter(); }
 
   openDocs(row: OrdenResponseDTO) {
-    // For now: if there is a single doc, open it; if multiple, open the first.
-    const docs = row.ordenesDocumentosDTOs || [];
-    if (!docs.length) return;
+    const docs: any[] = (row as any).ordenesDocumentosDTOs || [];
+    if (!docs?.length) return;
     window.open(docs[0].odoDriveUrl, '_blank');
   }
 
-  onActionClick(action: string, row: OrdenResponseDTO) {
-    // Placeholder for future row actions
-    console.log(action, row);
+  onActionClick(action: string, row: OrdenResponseDTO) { console.log(action, row); }
+
+  statusClass(s?: string) {
+    const val = (s || '').toUpperCase();
+    switch (val) {
+      case 'REVISAR PLANO': return 'status revisar-plano';
+      case 'PLANIFICADO': return 'status planificado';
+      case 'EN PROCESO': return 'status en-proceso';
+      case 'TERMINADO': return 'status terminado';
+      case 'FALTA MATERIAL': return 'status falta-material';
+      default: return 'status otro';
+    }
   }
 }
