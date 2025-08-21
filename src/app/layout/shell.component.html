@@ -1,0 +1,22 @@
+
+<mat-toolbar class="topbar" color="default">
+  <img src="/car-mar-logo.png" alt="Logo" class="logo-img" />
+
+  <nav class="nav">
+    <a mat-button routerLink="/ordenes" routerLinkActive="active">ORDENES</a>
+    <span class="divider"></span>
+    <a mat-button routerLink="/tareas" routerLinkActive="active">TAREAS</a>
+  </nav>
+
+  <div class="userbox">
+    <span class="username">{{ username }}</span>
+    <mat-icon class="avatar" aria-hidden="true">account_circle</mat-icon>
+    <button mat-icon-button (click)="logout()" aria-label="Salir" matTooltip="Salir">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </div>
+</mat-toolbar>
+
+<section class="content">
+  <router-outlet></router-outlet>
+</section>
