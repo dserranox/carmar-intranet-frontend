@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ActivatedRoute, ActivatedRouteSnapshot } from '@angular/router';
 
 @Component({
   selector: 'app-tareas',
@@ -10,12 +11,20 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 })
 export class TareasComponent implements OnInit {
 
+  private route = inject(ActivatedRoute);
   pdfs: any[] = [];
   selectedPdfUrl: SafeResourceUrl | null = null;
   inputPdfUrl= '';
 
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(private sanitizer: DomSanitizer) {
+
+        // Access multiple route elements
+    const snapshot = this.route.snapshot;
+    console.log({
+      queryParams: snapshot.queryParams,
+    });
+  }
 
   ngOnInit(): void {
     this.loadPdfs();

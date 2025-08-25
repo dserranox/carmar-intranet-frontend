@@ -17,6 +17,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  align-items: center;
 }
 
 .table-container {
@@ -61,4 +62,14 @@ table {
 
 .status.otro {
   color: #616161;
+}
+
+.btn-green {
+  color: #2e7d32;
+}
+
+.btn-refresh {
+  color: #0b5966 !important;
+  border-color: rgba(11, 89, 102, 0.35) !important;
+  margin-bottom: 20px;
 }

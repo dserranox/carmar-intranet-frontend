@@ -1,0 +1,73 @@
+.dialog-shell {
+  min-width: 420px;
+  max-width: 520px;
+}
+
+.dialog-header {
+  padding: 8px 16px 0 16px;
+}
+
+.dialog-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #263238;
+  padding-top: 15px;
+  padding-left: 10px;
+}
+
+.accent-line {
+  height: 3px;
+  width: 100%;
+  margin-top: 8px;
+  background: #00738a;
+  border-radius: 2px;
+}
+
+.dialog-body {
+  padding: 12px 16px 0 16px;
+}
+.form-style {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dialog-subtitle {
+  margin: 8px 0 12px 0;
+  color: #37474f;
+  font-size: 0.95rem;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.full {
+  width: 100%;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px;
+}
+
+.btn-cancel {
+  color: #0b5966 !important;
+  border-color: rgba(11, 89, 102, 0.35) !important;
+}
+
+.btn-confirm {
+  background: #0b5966 !important;
+  color: #fff !important;
+}
+
+/* Opcional: redondear contenedor del diálogo */
+:host ::ng-deep .mat-mdc-dialog-surface {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25) !important;
+}

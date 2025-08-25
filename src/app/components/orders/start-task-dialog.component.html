@@ -1,0 +1,35 @@
+<div class="dialog-shell">
+  <div class="dialog-header">
+    <h2 class="dialog-title">Iniciar tarea</h2>
+    <div class="accent-line"></div>
+  </div>
+
+  <div class="dialog-body">
+    <!-- <p class="dialog-subtitle">¿Desea iniciar una tarea{{ data?.ordNroPlan ? ' para ' + data.ordNroPlan : '' }}?</p> -->
+
+    <form [formGroup]="form" class="form-style">
+      <!-- Selector de operación -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Operación</mat-label>
+        <mat-select formControlName="operacionId">
+          <mat-option value="" disabled>Seleccione una operación</mat-option>
+          @for (op of operaciones; track op.opeId) {
+            <mat-option [value]="op.opeId">{{ op.opeNombreCorto }} - {{ op.opeNombre }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    
+      
+      <!-- Nro de máquina -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Nro Maquina</mat-label>
+        <input matInput type="number" formControlName="nroMaquina" />
+      </mat-form-field>
+    </form>
+  </div>
+
+  <div class="dialog-actions">
+    <button mat-stroked-button (click)="cancelar()" class="btn-cancel">Cancelar</button>
+    <button mat-flat-button color="primary" class="btn-confirm" (click)="iniciar()">Iniciar</button>
+  </div>
+</div>

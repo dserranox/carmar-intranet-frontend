@@ -12,6 +12,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { OrdersService } from '../../services/orders.service';
 import { OrdenResponseDTO } from '../../models/order';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { TasksService } from '../../services/tasks.service';
+import { StartTaskDialogComponent } from './start-task-dialog.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-orders-table',
@@ -40,6 +45,13 @@ export class OrdersTableComponent implements OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+
+  constructor(
+    private dialog: MatDialog,
+    private snack: MatSnackBar,
+    private tasksService: TasksService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.resolveIsAdmin();
@@ -102,5 +114,29 @@ export class OrdersTableComponent implements OnInit {
       case 'FALTA MATERIAL': return 'status falta-material';
       default: return 'status otro';
     }
+  }
+
+  canShowActions(row: any): boolean {
+    return row.situacionClave === 'EN PROCESO';
+  }
+
+  openStartTaskDialog(order: any) {
+    const dialogRef = this.dialog.open(StartTaskDialogComponent, {
+      data: { order }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.tasksService.startTask(result).subscribe(() => {
+          this.snack.open('Tarea iniciada correctamente', 'Cerrar', { duration: 3000 });
+          this.router.navigate(['/tareas'], {
+            queryParams: result
+          });
+        });
+      }
+    });
+  }
+
+  stopOrder(order: any) {
+    this.snack.open('Finalizar orden aún no implementado', 'Cerrar', { duration: 3000 });
   }
 }
