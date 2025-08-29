@@ -20,6 +20,7 @@ export interface StartTaskDialogData {
 export interface StartTaskDialogResult {
   operacionId: number;
   nroMaquina: number;
+  ordenId?: number;
 }
 
 @Component({

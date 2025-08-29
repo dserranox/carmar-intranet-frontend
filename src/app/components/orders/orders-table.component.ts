@@ -1,3 +1,4 @@
+import { TareasDTO } from './../../models/tarea';
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -33,6 +34,7 @@ import { Router } from '@angular/router';
 export class OrdersTableComponent implements OnInit {
   private ordersSvc = inject(OrdersService);
   dataSource = new MatTableDataSource<OrdenResponseDTO>([]);
+  tareasDTO : TareasDTO = {} as TareasDTO;
   displayedColumns = [
     'ordNroPlan','clienteId','productoDescripcion','productoCodigo',
     'fechaInicio','cantidad','hoja','etiqueta','situacionClave','fechaFinalizacion','acciones'
@@ -126,10 +128,14 @@ export class OrdersTableComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.tasksService.startTask(result).subscribe(() => {
+        debugger
+        this.tareasDTO.ordenId = order.id;
+        this.tareasDTO.operacionId = result.operacionId;
+        this.tareasDTO.nroMaquina = result.nroMaquina;
+        this.tasksService.iniciarTarea(this.tareasDTO).subscribe(tareaResult => {
           this.snack.open('Tarea iniciada correctamente', 'Cerrar', { duration: 3000 });
           this.router.navigate(['/tareas'], {
-            queryParams: result
+            queryParams: tareaResult.tarId
           });
         });
       }
