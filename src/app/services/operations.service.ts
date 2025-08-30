@@ -8,9 +8,9 @@ import { OperacionesDTO } from '../models/operacion';
 @Injectable({ providedIn: 'root' })
 export class OperationsService {
   private http = inject(HttpClient);
-  private baseUrl = environment.apiUrl;
+  private baseUrl = environment.apiUrl + '/operaciones';
 
   getAll(): Observable<OperacionesDTO[]> {
-    return this.http.get<OperacionesDTO[]>(`${this.baseUrl}/operaciones/get-all`);
+    return this.http.get<OperacionesDTO[]>(`${this.baseUrl}/get-all`);
   }
 }

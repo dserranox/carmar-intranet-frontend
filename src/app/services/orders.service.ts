@@ -6,9 +6,9 @@ import { environment } from '../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class OrdersService {
   private http = inject(HttpClient);
-  private baseUrl = environment.apiUrl;
+  private baseUrl = environment.apiUrl + '/orders';
 
   listByYear(year: number) {
-    return this.http.get<OrdenResponseDTO[]>(`${this.baseUrl}/orders`, { params: { year } as any });
+    return this.http.get<OrdenResponseDTO[]>(this.baseUrl, { params: { year } as any });
   }
 }

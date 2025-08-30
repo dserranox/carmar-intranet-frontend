@@ -1,0 +1,29 @@
+
+<div class="dialog-shell">
+  <div class="dialog-header">
+    <h2 class="dialog-title">Finalizar tarea</h2>
+    <div class="accent-line"></div>
+  </div>
+
+  <div class="dialog-body">
+    <form [formGroup]="form" class="form-grid">
+      <mat-form-field appearance="fill" class="full">
+        <mat-label>Cantidad</mat-label>
+        <input matInput inputmode="numeric" pattern="^\d+$" formControlName="cantidad" placeholder="Solo enteros" />
+        @if (form.get('cantidad')?.invalid && form.get('cantidad')?.touched) {
+          <mat-error>La cantidad es obligatoria y debe ser un entero.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full">
+        <mat-label>Observaciones</mat-label>
+        <textarea matInput rows="3" formControlName="observaciones" placeholder="Opcional"></textarea>
+      </mat-form-field>
+    </form>
+  </div>
+
+  <div class="dialog-actions">
+    <button mat-stroked-button (click)="cancelar()" class="btn-cancel">Cancelar</button>
+    <button mat-flat-button color="primary" class="btn-confirm" (click)="finalizar()">Finalizar</button>
+  </div>
+</div>

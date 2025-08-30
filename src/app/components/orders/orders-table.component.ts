@@ -66,8 +66,8 @@ export class OrdersTableComponent implements OnInit {
       if (!raw) { this.isAdmin = false; return; }
       const obj = JSON.parse(raw);
       const username = (obj?.username || '').toString().toLowerCase();
-      const roles: string[] = Array.isArray(obj?.roles) ? obj.roles.map((r:any)=>String(r).toUpperCase()) : [];
-      this.isAdmin = username === 'admin' || roles.includes('ADMIN') || roles.includes('ROLE_ADMIN');
+      const permissions: string[] = Array.isArray(obj?.permissions) ? obj.permissions.map((r:any)=>String(r).toUpperCase()) : [];
+      this.isAdmin = username === 'admin' || permissions.includes('ORDENES:WRITE');
     } catch {
       this.isAdmin = false;
     }

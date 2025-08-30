@@ -1,20 +1,160 @@
-<div class="tareas-container">
-  <!-- <h1>Lista de PDFs</h1> -->
-  <!-- <ul>
-    @for (pdf of pdfs; track pdf.id) {
-      <li (click)="selectPdf(pdf.name)">
-      {{ pdf.name }}
-      </li>
+<section class="tareas-wrapper">
+
+  <header class="filters">
+    <h2 class="title">Tareas</h2>
+
+    <div class="grid">
+      <!-- Filtro Operación -->
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Operación</mat-label>
+        <input matInput placeholder="Nombre o nombre corto" [(ngModel)]="filtroOperacion"
+          (ngModelChange)="onOperacionChange($event)">
+      </mat-form-field>
+
+      <!-- Filtro Usuario (solo si permiso) -->
+      @if (canReadAll) {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Usuario</mat-label>
+        <mat-select [(ngModel)]="filtroUsuario" (ngModelChange)="onUsuarioChange($event)">
+          <mat-option [value]="''">Todos</mat-option>
+          @for (u of usuariosUnicos; track u) {
+          <mat-option [value]="u">{{ u }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      }
+
+      <!-- Fecha desde -->
+      <!-- <mat-form-field appearance="outline">
+        <mat-label>Fecha desde</mat-label>
+        <input matInput type="date" [(ngModel)]="filtroFechaDesde" (ngModelChange)="onDesdeChange($event)">
+      </mat-form-field> -->
+
+      <!-- Fecha hasta -->
+      <!-- <mat-form-field appearance="outline">
+        <mat-label>Fecha hasta</mat-label>
+        <input matInput type="date" [(ngModel)]="filtroFechaHasta" (ngModelChange)="onHastaChange($event)">
+      </mat-form-field> -->
+
+      <div class="actions">
+        <button mat-stroked-button (click)="limpiarFiltros()">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="table-container">
+    @if (filtered.length === 0) {
+    <div class="empty">
+      No hay tareas para los filtros seleccionados.
+    </div>
+    } @else {
+    <table mat-table [dataSource]="filtered" class="mat-elevation-z1">
+
+      <!-- Fecha -->
+      <ng-container matColumnDef="fecha">
+        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+        <td mat-cell *matCellDef="let row" [class.highlight]="isHighlighted(row)">
+          {{ toDate(row.fechaInicio) | date:'dd/MM/yyyy' }}
+        </td>
+      </ng-container>
+
+      <!-- Operación -->
+      <ng-container matColumnDef="operacion">
+        <th mat-header-cell *matHeaderCellDef>Operación</th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.operacionNombreCorto }} — {{ row.operacionNombre }}
+        </td>
+      </ng-container>
+
+      <!-- Nro. Máquina -->
+      <ng-container matColumnDef="nroMaquina">
+        <th mat-header-cell *matHeaderCellDef>Nro. Máquina</th>
+        <td mat-cell *matCellDef="let row">{{ row.nroMaquina ?? '-' }}</td>
+      </ng-container>
+
+      @if (canReadAll) {
+        <!-- Operario -->
+        <ng-container matColumnDef="operario">
+          <th mat-header-cell *matHeaderCellDef>Operario</th>
+          <td mat-cell *matCellDef="let row">{{ row.username }}</td>
+        </ng-container>
+      }
+      <!-- Hora Inicio -->
+      <ng-container matColumnDef="horaInicio">
+        <th mat-header-cell *matHeaderCellDef>Hora Inicio</th>
+        <td mat-cell *matCellDef="let row">
+          {{ toDate(row.fechaInicio) | date:'HH:mm' }}
+        </td>
+      </ng-container>
+
+      <!-- Hora fin -->
+      <ng-container matColumnDef="horaFin">
+        <th mat-header-cell *matHeaderCellDef>Hora fin</th>
+        <td mat-cell *matCellDef="let row">
+          {{ toDate(row.fechaFinalizacion) | date:'HH:mm' }}
+        </td>
+      </ng-container>
+
+      <!-- Cantidad -->
+      <ng-container matColumnDef="cantidad">
+        <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+        <td mat-cell *matCellDef="let row">{{ row.cantidad ?? '-' }}</td>
+      </ng-container>
+
+      <!-- Tiempo proceso -->
+      <ng-container matColumnDef="tiempo">
+        <th mat-header-cell *matHeaderCellDef>Tiempo proceso</th>
+        <td mat-cell *matCellDef="let row">
+          <span appTiempoProceso [start]="row.fechaInicio" [end]="row.fechaFinalizacion">
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Observaciones -->
+      <ng-container matColumnDef="observaciones">
+        <th mat-header-cell *matHeaderCellDef>Observaciones</th>
+        <td mat-cell *matCellDef="let row" class="obs">
+          {{ row.observaciones ?? '-' }}
+        </td>
+      </ng-container>
+
+      <!-- Documentos -->
+      <ng-container matColumnDef="documentos">
+        <th mat-header-cell *matHeaderCellDef>Documentos</th>
+        <td mat-cell *matCellDef="let row" class="docs-cell">
+          @if (row.documentos?.length ?? 0) {
+          <div class="docs-wrap">
+            @for (doc of row.documentos; track doc.odoId) {
+            <a class="doc-item" [href]="doc.odoDriveUrl" target="_blank" rel="noopener" matTooltip="{{ doc.odoNombre }}">
+              <mat-icon class="doc-icon">description</mat-icon>
+              <span class="doc-label">{{ docLabel(doc.odoNombre) }}</span>
+            </a>
+            }
+          </div>
+          } @else {
+          —
+          }
+        </td>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let row">
+          @if (row.fechaFinalizacion == null) {
+            <button mat-icon-button color="warn" (click)="finalizarTarea(row)" matTooltip="Finalizar tarea">
+              <mat-icon>stop_circle</mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
     }
-  </ul> -->
-  <div class="url-input-container">
-    <input id="pdfUrl" type="text" [(ngModel)]="inputPdfUrl" placeholder="Ingrese la URL del PDF" />
-    <button (click)="openPdfFromInput()">Abrir PDF</button>
   </div>
 
-  @if (selectedPdfUrl) {
-    <div class="pdf-viewer">
-      <iframe [src]="selectedPdfUrl"></iframe>
-    </div>
-  }
-</div>
+</section>
