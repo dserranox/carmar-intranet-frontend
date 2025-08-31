@@ -11,7 +11,6 @@ export class TasksService {
   constructor(private http: HttpClient) {}
 
   iniciarTarea(payload: any): Observable<any> {
-    debugger;
     return this.http.post(this.baseUrl, payload);
   }
 

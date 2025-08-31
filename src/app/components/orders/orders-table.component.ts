@@ -18,6 +18,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TasksService } from '../../services/tasks.service';
 import { StartTaskDialogComponent } from './start-task-dialog.component';
 import { Router } from '@angular/router';
+import { FinishOrderDialogComponent } from './finish-order-dialog.component';
 
 @Component({
   selector: 'app-orders-table',
@@ -128,7 +129,6 @@ export class OrdersTableComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        debugger
         this.tareasDTO.ordenId = order.id;
         this.tareasDTO.operacionId = result.operacionId;
         this.tareasDTO.nroMaquina = result.nroMaquina;
@@ -143,6 +143,12 @@ export class OrdersTableComponent implements OnInit {
   }
 
   stopOrder(order: any) {
-    this.snack.open('Finalizar orden aún no implementado', 'Cerrar', { duration: 3000 });
+    console.log('Stopping order', order);
+    const dialogRef = this.dialog.open(FinishOrderDialogComponent, {
+      data: order
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      this.load();
+    });
   }
 }

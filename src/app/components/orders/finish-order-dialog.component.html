@@ -1,0 +1,15 @@
+<div class="dialog-shell">
+  <div class="dialog-header">
+    <h2 class="dialog-title">Finalizar orden</h2>
+    <div class="accent-line"></div>
+  </div>
+
+  <div class="dialog-body">
+    <p class="dialog-subtitle">¿Desea finalizar orden nro. {{ data.ordNroPlan }}?</p>
+  </div>
+
+  <div class="dialog-actions">
+    <button mat-stroked-button (click)="cancelar()" class="btn-cancel">Cancelar</button>
+    <button mat-flat-button color="primary" class="btn-confirm" (click)="finalizarOrden()">Finalizar</button>
+  </div>
+</div>

@@ -11,4 +11,8 @@ export class OrdersService {
   listByYear(year: number) {
     return this.http.get<OrdenResponseDTO[]>(this.baseUrl, { params: { year } as any });
   }
+
+  finalizarOrden(id: number) {
+    return this.http.post(`${this.baseUrl}/finalizar-orden`, { id });
+  }
 }

@@ -29,7 +29,6 @@ export class AuthService {
 
   persistSession(resp: LoginResponse, usernameFallback: string) {
     const token = resp.token || resp.access_token;
-    debugger
     if (!token) throw new Error('No token in response');
     const username = resp.username || usernameFallback;
     localStorage.setItem('token', token);
@@ -56,7 +55,6 @@ export class AuthService {
   }
 
   autoLogout(expirationDuration: number) {
-    debugger
     this.tokenExpirationTimer = setTimeout(() => {
       this.logout();
     }, expirationDuration);
