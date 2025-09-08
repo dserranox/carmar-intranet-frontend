@@ -99,11 +99,11 @@ export class OrdersTableComponent implements OnInit {
   applyFilter() { this.dataSource.filter = this.filterValue; }
   clearFilter() { this.filterValue = ''; this.applyFilter(); }
 
-  openDocs(row: OrdenResponseDTO) {
-    const docs: any[] = (row as any).ordenesDocumentosDTOs || [];
-    if (!docs?.length) return;
-    window.open(docs[0].odoDriveUrl, '_blank');
-  }
+  // openDocs(row: OrdenResponseDTO) {
+  //   const docs: any[] = (row as any).ordenesDocumentosDTOs || [];
+  //   if (!docs?.length) return;
+  //   window.open(docs[0].odoDriveUrl, '_blank');
+  // }
 
   onActionClick(action: string, row: OrdenResponseDTO) { console.log(action, row); }
 

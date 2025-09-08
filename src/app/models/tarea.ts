@@ -1,8 +1,13 @@
-import { OrdenDocumentoDTO } from "./order";
+export interface ProductoDocumentosDTO {
+  pdoId: number;
+  pdoNombre: string;
+  pdoDriveUrl: string;
+}
 
 export interface TareasDTO {
   id: number;
   ordenId: number;
+  nroPlan: string | null;
   operacionId: number;
   operacionNombre: string | null;
   operacionNombreCorto: string | null;
@@ -13,5 +18,5 @@ export interface TareasDTO {
   observaciones: string | null;
   username: string | null;
   ordCantidad: number | null;
-  documentos: OrdenDocumentoDTO[] | null;
+  documentos: ProductoDocumentosDTO[] | null;
 }

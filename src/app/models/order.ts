@@ -1,9 +1,3 @@
-export interface OrdenDocumentoDTO {
-  odoId: number;
-  odoNombre: string;
-  odoDriveUrl: string;
-}
-
 export interface OrdenResponseDTO {
   id: number;
   ordNroPlan: string;
@@ -19,5 +13,4 @@ export interface OrdenResponseDTO {
   fechaInicio: string | null;        // ISO strings from backend
   fechaFinalizacion: string | null;  // ISO strings from backend
   ordenInterna: string | null;
-  ordenesDocumentosDTOs: OrdenDocumentoDTO[] | null;
 }

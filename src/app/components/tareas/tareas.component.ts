@@ -33,7 +33,6 @@ import { TiempoProcesoDirective } from '../../directives/tiempo-proceso.directiv
 export class TareasComponent implements OnInit {
   private tasksService = inject(TasksService);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
   private snack = inject(MatSnackBar);
 
   // raw data
@@ -42,6 +41,7 @@ export class TareasComponent implements OnInit {
 
   // filters
   filtroOperacion = signal<string>('');
+  filtroNroPlan = signal<string>('');
   filtroUsuario = signal<string>('');
   filtroFechaDesde = signal<string>(''); // 'yyyy-MM-dd'
   filtroFechaHasta = signal<string>(''); // 'yyyy-MM-dd'
@@ -63,7 +63,7 @@ export class TareasComponent implements OnInit {
   }
 
   displayedColumns = [
-    'fecha','operacion','nroMaquina','operario',
+    'fecha','nroPlan','operacion','nroMaquina','operario',
     'horaInicio','horaFin','cantidad','tiempo','observaciones','documentos','acciones'
   ];
 
@@ -72,7 +72,7 @@ export class TareasComponent implements OnInit {
 
     if(!this.canReadAll){
       this.displayedColumns = [
-    'fecha','operacion','nroMaquina',
+    'fecha', 'nroPlan', 'operacion','nroMaquina',
     'horaInicio','horaFin','cantidad','tiempo','observaciones','documentos','acciones'
   ]
     }
@@ -111,12 +111,14 @@ export class TareasComponent implements OnInit {
   }
 
   onOperacionChange(val: string) { this.filtroOperacion.set(val || ''); this.applyFilters(); }
+  onNroPlanChange(val: string) { this.filtroNroPlan.set(val || ''); this.applyFilters(); }
   onUsuarioChange(val: string) { this.filtroUsuario.set(val || ''); this.applyFilters(); }
   onDesdeChange(val: string) { this.filtroFechaDesde.set(val || ''); this.applyFilters(); }
   onHastaChange(val: string) { this.filtroFechaHasta.set(val || ''); this.applyFilters(); }
 
   limpiarFiltros() {
     this.filtroOperacion.set('');
+    this.filtroNroPlan.set('');
     this.filtroUsuario.set('');
     this.filtroFechaDesde.set('');
     this.filtroFechaHasta.set('');
@@ -125,6 +127,7 @@ export class TareasComponent implements OnInit {
 
   private applyFilters() {
     const op = this.filtroOperacion().toLowerCase().trim();
+    const nroP = this.filtroNroPlan().toLowerCase().trim();
     const user = this.filtroUsuario().toLowerCase().trim();
     const d = this.filtroFechaDesde();
     const h = this.filtroFechaHasta();
@@ -136,6 +139,10 @@ export class TareasComponent implements OnInit {
       // operacion filter
       const opBlob = `${t.operacionNombre ?? ''} ${t.operacionNombreCorto ?? ''}`.toLowerCase();
       if (op && !opBlob.includes(op)) return false;
+
+      // nro plan filter
+      const npF = `${t.nroPlan ?? ''}`.toLowerCase();
+      if (nroP && !npF.includes(nroP)) return false;
 
       // user filter (only if canReadAll and selected any)
       if (this.canReadAll && user && !(t.username ?? '').toLowerCase().includes(user)) return false;
