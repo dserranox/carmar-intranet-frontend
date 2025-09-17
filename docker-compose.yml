@@ -1,0 +1,10 @@
+services:
+  carmar-intranet-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: carmar/frontend:latest
+    container_name: carmar-intranet-frontend
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

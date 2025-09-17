@@ -1,59 +1,68 @@
-# CarmarIntranetFrontend
+# CarMar Angular Frontend — Docker Deploy
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.7.
+This folder contains production Docker assets to build and run your Angular 19 app behind Nginx.
 
-## Development server
+## Layout
 
-To start a local development server, run:
-
-```bash
-ng serve
+```
+carmar-docker/
+├─ Dockerfile
+├─ docker-compose.yml
+├─ nginx.conf
+└─ carmar-intranet-frontend/   # copy of your Angular project root
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+> The compose maps container port **8080** to host **8080**. Change if needed.
 
-## Code scaffolding
+## Build & Run
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+1) Put your Angular project under `carmar-intranet-frontend/` (already done here).
+2) Build the image:
 
 ```bash
-ng generate --help
+docker compose build
 ```
 
-## Building
-
-To build the project run:
+3) Run it:
 
 ```bash
-ng build
+docker compose up -d
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+4) Open: `http://<VPS_IP_or_domain>:8080`
 
-## Running unit tests
+### Custom domain + HTTPS (recommended)
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Use **Caddy** or **Traefik** as a reverse proxy to get automatic Let's Encrypt certificates, HTTP->HTTPS redirect, and access control. See notes below.
 
-```bash
-ng test
+## SPA routing
+
+`nginx.conf` includes `try_files ... /index.html;` so deep links like `/tareas/123` load the SPA entrypoint.
+
+## Cache & headers
+
+Static assets get long cache; `index.html` is `no-cache`. Security headers (X-Frame-Options, etc.) are enabled by default. Consider adding a CSP tailored to your app.
+
+## Multi-env API URLs
+
+Angular typically bakes API URLs at build time. Options:
+- Use `environment.prod.ts` for production.
+- Or serve a small `/assets/runtime-config.json` and fetch it during bootstrap to avoid rebuilds per environment.
+- Or inject env with Nginx using `envsubst` and a placeholder file.
+
+## Hardening options
+
+- Put the service **behind a reverse proxy** that terminates TLS and enforces auth (Caddy, Traefik).  
+- Restrict exposure: publish on localhost and use the proxy to expose 443 only.
+- Add HTTP Basic Auth on the proxy or Nginx, or SSO via oauth2-proxy/Authelia.
+- IP allowlist at the proxy/firewall (only your office/home IPs).
+- Use a **VPN overlay** (Tailscale/WireGuard) and expose the app only on the VPN network.
+- Keep images updated and set `restart: unless-stopped`.
+
+## Troubleshooting
+
+- White page after deploy? Check browser console/network; usually API base URL or missing SPA fallback.
+- 404 on deep links? Ensure the SPA fallback in `nginx.conf` is active.
+- Can't reach from local machine? Check VPS firewall (ufw) and cloud provider security groups, and that port 8080 is open or proxied.
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
