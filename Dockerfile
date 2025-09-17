@@ -3,13 +3,13 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 # Copy only manifests first to leverage Docker layer caching
-COPY carmar-intranet-frontend/package*.json ./
+COPY package*.json ./
 
 # Install ALL deps (including dev) for Angular build
 RUN npm ci
 
 # Copy the rest of the source
-COPY carmar-intranet-frontend/ .
+COPY . .
 
 # Build Angular (production)
 RUN npx ng build --configuration production
