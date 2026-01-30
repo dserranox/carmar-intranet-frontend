@@ -19,6 +19,8 @@ import { TasksService } from '../../services/tasks.service';
 import { StartTaskDialogComponent } from './start-task-dialog.component';
 import { Router } from '@angular/router';
 import { FinishOrderDialogComponent } from './finish-order-dialog.component';
+import { CreateOrderDialogComponent } from './create-order-dialog.component';
+import { OrdenCreateDTO } from '../../models/orden-create';
 
 @Component({
   selector: 'app-orders-table',
@@ -123,6 +125,31 @@ export class OrdersTableComponent implements OnInit {
     return row.situacionClave === 'EN PROCESO';
   }
 
+  isPlanificado(row: any): boolean {
+    return row.situacionClave === 'PLANIFICADO';
+  }
+
+  isEnProceso(row: any): boolean {
+    return row.situacionClave === 'EN PROCESO';
+  }
+
+  startProcess(order: OrdenResponseDTO): void {
+    const ordenAIniciar: OrdenResponseDTO = {
+      ...order,
+      situacionClave: 'EN PROCESO'
+    };
+    this.ordersSvc.avanzarOrden(ordenAIniciar).subscribe({
+      next: () => {
+        this.snack.open('Orden iniciada correctamente', 'Cerrar', { duration: 3000 });
+        this.load();
+      },
+      error: (err) => {
+        console.error('Error al iniciar orden:', err);
+        this.snack.open('Error al iniciar la orden', 'Cerrar', { duration: 5000 });
+      }
+    });
+  }
+
   openStartTaskDialog(order: any) {
     const dialogRef = this.dialog.open(StartTaskDialogComponent, {
       data: { order }
@@ -149,6 +176,31 @@ export class OrdersTableComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       this.load();
+    });
+  }
+
+  openCreateOrderDialog() {
+    const dialogRef = this.dialog.open(CreateOrderDialogComponent, {
+      width: '600px',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe((result: OrdenCreateDTO | undefined) => {
+      if (!result) return;
+
+      this.loading = true;
+      this.ordersSvc.createOrden(result).subscribe({
+        next: (ordenCreada) => {
+          this.snack.open('Orden creada exitosamente', 'Cerrar', { duration: 3000 });
+          this.load(); // Reload the table
+        },
+        error: (err) => {
+          console.error('Error creating order:', err);
+          const errorMsg = err.error?.message || 'Error al crear la orden';
+          this.snack.open(errorMsg, 'Cerrar', { duration: 5000 });
+          this.loading = false;
+        }
+      });
     });
   }
 }

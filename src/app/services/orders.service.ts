@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { OrdenResponseDTO } from '../models/order';
+import { OrdenCreateDTO } from '../models/orden-create';
 import { environment } from '../../environments/environment';
+import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class OrdersService {
@@ -12,7 +14,11 @@ export class OrdersService {
     return this.http.get<OrdenResponseDTO[]>(this.baseUrl, { params: { year } as any });
   }
 
-  finalizarOrden(id: number) {
-    return this.http.post(`${this.baseUrl}/finalizar-orden`, { id });
+  avanzarOrden(orden: OrdenResponseDTO) {
+    return this.http.post<OrdenResponseDTO>(`${this.baseUrl}/avanzar-orden`, orden);
+  }
+
+  createOrden(orden: OrdenCreateDTO): Observable<OrdenResponseDTO> {
+    return this.http.post<OrdenResponseDTO>(this.baseUrl, orden);
   }
 }

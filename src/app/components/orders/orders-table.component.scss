@@ -20,6 +20,11 @@
   align-items: center;
 }
 
+.nueva-orden-container{
+  display: flex;
+  justify-content: flex-end;
+}
+
 .table-container {
   overflow: auto;
   border-radius: 12px;

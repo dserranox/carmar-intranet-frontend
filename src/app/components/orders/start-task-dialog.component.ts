@@ -51,7 +51,7 @@ export class StartTaskDialogComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       operacionId: [null, Validators.required],
-      nroMaquina: [null, [Validators.required, Validators.pattern(/^\d+$/)]]
+      nroMaquina: [null, Validators.pattern(/^\d+$/)]
     });
   }
 

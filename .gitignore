@@ -44,3 +44,6 @@ testem.log
 Thumbs.db
 
 *.zip
+
+.claude/
+CLAUDE.md

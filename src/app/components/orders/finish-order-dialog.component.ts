@@ -52,7 +52,11 @@ export class FinishOrderDialogComponent implements OnInit {
   }
 
   finalizarOrden(): void {
-    this.ordenesService.finalizarOrden(this.data.id).subscribe({
+    const ordenAFinalizar: OrdenResponseDTO = {
+      ...this.data,
+      situacionClave: 'TERMINADO'
+    };
+    this.ordenesService.avanzarOrden(ordenAFinalizar).subscribe({
       next: () => { this.ref.close(); }
     });
   }
