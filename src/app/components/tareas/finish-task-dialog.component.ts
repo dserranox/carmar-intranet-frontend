@@ -14,6 +14,10 @@ export interface FinishTaskDialogData {
 export interface FinishTaskDialogResult {
   cantidad: number;
   observaciones: string | null;
+  noConforme: number | null;
+  perdidaRendimiento: number | null;
+  perdidaMantenimiento: number | null;
+  perdidaCalidad: number | null;
 }
 
 @Component({
@@ -41,7 +45,11 @@ export class FinishTaskDialogComponent {
     const initialCantidad = data?.tarea?.ordCantidad ?? null;
     this.form = this.fb.group({
       cantidad: [initialCantidad, [Validators.required, Validators.pattern(/^\d+$/)]],
-      observaciones: [data?.tarea?.observaciones ?? null]
+      observaciones: [data?.tarea?.observaciones ?? null],
+      noConforme: [null],
+      perdidaRendimiento: [null],
+      perdidaMantenimiento: [null],
+      perdidaCalidad: [null]
     });
   }
 
@@ -52,10 +60,14 @@ export class FinishTaskDialogComponent {
       this.form.markAllAsTouched();
       return;
     }
-    const { cantidad, observaciones } = this.form.value;
+    const { cantidad, observaciones, noConforme, perdidaRendimiento, perdidaMantenimiento, perdidaCalidad } = this.form.value;
     this.ref.close({
       cantidad: Number(cantidad),
-      observaciones: (observaciones ?? '').toString().trim() || null
+      observaciones: (observaciones ?? '').toString().trim() || null,
+      noConforme: noConforme != null ? Number(noConforme) : null,
+      perdidaRendimiento: perdidaRendimiento != null ? Number(perdidaRendimiento) : null,
+      perdidaMantenimiento: perdidaMantenimiento != null ? Number(perdidaMantenimiento) : null,
+      perdidaCalidad: perdidaCalidad != null ? Number(perdidaCalidad) : null
     });
   }
 }

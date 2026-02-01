@@ -16,6 +16,28 @@
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="full">
+        <mat-label>Piezas no conformes</mat-label>
+        <input matInput type="number" formControlName="noConforme" placeholder="Opcional" min="0" />
+      </mat-form-field>
+
+      <div class="section-title">Tiempos de demora (minutos)</div>
+
+      <mat-form-field appearance="fill" class="full">
+        <mat-label>Perdida por rendimiento</mat-label>
+        <input matInput type="number" formControlName="perdidaRendimiento" placeholder="Opcional" min="0" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full">
+        <mat-label>Perdida por mantenimiento</mat-label>
+        <input matInput type="number" formControlName="perdidaMantenimiento" placeholder="Opcional" min="0" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full">
+        <mat-label>Perdida por calidad</mat-label>
+        <input matInput type="number" formControlName="perdidaCalidad" placeholder="Opcional" min="0" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full">
         <mat-label>Observaciones</mat-label>
         <textarea matInput rows="3" formControlName="observaciones" placeholder="Opcional"></textarea>
       </mat-form-field>

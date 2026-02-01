@@ -173,7 +173,16 @@ export class TareasComponent implements OnInit {
       data: { tarea: row }
     }).afterClosed().subscribe((res: FinishTaskDialogResult | undefined) => {
       if (!res) return;
-      const payload = { ...row, cantidad: res.cantidad, observaciones: res.observaciones, fechaFinalizacion };
+      const payload = {
+        ...row,
+        cantidad: res.cantidad,
+        observaciones: res.observaciones,
+        noConforme: res.noConforme,
+        perdidaRendimiento: res.perdidaRendimiento,
+        perdidaMantenimiento: res.perdidaMantenimiento,
+        perdidaCalidad: res.perdidaCalidad,
+        fechaFinalizacion
+      };
       this.tasksService.finalizarTarea(payload).subscribe({
         next: () => {
           this.snackFinalizarTarea.open('Tarea finalizada', 'OK', { duration: 2500 });

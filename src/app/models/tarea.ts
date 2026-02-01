@@ -18,5 +18,9 @@ export interface TareasDTO {
   observaciones: string | null;
   username: string | null;
   ordCantidad: number | null;
+  noConforme: number | null;
+  perdidaRendimiento: number | null;
+  perdidaMantenimiento: number | null;
+  perdidaCalidad: number | null;
   documentos: ProductoDocumentosDTO[] | null;
 }
