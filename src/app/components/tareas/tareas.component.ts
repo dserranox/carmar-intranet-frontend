@@ -166,12 +166,14 @@ export class TareasComponent implements OnInit {
   }
 
   finalizarTarea(row: TareasDTO) {
+    
+    const fechaFinalizacion = this.formatDateTime(new Date());
     this.dialog.open(FinishTaskDialogComponent, {
       width: '520px',
       data: { tarea: row }
     }).afterClosed().subscribe((res: FinishTaskDialogResult | undefined) => {
       if (!res) return;
-      const payload = { ...row, cantidad: res.cantidad, observaciones: res.observaciones };
+      const payload = { ...row, cantidad: res.cantidad, observaciones: res.observaciones, fechaFinalizacion };
       this.tasksService.finalizarTarea(payload).subscribe({
         next: () => {
           this.snackFinalizarTarea.open('Tarea finalizada', 'OK', { duration: 2500 });
@@ -183,6 +185,11 @@ export class TareasComponent implements OnInit {
         error: () => this.snack.open('No se pudo finalizar la tarea', 'OK', { duration: 3000 })
       });
     });
+  }
+
+  private formatDateTime(date: Date): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   }
 
   toDate(val: any): Date | null {
