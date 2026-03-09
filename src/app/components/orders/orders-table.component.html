@@ -51,22 +51,16 @@
           <td mat-cell *matCellDef="let row">{{ row.clienteId }}</td>
         </ng-container>
 
-        <!-- Producto solicitado -->
-        <ng-container matColumnDef="productoDescripcion">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Producto solicitado</th>
-          <td mat-cell *matCellDef="let row">{{ row.productoDescripcion }}</td>
-        </ng-container>
-
         <!-- Código -->
         <ng-container matColumnDef="productoCodigo">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Código</th>
           <td mat-cell *matCellDef="let row">{{ row.productoCodigo }}</td>
         </ng-container>
 
-        <!-- Fecha Inicio -->
-        <ng-container matColumnDef="fechaInicio">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Inicio</th>
-          <td mat-cell *matCellDef="let row">{{ row.fechaInicio | date:'yyyy-MM-dd' }}</td>
+        <!-- Producto solicitado -->
+        <ng-container matColumnDef="productoDescripcion">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Producto</th>
+          <td mat-cell *matCellDef="let row">{{ row.productoDescripcion }}</td>
         </ng-container>
 
         <!-- Cantidad -->
@@ -75,16 +69,10 @@
           <td mat-cell *matCellDef="let row">{{ row.cantidad ?? '-' }}</td>
         </ng-container>
 
-        <!-- Hoja -->
-        <ng-container matColumnDef="hoja">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Hoja</th>
-          <td mat-cell *matCellDef="let row">{{ row.hoja ?? '-' }}</td>
-        </ng-container>
-
-        <!-- Etiqueta -->
-        <ng-container matColumnDef="etiqueta">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Etiqueta</th>
-          <td mat-cell *matCellDef="let row">{{ row.etiqueta ?? '-' }}</td>
+        <!-- Fecha Inicio -->
+        <ng-container matColumnDef="fechaInicio">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Inicio</th>
+          <td mat-cell *matCellDef="let row">{{ row.fechaInicio | date:'yyyy-MM-dd' }}</td>
         </ng-container>
 
         <!-- Estado -->

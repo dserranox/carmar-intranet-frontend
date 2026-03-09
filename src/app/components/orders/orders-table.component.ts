@@ -40,8 +40,8 @@ export class OrdersTableComponent implements OnInit {
   dataSource = new MatTableDataSource<OrdenResponseDTO>([]);
   tareasDTO : TareasDTO = {} as TareasDTO;
   displayedColumns = [
-    'fechaCreacion','ordNroPlan','clienteId','productoDescripcion','productoCodigo',
-    'fechaInicio','cantidad','hoja','etiqueta','situacionClave','fechaFinalizacion','acciones'
+    'fechaCreacion','ordNroPlan','clienteId','productoCodigo','productoDescripcion',
+    'cantidad','fechaInicio','situacionClave','fechaFinalizacion','acciones'
   ];
   year = new Date().getFullYear();
   loading = false;
