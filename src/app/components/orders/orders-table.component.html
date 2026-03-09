@@ -33,6 +33,12 @@
   @if (!loading) {
     <div class="table-container">
       <table mat-table [dataSource]="dataSource" matSort>
+        <!-- Fecha Creación -->
+        <ng-container matColumnDef="fechaCreacion">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Creación</th>
+          <td mat-cell *matCellDef="let row" [appFechaFormato]="row.fechaCreacion"></td>
+        </ng-container>
+
         <!-- Nro plan -->
         <ng-container matColumnDef="ordNroPlan">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Nro plan</th>
@@ -81,9 +87,9 @@
           <td mat-cell *matCellDef="let row">{{ row.etiqueta ?? '-' }}</td>
         </ng-container>
 
-        <!-- Situación -->
+        <!-- Estado -->
         <ng-container matColumnDef="situacionClave">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Situación</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
           <td mat-cell *matCellDef="let row">
             <span [ngClass]="statusClass(row.situacionClave)">{{ row.situacionClave }}</span>
           </td>

@@ -21,12 +21,13 @@ import { Router } from '@angular/router';
 import { FinishOrderDialogComponent } from './finish-order-dialog.component';
 import { CreateOrderDialogComponent } from './create-order-dialog.component';
 import { OrdenCreateDTO } from '../../models/orden-create';
+import { FechaFormatoDirective } from '../../directives/fecha-formato.directive';
 
 @Component({
   selector: 'app-orders-table',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, DatePipe,
+    CommonModule, FormsModule, DatePipe, FechaFormatoDirective,
     MatTableModule, MatPaginatorModule, MatSortModule,
     MatIconModule, MatButtonModule, MatTooltipModule,
     MatFormFieldModule, MatInputModule, MatProgressSpinnerModule
@@ -39,7 +40,7 @@ export class OrdersTableComponent implements OnInit {
   dataSource = new MatTableDataSource<OrdenResponseDTO>([]);
   tareasDTO : TareasDTO = {} as TareasDTO;
   displayedColumns = [
-    'ordNroPlan','clienteId','productoDescripcion','productoCodigo',
+    'fechaCreacion','ordNroPlan','clienteId','productoDescripcion','productoCodigo',
     'fechaInicio','cantidad','hoja','etiqueta','situacionClave','fechaFinalizacion','acciones'
   ];
   year = new Date().getFullYear();

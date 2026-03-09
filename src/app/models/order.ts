@@ -12,5 +12,6 @@ export interface OrdenResponseDTO {
   cantidad: number | null;
   fechaInicio: string | null;        // ISO strings from backend
   fechaFinalizacion: string | null;  // ISO strings from backend
+  fechaCreacion: string | null;      // ISO strings from backend
   ordenInterna: string | null;
 }
