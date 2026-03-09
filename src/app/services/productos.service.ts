@@ -16,4 +16,8 @@ export class ProductosService {
     const params = new HttpParams().set('filtro', filtro.trim());
     return this.http.get<Producto[]>(`${this.baseUrl}`, { params });
   }
+
+  getAll(): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.baseUrl}`);
+  }
 }

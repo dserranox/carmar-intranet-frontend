@@ -1,6 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
+import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,20 +7,16 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { ClientesService } from '../../services/clientes.service';
 import { ProductosService } from '../../services/productos.service';
 import { Cliente } from '../../models/cliente';
 import { Producto } from '../../models/producto';
 import { OrdenCreateDTO } from '../../models/orden-create';
-import { Observable, of, Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-create-order-dialog',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -29,53 +24,56 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
     MatSelectModule,
     MatButtonModule,
     MatRadioModule,
-    MatProgressSpinnerModule,
-    MatAutocompleteModule
+    MatProgressSpinnerModule
   ],
   template: `
     <h2 mat-dialog-title>Nueva Orden</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="form-container">
+
         <!-- Cliente -->
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Cliente</mat-label>
+            <mat-label>Cliente </mat-label>
             <mat-select formControlName="clienteId">
-              <mat-option [value]="null">-- Sin Cliente --</mat-option>
-              <mat-option *ngFor="let cliente of clientes" [value]="cliente.id">
-                {{ cliente.razonSocial }}
-              </mat-option>
+              @for (cliente of clientes(); track cliente.id) {
+                <mat-option [value]="cliente.id">{{ cliente.razonSocial }}</mat-option>
+              }
             </mat-select>
+            @if (form.get('clienteId')?.hasError('required')) {
+              <mat-error>El cliente es obligatorio</mat-error>
+            }
           </mat-form-field>
         </div>
 
-        <!-- Producto con Autocomplete -->
+        <!-- Producto -->
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Producto</mat-label>
-            <input matInput
-                   formControlName="productoSearch"
-                   [matAutocomplete]="autoProducto"
-                   placeholder="Buscar producto...">
-            <mat-autocomplete #autoProducto="matAutocomplete"
-                              [displayWith]="displayProducto"
-                              (optionSelected)="onProductoSelected($event.option.value)">
-              <mat-option *ngFor="let producto of filteredProductos$ | async" [value]="producto">
-                <span class="producto-code">{{ producto.codigo }}</span> -
-                <span>{{ producto.descripcion }}</span>
-              </mat-option>
-            </mat-autocomplete>
+            <mat-label>Producto </mat-label>
+            <mat-select formControlName="productoId">
+              @for (producto of productos(); track producto.id) {
+                <mat-option [value]="producto.id">
+                  <span class="producto-code">{{ producto.codigo }}</span> - {{ producto.descripcion }}
+                </mat-option>
+              }
+            </mat-select>
+            @if (form.get('productoId')?.hasError('required')) {
+              <mat-error>El producto es obligatorio</mat-error>
+            }
           </mat-form-field>
         </div>
 
         <!-- Cantidad -->
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Cantidad</mat-label>
+            <mat-label>Cantidad </mat-label>
             <input matInput type="number" formControlName="cantidad" min="1">
-            <mat-error *ngIf="form.get('cantidad')?.hasError('min')">
-              La cantidad debe ser mayor a 0
-            </mat-error>
+            @if (form.get('cantidad')?.hasError('required')) {
+              <mat-error>La cantidad es obligatoria</mat-error>
+            }
+            @if (form.get('cantidad')?.hasError('min')) {
+              <mat-error>La cantidad debe ser mayor a 0</mat-error>
+            }
           </mat-form-field>
         </div>
 
@@ -88,7 +86,7 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
           </mat-radio-group>
         </div>
 
-        <!-- Etiqueta (SI/NO) -->
+        <!-- Etiqueta -->
         <div class="form-row">
           <label class="radio-label">Etiqueta:</label>
           <mat-radio-group formControlName="etiqueta" class="radio-group">
@@ -103,10 +101,14 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Cancelar</button>
       <button mat-raised-button color="primary"
-              [disabled]="form.invalid || loading"
+              [disabled]="form.invalid || loading()"
               (click)="onSubmit()">
-        <span *ngIf="!loading">Crear Orden</span>
-        <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+        @if (!loading()) {
+          <span>Crear Orden</span>
+        }
+        @if (loading()) {
+          <mat-spinner diameter="20"></mat-spinner>
+        }
       </button>
     </mat-dialog-actions>
   `,
@@ -155,57 +157,33 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
     }
   `]
 })
-export class CreateOrderDialogComponent implements OnInit {
+export class CreateOrderDialogComponent {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<CreateOrderDialogComponent>);
   private clientesService = inject(ClientesService);
   private productosService = inject(ProductosService);
 
-  form!: FormGroup;
-  clientes: Cliente[] = [];
-  filteredProductos$!: Observable<Producto[]>;
-  loading = false;
-  selectedProductoId: number | null = null;
+  clientes = signal<Cliente[]>([]);
+  productos = signal<Producto[]>([]);
+  loading = signal(false);
 
-  ngOnInit(): void {
-    this.initForm();
-    this.loadClientes();
-  }
+  form = this.fb.group({
+    clienteId: [null as number | null, Validators.required],
+    productoId: [null as number | null, Validators.required],
+    cantidad: [null as number | null, [Validators.required, Validators.min(1)]],
+    hoja: ['NO'],
+    etiqueta: ['NO']
+  });
 
-  private initForm(): void {
-    this.form = this.fb.group({
-      clienteId: [null],
-      productoSearch: [''],
-      cantidad: [null, Validators.min(1)],
-      hoja: ['NO'],
-      etiqueta: ['NO']
+  constructor() {
+    this.clientesService.getAll().subscribe({
+      next: (data) => this.clientes.set(data),
+      error: (err) => console.error('Error loading clientes:', err)
     });
 
-    // Setup autocomplete con búsqueda en servidor
-    this.filteredProductos$ = this.form.get('productoSearch')!.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(value => {
-        const searchTerm = typeof value === 'string' ? value : value?.descripcion || '';
-        return this.productosService.buscar(searchTerm).pipe(
-          catchError(() => of([]))
-        );
-      })
-    );
-  }
-
-  displayProducto(producto: Producto): string {
-    return producto ? `${producto.codigo} - ${producto.descripcion}` : '';
-  }
-
-  onProductoSelected(producto: Producto): void {
-    this.selectedProductoId = producto.id;
-  }
-
-  private loadClientes(): void {
-    this.clientesService.getAll().subscribe({
-      next: (data) => this.clientes = data,
-      error: (err) => console.error('Error loading clientes:', err)
+    this.productosService.getAll().subscribe({
+      next: (data) => this.productos.set(data),
+      error: (err) => console.error('Error loading productos:', err)
     });
   }
 
@@ -215,11 +193,11 @@ export class CreateOrderDialogComponent implements OnInit {
     const formValue = this.form.value;
 
     const payload: OrdenCreateDTO = {
-      clienteId: formValue.clienteId || undefined,
-      productoId: this.selectedProductoId || undefined,
-      cantidad: formValue.cantidad || undefined,
-      hoja: formValue.hoja || undefined,
-      etiqueta: formValue.etiqueta || undefined,
+      clienteId: formValue.clienteId!,
+      productoId: formValue.productoId!,
+      cantidad: formValue.cantidad!,
+      hoja: formValue.hoja ?? undefined,
+      etiqueta: formValue.etiqueta ?? undefined,
     };
 
     this.dialogRef.close(payload);
