@@ -10,6 +10,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
 import { OrdersService } from '../../services/orders.service';
 import { OrdenResponseDTO } from '../../models/order';
@@ -30,7 +33,8 @@ import { FechaFormatoDirective } from '../../directives/fecha-formato.directive'
     CommonModule, FormsModule, DatePipe, FechaFormatoDirective,
     MatTableModule, MatPaginatorModule, MatSortModule,
     MatIconModule, MatButtonModule, MatTooltipModule,
-    MatFormFieldModule, MatInputModule, MatProgressSpinnerModule
+    MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
+    MatSelectModule, MatDatepickerModule, MatNativeDateModule
   ],
   templateUrl: './orders-table.component.html',
   styleUrls: ['./orders-table.component.scss']
@@ -43,14 +47,26 @@ export class OrdersTableComponent implements OnInit {
     'fechaCreacion','ordNroPlan','clienteId','productoCodigo','productoDescripcion',
     'cantidad','fechaInicio','situacionClave','fechaFinalizacion','acciones'
   ];
+  years: number[] = [];
   year = new Date().getFullYear();
   loading = false;
   filterValue = '';
 
+  fechaCreacionDesde: Date | null = null;
+  fechaCreacionHasta: Date | null = null;
+  fechaInicioDesde: Date | null = null;
+  fechaInicioHasta: Date | null = null;
+  fechaFinalizacionDesde: Date | null = null;
+  fechaFinalizacionHasta: Date | null = null;
+
   isAdmin = false;
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(p: MatPaginator) {
+    if (p) this.dataSource.paginator = p;
+  }
+  @ViewChild(MatSort) set sort(s: MatSort) {
+    if (s) this.dataSource.sort = s;
+  }
 
   constructor(
     private dialog: MatDialog,
@@ -61,7 +77,24 @@ export class OrdersTableComponent implements OnInit {
 
   ngOnInit(): void {
     this.resolveIsAdmin();
-    this.load();
+    this.dataSource.filterPredicate = (row, filter) => {
+      const blob = `${row.ordNroPlan} ${row.clienteId} ${row.productoDescripcion} ${row.productoCodigo} ${row.situacionClave}`.toLowerCase();
+      return blob.includes(filter.trim().toLowerCase());
+    };
+    this.loadYears();
+  }
+
+  loadYears(): void {
+    this.ordersSvc.getYears().subscribe({
+      next: (years) => {
+        this.years = years;
+        if (years.length > 0) {
+          this.year = years[0];
+        }
+        this.load();
+      },
+      error: () => this.load()
+    });
   }
 
   private resolveIsAdmin() {
@@ -85,13 +118,7 @@ export class OrdersTableComponent implements OnInit {
         if (!this.isAdmin) {
           data = data.filter(o => (o.situacionClave || '').toUpperCase() === 'EN PROCESO');
         }
-        this.dataSource = new MatTableDataSource<OrdenResponseDTO>(data);
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
-        this.dataSource.filterPredicate = (row, filter) => {
-          const blob = `${row.ordNroPlan} ${row.clienteId} ${row.productoDescripcion} ${row.productoCodigo} ${row.situacionClave}`.toLowerCase();
-          return blob.includes(filter.trim().toLowerCase());
-        };
+        this.dataSource.data = data;
         if (this.filterValue) this.applyFilter();
       },
       error: (err) => console.error(err),
@@ -100,7 +127,17 @@ export class OrdersTableComponent implements OnInit {
   }
 
   applyFilter() { this.dataSource.filter = this.filterValue; }
-  clearFilter() { this.filterValue = ''; this.applyFilter(); }
+
+  clearFilter() {
+    this.filterValue = '';
+    this.fechaCreacionDesde = null;
+    this.fechaCreacionHasta = null;
+    this.fechaInicioDesde = null;
+    this.fechaInicioHasta = null;
+    this.fechaFinalizacionDesde = null;
+    this.fechaFinalizacionHasta = null;
+    this.applyFilter();
+  }
 
   // openDocs(row: OrdenResponseDTO) {
   //   const docs: any[] = (row as any).ordenesDocumentosDTOs || [];

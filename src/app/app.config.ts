@@ -6,6 +6,19 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './auth/auth.interceptor';
+import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+
+const APP_DATE_FORMATS = {
+  parse: {
+    dateInput: { day: 'numeric', month: 'numeric', year: 'numeric' },
+  },
+  display: {
+    dateInput: { day: '2-digit', month: '2-digit', year: 'numeric' },
+    monthYearLabel: { year: 'numeric', month: 'short' },
+    dateA11yLabel: { year: 'numeric', month: 'long', day: 'numeric' },
+    monthYearA11yLabel: { year: 'numeric', month: 'long' },
+  },
+};
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,6 +29,8 @@ export const appConfig: ApplicationConfig = {
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000'
-    })
+    }),
+    { provide: MAT_DATE_LOCALE, useValue: 'es-AR' },
+    { provide: MAT_DATE_FORMATS, useValue: APP_DATE_FORMATS },
   ]
 };

@@ -1,38 +1,157 @@
 <section class="orders-wrapper">
-  <header class="toolbar">
-    <h2>Órdenes {{year}}</h2>
-    <div class="actions">
+
+  <!-- Encabezado -->
+  <header class="page-header">
+    <h2>Órdenes</h2>
+    @if (isAdmin) {
+      <button mat-raised-button color="primary" (click)="openCreateOrderDialog()" class="btn-create">
+        <mat-icon>add</mat-icon>
+        Nueva Orden
+      </button>
+    }
+  </header>
+
+  <!-- Panel de Filtros -->
+  <div class="filter-panel">
+
+    <!-- Fila 1: selectores simples -->
+    <div class="filter-grid">
+
       <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Filtrar</mat-label>
-        <input matInput placeholder="Buscar..." [(ngModel)]="filterValue" (ngModelChange)="applyFilter()">
-        <button mat-icon-button matSuffix *ngIf="filterValue" (click)="clearFilter()" aria-label="Limpiar">
-          <mat-icon>close</mat-icon>
-        </button>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="year-field">
         <mat-label>Año</mat-label>
-        <input matInput type="number" [(ngModel)]="year" (change)="load()" min="2000" max="2100">
+        <mat-select [(ngModel)]="year" (ngModelChange)="load()">
+          @for (y of years; track y) {
+            <mat-option [value]="y">{{ y }}</mat-option>
+          }
+        </mat-select>
       </mat-form-field>
 
-      <button mat-stroked-button (click)="load()" class="btn-refresh">
-        <mat-icon>refresh</mat-icon>
-        Recargar
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Nro. Plan</mat-label>
+        <mat-select>
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="25-001">25-001</mat-option>
+          <mat-option value="25-002">25-002</mat-option>
+          <mat-option value="25-003">25-003</mat-option>
+          <mat-option value="25-004">25-004</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Cliente</mat-label>
+        <mat-select>
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="LEAF">LEAF</mat-option>
+          <mat-option value="YPF">YPF</mat-option>
+          <mat-option value="TENARIS">TENARIS</mat-option>
+          <mat-option value="ACINDAR">ACINDAR</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Código</mat-label>
+        <mat-select>
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="COD-001">COD-001</mat-option>
+          <mat-option value="COD-002">COD-002</mat-option>
+          <mat-option value="COD-003">COD-003</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Producto</mat-label>
+        <mat-select>
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="p1">VÁLVULA ESFERA 1/2"</mat-option>
+          <mat-option value="p2">BRIDA DN50 PN16</mat-option>
+          <mat-option value="p3">CODO 90° 2"</mat-option>
+          <mat-option value="p4">TEE REDUCIDA 3/4"</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+    </div>
+
+    <!-- Fila 2: rangos de fechas -->
+    <div class="filter-dates-grid">
+
+      <!-- Fecha Creación -->
+      <div class="date-range-group">
+        <span class="date-range-label">Fecha Creación</span>
+        <div class="date-range-fields">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Desde</mat-label>
+            <input matInput [matDatepicker]="pickerCreacionDesde" [(ngModel)]="fechaCreacionDesde">
+            <mat-datepicker-toggle matIconSuffix [for]="pickerCreacionDesde"></mat-datepicker-toggle>
+            <mat-datepicker #pickerCreacionDesde></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Hasta</mat-label>
+            <input matInput [matDatepicker]="pickerCreacionHasta" [(ngModel)]="fechaCreacionHasta" [min]="fechaCreacionDesde">
+            <mat-datepicker-toggle matIconSuffix [for]="pickerCreacionHasta"></mat-datepicker-toggle>
+            <mat-datepicker #pickerCreacionHasta></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Fecha Inicio -->
+      <div class="date-range-group">
+        <span class="date-range-label">Fecha Inicio</span>
+        <div class="date-range-fields">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Desde</mat-label>
+            <input matInput [matDatepicker]="pickerInicioDesde" [(ngModel)]="fechaInicioDesde">
+            <mat-datepicker-toggle matIconSuffix [for]="pickerInicioDesde"></mat-datepicker-toggle>
+            <mat-datepicker #pickerInicioDesde></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Hasta</mat-label>
+            <input matInput [matDatepicker]="pickerInicioHasta" [(ngModel)]="fechaInicioHasta" [min]="fechaInicioDesde">
+            <mat-datepicker-toggle matIconSuffix [for]="pickerInicioHasta"></mat-datepicker-toggle>
+            <mat-datepicker #pickerInicioHasta></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Fecha Finalización -->
+      <div class="date-range-group">
+        <span class="date-range-label">Fecha Finalización</span>
+        <div class="date-range-fields">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Desde</mat-label>
+            <input matInput [matDatepicker]="pickerFinDesde" [(ngModel)]="fechaFinalizacionDesde">
+            <mat-datepicker-toggle matIconSuffix [for]="pickerFinDesde"></mat-datepicker-toggle>
+            <mat-datepicker #pickerFinDesde></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Hasta</mat-label>
+            <input matInput [matDatepicker]="pickerFinHasta" [(ngModel)]="fechaFinalizacionHasta" [min]="fechaFinalizacionDesde">
+            <mat-datepicker-toggle matIconSuffix [for]="pickerFinHasta"></mat-datepicker-toggle>
+            <mat-datepicker #pickerFinHasta></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Fila 3: acciones -->
+    <div class="filter-actions">
+      <button mat-stroked-button class="btn-clear" (click)="clearFilter()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Limpiar filtros
+      </button>
+      <button mat-raised-button color="primary" class="btn-search" (click)="load()">
+        <mat-icon>search</mat-icon>
+        Buscar
       </button>
     </div>
-  </header>
-  <div class="nueva-orden-container">  
-    @if (isAdmin) {
-    <button mat-raised-button color="primary" (click)="openCreateOrderDialog()" class="btn-create">
-      <mat-icon>add</mat-icon>
-      Nueva Orden
-    </button>
-    }
+
   </div>
 
+  <!-- Tabla -->
   @if (!loading) {
     <div class="table-container">
       <table mat-table [dataSource]="dataSource" matSort>
+
         <!-- Fecha Creación -->
         <ng-container matColumnDef="fechaCreacion">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Creación</th>
@@ -116,10 +235,9 @@
       <mat-paginator [pageSize]="10" [pageSizeOptions]="[5,10,25,50]"></mat-paginator>
     </div>
   } @else {
-    <ng-template>
-      <div class="loading">
-        <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
-      </div>
-    </ng-template>
+    <div class="loading">
+      <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    </div>
   }
+
 </section>

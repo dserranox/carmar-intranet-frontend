@@ -5,29 +5,110 @@
   padding: 16px;
 }
 
-.toolbar {
+/* ── Encabezado ── */
+.page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+
+  h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
 }
 
-.actions {
+/* ── Panel de filtros ── */
+.filter-panel {
+  background: #ffffff;
+  border: 1px solid #e0e4ea;
+  border-radius: 12px;
+  padding: 20px 24px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
-  align-items: center;
 }
 
-.nueva-orden-container{
+/* Fila 1: selectores simples */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.filter-field {
+  width: 100%;
+}
+
+/* Fila 2: rangos de fechas */
+.filter-dates-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.date-range-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.date-range-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #5c6470;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 2px;
+}
+
+.date-range-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Fila 3: botones de acción */
+.filter-actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 4px;
 }
 
+.btn-clear {
+  color: #5c6470;
+  border-color: #d0d4da !important;
+}
+
+.btn-search {
+  min-width: 120px;
+}
+
+/* ── Tabla ── */
 .table-container {
   overflow: auto;
   border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e0e4ea;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 table {
@@ -37,44 +118,18 @@ table {
 .loading {
   display: flex;
   justify-content: center;
-  padding: 24px;
+  padding: 40px;
 }
 
+/* ── Estados ── */
 .status {
   font-weight: 600;
   letter-spacing: .3px;
 }
 
-.status.revisar-plano {
-  color: #a67c00;
-}
-
-.status.planificado {
-  color: #0277bd;
-}
-
-.status.en-proceso {
-  color: #ef6c00;
-}
-
-.status.terminado {
-  color: #2e7d32;
-}
-
-.status.falta-material {
-  color: #c62828;
-}
-
-.status.otro {
-  color: #616161;
-}
-
-.btn-green {
-  color: #2e7d32;
-}
-
-.btn-refresh {
-  color: #0b5966 !important;
-  border-color: rgba(11, 89, 102, 0.35) !important;
-  margin-bottom: 20px;
-}
+.status.revisar-plano  { color: #a67c00; }
+.status.planificado    { color: #0277bd; }
+.status.en-proceso     { color: #ef6c00; }
+.status.terminado      { color: #2e7d32; }
+.status.falta-material { color: #c62828; }
+.status.otro           { color: #616161; }

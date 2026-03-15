@@ -10,6 +10,10 @@ export class OrdersService {
   private http = inject(HttpClient);
   private baseUrl = environment.apiUrl + '/orders';
 
+  getYears() {
+    return this.http.get<number[]>(`${this.baseUrl}/years`);
+  }
+
   listByYear(year: number) {
     return this.http.get<OrdenResponseDTO[]>(this.baseUrl, { params: { year } as any });
   }
