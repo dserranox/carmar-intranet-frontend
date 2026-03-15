@@ -34,8 +34,12 @@
 /* Fila 1: selectores simples */
 .filter-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: 0.5fr 0.7fr 0.7fr 1fr 2fr 1fr;
   gap: 12px;
+
+  @media (max-width: 1400px) {
+    grid-template-columns: 0.5fr 0.7fr 0.9fr 1fr 2fr 1fr;
+  }
 
   @media (max-width: 1200px) {
     grid-template-columns: repeat(3, 1fr);

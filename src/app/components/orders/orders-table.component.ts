@@ -52,12 +52,28 @@ export class OrdersTableComponent implements OnInit {
   loading = false;
   filterValue = '';
 
+  // Listas de opciones para los selects (extraídas de los datos cargados)
+  nroPlanes: string[] = [];
+  clientes: number[] = [];
+  codigos: string[] = [];
+  productos: string[] = [];
+  estados: string[] = [];
+
+  // Valores seleccionados en los filtros
+  filterNroPlan = '';
+  filterClienteId: number | '' = '';
+  filterProductoCodigo = '';
+  filterProductoDescripcion = '';
+  filterSituacionClave = '';
+
   fechaCreacionDesde: Date | null = null;
   fechaCreacionHasta: Date | null = null;
   fechaInicioDesde: Date | null = null;
   fechaInicioHasta: Date | null = null;
   fechaFinalizacionDesde: Date | null = null;
   fechaFinalizacionHasta: Date | null = null;
+
+  private allOrders: OrdenResponseDTO[] = [];
 
   isAdmin = false;
 
@@ -112,31 +128,85 @@ export class OrdersTableComponent implements OnInit {
 
   load() {
     this.loading = true;
+    this.resetSelectFilters();
     this.ordersSvc.listByYear(this.year).subscribe({
       next: (orders) => {
         let data = orders || [];
         if (!this.isAdmin) {
           data = data.filter(o => (o.situacionClave || '').toUpperCase() === 'EN PROCESO');
         }
-        this.dataSource.data = data;
-        if (this.filterValue) this.applyFilter();
+        this.allOrders = data;
+        this.buildFilterOptions(data);
+        this.applyFilters();
       },
       error: (err) => console.error(err),
       complete: () => this.loading = false
     });
   }
 
-  applyFilter() { this.dataSource.filter = this.filterValue; }
+  private buildFilterOptions(orders: OrdenResponseDTO[]): void {
+    this.nroPlanes = [...new Set(orders.map(o => o.ordNroPlan).filter((v): v is string => !!v))].sort();
+    this.clientes  = [...new Set(orders.map(o => o.clienteId).filter((v): v is number => v != null))].sort((a, b) => a - b);
+    this.codigos   = [...new Set(orders.map(o => o.productoCodigo).filter((v): v is string => !!v))].sort();
+    this.productos = [...new Set(orders.map(o => o.productoDescripcion).filter((v): v is string => !!v))].sort();
+    this.estados   = [...new Set(orders.map(o => o.situacionClave).filter((v): v is string => !!v))].sort();
+  }
+
+  private resetSelectFilters(): void {
+    this.filterNroPlan = '';
+    this.filterClienteId = '';
+    this.filterProductoCodigo = '';
+    this.filterProductoDescripcion = '';
+    this.filterSituacionClave = '';
+  }
+
+  applyFilters(): void {
+    let data = this.allOrders;
+    if (this.filterNroPlan)             data = data.filter(o => o.ordNroPlan === this.filterNroPlan);
+    if (this.filterClienteId)           data = data.filter(o => o.clienteId === this.filterClienteId);
+    if (this.filterProductoCodigo)      data = data.filter(o => o.productoCodigo === this.filterProductoCodigo);
+    if (this.filterProductoDescripcion) data = data.filter(o => o.productoDescripcion === this.filterProductoDescripcion);
+    if (this.filterSituacionClave)      data = data.filter(o => o.situacionClave === this.filterSituacionClave);
+
+    if (this.fechaCreacionDesde)  data = data.filter(o => this.dateOf(o.fechaCreacion)   >= this.startOf(this.fechaCreacionDesde!));
+    if (this.fechaCreacionHasta)  data = data.filter(o => this.dateOf(o.fechaCreacion)   <= this.endOf(this.fechaCreacionHasta!));
+    if (this.fechaInicioDesde)    data = data.filter(o => this.dateOf(o.fechaInicio)      >= this.startOf(this.fechaInicioDesde!));
+    if (this.fechaInicioHasta)    data = data.filter(o => this.dateOf(o.fechaInicio)      <= this.endOf(this.fechaInicioHasta!));
+    if (this.fechaFinalizacionDesde) data = data.filter(o => this.dateOf(o.fechaFinalizacion) >= this.startOf(this.fechaFinalizacionDesde!));
+    if (this.fechaFinalizacionHasta) data = data.filter(o => this.dateOf(o.fechaFinalizacion) <= this.endOf(this.fechaFinalizacionHasta!));
+
+    this.dataSource.data = data;
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+  }
+
+  private dateOf(value: string | null): number {
+    if (!value) return NaN;
+    return new Date(value).getTime();
+  }
+
+  private startOf(d: Date): number {
+    const r = new Date(d);
+    r.setHours(0, 0, 0, 0);
+    return r.getTime();
+  }
+
+  private endOf(d: Date): number {
+    const r = new Date(d);
+    r.setHours(23, 59, 59, 999);
+    return r.getTime();
+  }
 
   clearFilter() {
     this.filterValue = '';
+    this.resetSelectFilters();
     this.fechaCreacionDesde = null;
     this.fechaCreacionHasta = null;
     this.fechaInicioDesde = null;
     this.fechaInicioHasta = null;
     this.fechaFinalizacionDesde = null;
     this.fechaFinalizacionHasta = null;
-    this.applyFilter();
+    this.dataSource.data = this.allOrders;
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
   }
 
   // openDocs(row: OrdenResponseDTO) {

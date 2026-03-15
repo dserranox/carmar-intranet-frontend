@@ -28,44 +28,51 @@
 
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Nro. Plan</mat-label>
-        <mat-select>
+        <mat-select [(ngModel)]="filterNroPlan" (ngModelChange)="applyFilters()">
           <mat-option value="">Todos</mat-option>
-          <mat-option value="25-001">25-001</mat-option>
-          <mat-option value="25-002">25-002</mat-option>
-          <mat-option value="25-003">25-003</mat-option>
-          <mat-option value="25-004">25-004</mat-option>
+          @for (p of nroPlanes; track p) {
+            <mat-option [value]="p">{{ p }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Cliente</mat-label>
-        <mat-select>
+        <mat-select [(ngModel)]="filterClienteId" (ngModelChange)="applyFilters()">
           <mat-option value="">Todos</mat-option>
-          <mat-option value="LEAF">LEAF</mat-option>
-          <mat-option value="YPF">YPF</mat-option>
-          <mat-option value="TENARIS">TENARIS</mat-option>
-          <mat-option value="ACINDAR">ACINDAR</mat-option>
+          @for (c of clientes; track c) {
+            <mat-option [value]="c">{{ c }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Código</mat-label>
-        <mat-select>
+        <mat-select [(ngModel)]="filterProductoCodigo" (ngModelChange)="applyFilters()">
           <mat-option value="">Todos</mat-option>
-          <mat-option value="COD-001">COD-001</mat-option>
-          <mat-option value="COD-002">COD-002</mat-option>
-          <mat-option value="COD-003">COD-003</mat-option>
+          @for (cod of codigos; track cod) {
+            <mat-option [value]="cod">{{ cod }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Producto</mat-label>
-        <mat-select>
+        <mat-select [(ngModel)]="filterProductoDescripcion" (ngModelChange)="applyFilters()">
           <mat-option value="">Todos</mat-option>
-          <mat-option value="p1">VÁLVULA ESFERA 1/2"</mat-option>
-          <mat-option value="p2">BRIDA DN50 PN16</mat-option>
-          <mat-option value="p3">CODO 90° 2"</mat-option>
-          <mat-option value="p4">TEE REDUCIDA 3/4"</mat-option>
+          @for (prod of productos; track prod) {
+            <mat-option [value]="prod">{{ prod }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Estado</mat-label>
+        <mat-select [(ngModel)]="filterSituacionClave" (ngModelChange)="applyFilters()">
+          <mat-option value="">Todos</mat-option>
+          @for (e of estados; track e) {
+            <mat-option [value]="e">{{ e }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
@@ -80,13 +87,13 @@
         <div class="date-range-fields">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Desde</mat-label>
-            <input matInput [matDatepicker]="pickerCreacionDesde" [(ngModel)]="fechaCreacionDesde">
+            <input matInput [matDatepicker]="pickerCreacionDesde" [(ngModel)]="fechaCreacionDesde" (dateChange)="applyFilters()">
             <mat-datepicker-toggle matIconSuffix [for]="pickerCreacionDesde"></mat-datepicker-toggle>
             <mat-datepicker #pickerCreacionDesde></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Hasta</mat-label>
-            <input matInput [matDatepicker]="pickerCreacionHasta" [(ngModel)]="fechaCreacionHasta" [min]="fechaCreacionDesde">
+            <input matInput [matDatepicker]="pickerCreacionHasta" [(ngModel)]="fechaCreacionHasta" [min]="fechaCreacionDesde" (dateChange)="applyFilters()">
             <mat-datepicker-toggle matIconSuffix [for]="pickerCreacionHasta"></mat-datepicker-toggle>
             <mat-datepicker #pickerCreacionHasta></mat-datepicker>
           </mat-form-field>
@@ -99,13 +106,13 @@
         <div class="date-range-fields">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Desde</mat-label>
-            <input matInput [matDatepicker]="pickerInicioDesde" [(ngModel)]="fechaInicioDesde">
+            <input matInput [matDatepicker]="pickerInicioDesde" [(ngModel)]="fechaInicioDesde" (dateChange)="applyFilters()">
             <mat-datepicker-toggle matIconSuffix [for]="pickerInicioDesde"></mat-datepicker-toggle>
             <mat-datepicker #pickerInicioDesde></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Hasta</mat-label>
-            <input matInput [matDatepicker]="pickerInicioHasta" [(ngModel)]="fechaInicioHasta" [min]="fechaInicioDesde">
+            <input matInput [matDatepicker]="pickerInicioHasta" [(ngModel)]="fechaInicioHasta" [min]="fechaInicioDesde" (dateChange)="applyFilters()">
             <mat-datepicker-toggle matIconSuffix [for]="pickerInicioHasta"></mat-datepicker-toggle>
             <mat-datepicker #pickerInicioHasta></mat-datepicker>
           </mat-form-field>
@@ -118,13 +125,13 @@
         <div class="date-range-fields">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Desde</mat-label>
-            <input matInput [matDatepicker]="pickerFinDesde" [(ngModel)]="fechaFinalizacionDesde">
+            <input matInput [matDatepicker]="pickerFinDesde" [(ngModel)]="fechaFinalizacionDesde" (dateChange)="applyFilters()">
             <mat-datepicker-toggle matIconSuffix [for]="pickerFinDesde"></mat-datepicker-toggle>
             <mat-datepicker #pickerFinDesde></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Hasta</mat-label>
-            <input matInput [matDatepicker]="pickerFinHasta" [(ngModel)]="fechaFinalizacionHasta" [min]="fechaFinalizacionDesde">
+            <input matInput [matDatepicker]="pickerFinHasta" [(ngModel)]="fechaFinalizacionHasta" [min]="fechaFinalizacionDesde" (dateChange)="applyFilters()">
             <mat-datepicker-toggle matIconSuffix [for]="pickerFinHasta"></mat-datepicker-toggle>
             <mat-datepicker #pickerFinHasta></mat-datepicker>
           </mat-form-field>
