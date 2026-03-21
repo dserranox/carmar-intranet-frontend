@@ -36,120 +36,123 @@
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Cliente</mat-label>
-        <mat-select [(ngModel)]="filterClienteId" (ngModelChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          @for (c of clientes; track c) {
-            <mat-option [value]="c">{{ c }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      @if (isAdmin) {
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Cliente</mat-label>
+          <mat-select [(ngModel)]="filterClienteId" (ngModelChange)="applyFilters()">
+            <mat-option value="">Todos</mat-option>
+            @for (c of clientes; track c) {
+              <mat-option [value]="c">{{ c }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Código</mat-label>
-        <mat-select [(ngModel)]="filterProductoCodigo" (ngModelChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          @for (cod of codigos; track cod) {
-            <mat-option [value]="cod">{{ cod }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Código</mat-label>
+          <mat-select [(ngModel)]="filterProductoCodigo" (ngModelChange)="applyFilters()">
+            <mat-option value="">Todos</mat-option>
+            @for (cod of codigos; track cod) {
+              <mat-option [value]="cod">{{ cod }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Producto</mat-label>
-        <mat-select [(ngModel)]="filterProductoDescripcion" (ngModelChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          @for (prod of productos; track prod) {
-            <mat-option [value]="prod">{{ prod }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Producto</mat-label>
+          <mat-select [(ngModel)]="filterProductoDescripcion" (ngModelChange)="applyFilters()">
+            <mat-option value="">Todos</mat-option>
+            @for (prod of productos; track prod) {
+              <mat-option [value]="prod">{{ prod }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Estado</mat-label>
-        <mat-select [(ngModel)]="filterSituacionClave" (ngModelChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          @for (e of estados; track e) {
-            <mat-option [value]="e">{{ e }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-    </div>
-
-    <!-- Fila 2: rangos de fechas -->
-    <div class="filter-dates-grid">
-
-      <!-- Fecha Creación -->
-      <div class="date-range-group">
-        <span class="date-range-label">Fecha Creación</span>
-        <div class="date-range-fields">
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Desde</mat-label>
-            <input matInput [matDatepicker]="pickerCreacionDesde" [(ngModel)]="fechaCreacionDesde" (dateChange)="applyFilters()">
-            <mat-datepicker-toggle matIconSuffix [for]="pickerCreacionDesde"></mat-datepicker-toggle>
-            <mat-datepicker #pickerCreacionDesde></mat-datepicker>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Hasta</mat-label>
-            <input matInput [matDatepicker]="pickerCreacionHasta" [(ngModel)]="fechaCreacionHasta" [min]="fechaCreacionDesde" (dateChange)="applyFilters()">
-            <mat-datepicker-toggle matIconSuffix [for]="pickerCreacionHasta"></mat-datepicker-toggle>
-            <mat-datepicker #pickerCreacionHasta></mat-datepicker>
-          </mat-form-field>
-        </div>
-      </div>
-
-      <!-- Fecha Inicio -->
-      <div class="date-range-group">
-        <span class="date-range-label">Fecha Inicio</span>
-        <div class="date-range-fields">
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Desde</mat-label>
-            <input matInput [matDatepicker]="pickerInicioDesde" [(ngModel)]="fechaInicioDesde" (dateChange)="applyFilters()">
-            <mat-datepicker-toggle matIconSuffix [for]="pickerInicioDesde"></mat-datepicker-toggle>
-            <mat-datepicker #pickerInicioDesde></mat-datepicker>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Hasta</mat-label>
-            <input matInput [matDatepicker]="pickerInicioHasta" [(ngModel)]="fechaInicioHasta" [min]="fechaInicioDesde" (dateChange)="applyFilters()">
-            <mat-datepicker-toggle matIconSuffix [for]="pickerInicioHasta"></mat-datepicker-toggle>
-            <mat-datepicker #pickerInicioHasta></mat-datepicker>
-          </mat-form-field>
-        </div>
-      </div>
-
-      <!-- Fecha Finalización -->
-      <div class="date-range-group">
-        <span class="date-range-label">Fecha Finalización</span>
-        <div class="date-range-fields">
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Desde</mat-label>
-            <input matInput [matDatepicker]="pickerFinDesde" [(ngModel)]="fechaFinalizacionDesde" (dateChange)="applyFilters()">
-            <mat-datepicker-toggle matIconSuffix [for]="pickerFinDesde"></mat-datepicker-toggle>
-            <mat-datepicker #pickerFinDesde></mat-datepicker>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Hasta</mat-label>
-            <input matInput [matDatepicker]="pickerFinHasta" [(ngModel)]="fechaFinalizacionHasta" [min]="fechaFinalizacionDesde" (dateChange)="applyFilters()">
-            <mat-datepicker-toggle matIconSuffix [for]="pickerFinHasta"></mat-datepicker-toggle>
-            <mat-datepicker #pickerFinHasta></mat-datepicker>
-          </mat-form-field>
-        </div>
-      </div>
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Estado</mat-label>
+          <mat-select [(ngModel)]="filterSituacionClave" (ngModelChange)="applyFilters()">
+            <mat-option value="">Todos</mat-option>
+            @for (e of estados; track e) {
+              <mat-option [value]="e">{{ e }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
 
     </div>
 
+    @if (isAdmin) {
+      <!-- Fila 2: rangos de fechas -->
+      <div class="filter-dates-grid">
+
+        <!-- Fecha Creación -->
+        <div class="date-range-group">
+          <span class="date-range-label">Fecha Creación</span>
+          <div class="date-range-fields">
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Desde</mat-label>
+              <input matInput [matDatepicker]="pickerCreacionDesde" [(ngModel)]="fechaCreacionDesde" (dateChange)="applyFilters()">
+              <mat-datepicker-toggle matIconSuffix [for]="pickerCreacionDesde"></mat-datepicker-toggle>
+              <mat-datepicker #pickerCreacionDesde></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Hasta</mat-label>
+              <input matInput [matDatepicker]="pickerCreacionHasta" [(ngModel)]="fechaCreacionHasta" [min]="fechaCreacionDesde" (dateChange)="applyFilters()">
+              <mat-datepicker-toggle matIconSuffix [for]="pickerCreacionHasta"></mat-datepicker-toggle>
+              <mat-datepicker #pickerCreacionHasta></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Fecha Inicio -->
+        <div class="date-range-group">
+          <span class="date-range-label">Fecha Inicio</span>
+          <div class="date-range-fields">
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Desde</mat-label>
+              <input matInput [matDatepicker]="pickerInicioDesde" [(ngModel)]="fechaInicioDesde" (dateChange)="applyFilters()">
+              <mat-datepicker-toggle matIconSuffix [for]="pickerInicioDesde"></mat-datepicker-toggle>
+              <mat-datepicker #pickerInicioDesde></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Hasta</mat-label>
+              <input matInput [matDatepicker]="pickerInicioHasta" [(ngModel)]="fechaInicioHasta" [min]="fechaInicioDesde" (dateChange)="applyFilters()">
+              <mat-datepicker-toggle matIconSuffix [for]="pickerInicioHasta"></mat-datepicker-toggle>
+              <mat-datepicker #pickerInicioHasta></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Fecha Finalización -->
+        <div class="date-range-group">
+          <span class="date-range-label">Fecha Finalización</span>
+          <div class="date-range-fields">
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Desde</mat-label>
+              <input matInput [matDatepicker]="pickerFinDesde" [(ngModel)]="fechaFinalizacionDesde" (dateChange)="applyFilters()">
+              <mat-datepicker-toggle matIconSuffix [for]="pickerFinDesde"></mat-datepicker-toggle>
+              <mat-datepicker #pickerFinDesde></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Hasta</mat-label>
+              <input matInput [matDatepicker]="pickerFinHasta" [(ngModel)]="fechaFinalizacionHasta" [min]="fechaFinalizacionDesde" (dateChange)="applyFilters()">
+              <mat-datepicker-toggle matIconSuffix [for]="pickerFinHasta"></mat-datepicker-toggle>
+              <mat-datepicker #pickerFinHasta></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+
+      </div>
+    }
     <!-- Fila 3: acciones -->
     <div class="filter-actions">
       <button mat-stroked-button class="btn-clear" (click)="clearFilter()">
         <mat-icon>filter_alt_off</mat-icon>
         Limpiar filtros
       </button>
-      <button mat-raised-button color="primary" class="btn-search" (click)="load()">
+      <!-- <button mat-raised-button color="primary" class="btn-search" (click)="load()">
         <mat-icon>search</mat-icon>
         Buscar
-      </button>
+      </button> -->
     </div>
 
   </div>
@@ -198,7 +201,7 @@
         <!-- Fecha Inicio -->
         <ng-container matColumnDef="fechaInicio">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Inicio</th>
-          <td mat-cell *matCellDef="let row">{{ row.fechaInicio | date:'yyyy-MM-dd' }}</td>
+          <td mat-cell *matCellDef="let row">{{ row.fechaInicio | date:'dd-MM-yyyy' }}</td>
         </ng-container>
 
         <!-- Estado -->
@@ -212,26 +215,65 @@
         <!-- Fecha Finalización -->
         <ng-container matColumnDef="fechaFinalizacion">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Finalización</th>
-          <td mat-cell *matCellDef="let row">{{ row.fechaFinalizacion | date:'yyyy-MM-dd' }}</td>
+          <td mat-cell *matCellDef="let row">{{ row.fechaFinalizacion | date:'dd-MM-yyyy' }}</td>
         </ng-container>
 
         <!-- Acciones -->
         <ng-container matColumnDef="acciones">
           <th mat-header-cell *matHeaderCellDef>Acciones</th>
           <td mat-cell *matCellDef="let row">
+
             @if (isPlanificado(row)) {
-              <button mat-icon-button color="accent" (click)="startProcess(row)" matTooltip="Iniciar proceso">
+              <button mat-icon-button color="primary" (click)="startProcess(row)" matTooltip="Iniciar proceso">
                 <mat-icon>play_arrow</mat-icon>
               </button>
+              <button mat-icon-button class="btn-cancelar" (click)="cambiarEstado(row, 'CANCELADO', true)" matTooltip="Cancelar orden">
+                <mat-icon>cancel</mat-icon>
+              </button>
             }
+
             @if (isEnProceso(row)) {
-              <button mat-icon-button color="primary" (click)="openStartTaskDialog(row)" matTooltip="Iniciar tarea">
+              <button mat-icon-button class="btn-primary-green" (click)="openStartTaskDialog(row)" matTooltip="Iniciar tarea">
                 <mat-icon>play_circle</mat-icon>
               </button>
-              <button mat-icon-button color="warn" (click)="stopOrder(row)" matTooltip="Terminar orden">
-                <mat-icon>stop_circle</mat-icon>
+              @if (isAdmin) {
+                <button mat-icon-button color="primary" (click)="cambiarEstado(row, 'PLANIFICADO')" matTooltip="Volver a planificado">
+                  <mat-icon>undo</mat-icon>
+                </button>
+                <button mat-icon-button class="btn-falta-material" (click)="cambiarEstado(row, 'FALTA MATERIAL')" matTooltip="Falta material">
+                  <mat-icon>production_quantity_limits</mat-icon>
+                </button>
+                <button mat-icon-button class="btn-revisar-plano" (click)="cambiarEstado(row, 'REVISAR PLANO')"
+                  matTooltip="Revisar plano">
+                  <mat-icon>rate_review</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="stopOrder(row)" matTooltip="Terminar orden">
+                  <mat-icon>stop_circle</mat-icon>
+                </button>
+                <button mat-icon-button class="btn-cancelar" (click)="cambiarEstado(row, 'CANCELADO', true)" matTooltip="Cancelar orden">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              }
+            }
+
+            @if (isRevisarPlano(row) && isAdmin) {
+              <button mat-icon-button color="primary" (click)="cambiarEstado(row, 'EN PROCESO')" matTooltip="Reanudar proceso">
+                <mat-icon>sync</mat-icon>
+              </button>
+              <button mat-icon-button class="btn-cancelar" (click)="cambiarEstado(row, 'CANCELADO', true)" matTooltip="Cancelar orden">
+                <mat-icon>cancel</mat-icon>
               </button>
             }
+
+            @if (isFaltaMaterial(row) && isAdmin) {
+              <button mat-icon-button color="primary" (click)="cambiarEstado(row, 'EN PROCESO')" matTooltip="Reanudar proceso">
+                <mat-icon>sync</mat-icon>
+              </button>
+              <button mat-icon-button class="btn-cancelar" (click)="cambiarEstado(row, 'CANCELADO', true)" matTooltip="Cancelar orden">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            }
+
           </td>
         </ng-container>
 

@@ -7,6 +7,23 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './auth/auth.interceptor';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { MatPaginatorIntl } from '@angular/material/paginator';
+
+function paginatorIntlEs(): MatPaginatorIntl {
+  const intl = new MatPaginatorIntl();
+  intl.itemsPerPageLabel = 'Items por página:';
+  intl.nextPageLabel     = 'Página siguiente';
+  intl.previousPageLabel = 'Página anterior';
+  intl.firstPageLabel    = 'Primera página';
+  intl.lastPageLabel     = 'Última página';
+  intl.getRangeLabel = (page, pageSize, length) => {
+    if (length === 0) return '0 de 0';
+    const start = page * pageSize + 1;
+    const end   = Math.min((page + 1) * pageSize, length);
+    return `${start} – ${end} de ${length}`;
+  };
+  return intl;
+}
 
 const APP_DATE_FORMATS = {
   parse: {
@@ -32,5 +49,6 @@ export const appConfig: ApplicationConfig = {
     }),
     { provide: MAT_DATE_LOCALE, useValue: 'es-AR' },
     { provide: MAT_DATE_FORMATS, useValue: APP_DATE_FORMATS },
+    { provide: MatPaginatorIntl, useFactory: paginatorIntlEs },
   ]
 };

@@ -8,6 +8,8 @@ export interface TareasDTO {
   id: number;
   ordenId: number;
   nroPlan: string | null;
+  productoCodigo: string | null;
+  productoDescripcion: string | null;
   operacionId: number;
   operacionNombre: string | null;
   operacionNombreCorto: string | null;

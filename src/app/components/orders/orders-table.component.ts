@@ -25,6 +25,7 @@ import { FinishOrderDialogComponent } from './finish-order-dialog.component';
 import { CreateOrderDialogComponent } from './create-order-dialog.component';
 import { OrdenCreateDTO } from '../../models/orden-create';
 import { FechaFormatoDirective } from '../../directives/fecha-formato.directive';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
 @Component({
   selector: 'app-orders-table',
@@ -220,42 +221,56 @@ export class OrdersTableComponent implements OnInit {
   statusClass(s?: string) {
     const val = (s || '').toUpperCase();
     switch (val) {
-      case 'REVISAR PLANO': return 'status revisar-plano';
-      case 'PLANIFICADO': return 'status planificado';
-      case 'EN PROCESO': return 'status en-proceso';
-      case 'TERMINADO': return 'status terminado';
+      case 'REVISAR PLANO':  return 'status revisar-plano';
+      case 'PLANIFICADO':    return 'status planificado';
+      case 'EN PROCESO':     return 'status en-proceso';
+      case 'TERMINADO':      return 'status terminado';
       case 'FALTA MATERIAL': return 'status falta-material';
-      default: return 'status otro';
+      case 'CANCELADO':      return 'status cancelado';
+      default:               return 'status otro';
     }
   }
 
-  canShowActions(row: any): boolean {
-    return row.situacionClave === 'EN PROCESO';
+  isPlanificado(row: any):    boolean { return row.situacionClave === 'PLANIFICADO'; }
+  isEnProceso(row: any):      boolean { return row.situacionClave === 'EN PROCESO'; }
+  isRevisarPlano(row: any):   boolean { return row.situacionClave === 'REVISAR PLANO'; }
+  isFaltaMaterial(row: any):  boolean { return row.situacionClave === 'FALTA MATERIAL'; }
+
+  cambiarEstado(order: OrdenResponseDTO, situacion: string, confirmar = false): void {
+    if (confirmar) {
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: {
+          titulo: 'Cancelar orden',
+          mensaje: `¿Confirma cancelar la orden ${order.ordNroPlan}? Esta acción no se puede deshacer.`,
+          botonConfirmar: 'Cancelar orden',
+          botonCancelar: 'Volver'
+        }
+      });
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) this.ejecutarCambioEstado(order, situacion);
+      });
+    } else {
+      this.ejecutarCambioEstado(order, situacion);
+    }
   }
 
-  isPlanificado(row: any): boolean {
-    return row.situacionClave === 'PLANIFICADO';
-  }
-
-  isEnProceso(row: any): boolean {
-    return row.situacionClave === 'EN PROCESO';
-  }
-
-  startProcess(order: OrdenResponseDTO): void {
-    const ordenAIniciar: OrdenResponseDTO = {
-      ...order,
-      situacionClave: 'EN PROCESO'
-    };
-    this.ordersSvc.avanzarOrden(ordenAIniciar).subscribe({
+  private ejecutarCambioEstado(order: OrdenResponseDTO, situacion: string): void {
+    const dto: OrdenResponseDTO = { ...order, situacionClave: situacion };
+    this.ordersSvc.avanzarOrden(dto).subscribe({
       next: () => {
-        this.snack.open('Orden iniciada correctamente', 'Cerrar', { duration: 3000 });
+        this.snack.open(`Estado actualizado: ${situacion}`, 'Cerrar', { duration: 3000 });
         this.load();
       },
       error: (err) => {
-        console.error('Error al iniciar orden:', err);
-        this.snack.open('Error al iniciar la orden', 'Cerrar', { duration: 5000 });
+        console.error('Error al cambiar estado:', err);
+        this.snack.open('Error al cambiar el estado', 'Cerrar', { duration: 5000 });
       }
     });
+  }
+
+  startProcess(order: OrdenResponseDTO): void {
+    this.cambiarEstado(order, 'EN PROCESO');
   }
 
   openStartTaskDialog(order: any) {

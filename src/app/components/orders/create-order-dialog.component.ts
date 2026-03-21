@@ -77,24 +77,6 @@ import { OrdenCreateDTO } from '../../models/orden-create';
           </mat-form-field>
         </div>
 
-        <!-- Hoja -->
-        <div class="form-row">
-          <label class="radio-label">Hoja:</label>
-          <mat-radio-group formControlName="hoja" class="radio-group">
-            <mat-radio-button value="SI">SI</mat-radio-button>
-            <mat-radio-button value="NO">NO</mat-radio-button>
-          </mat-radio-group>
-        </div>
-
-        <!-- Etiqueta -->
-        <div class="form-row">
-          <label class="radio-label">Etiqueta:</label>
-          <mat-radio-group formControlName="etiqueta" class="radio-group">
-            <mat-radio-button value="SI">SI</mat-radio-button>
-            <mat-radio-button value="NO">NO</mat-radio-button>
-          </mat-radio-group>
-        </div>
-
       </form>
     </mat-dialog-content>
 

@@ -113,10 +113,58 @@
   background: #ffffff;
   border: 1px solid #e0e4ea;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
 
-table {
-  width: 100%;
+  ::ng-deep {
+    .mat-mdc-table {
+      width: 100%;
+      background: transparent;
+      border-collapse: collapse;
+    }
+
+    // Header
+    .mat-mdc-header-row {
+      background: #f8f9fa;
+      height: auto;
+    }
+
+    .mat-mdc-header-cell {
+      color: #2c3e50;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 2px solid #dee2e6 !important;
+      white-space: nowrap;
+    }
+
+    // Filas
+    .mat-mdc-row {
+      border-bottom: 1px solid #e9ecef !important;
+      height: auto;
+      transition: background 0.15s;
+
+      &:last-child { border-bottom: none !important; }
+      &:hover { background: #f8f9fa; }
+    }
+
+    .mat-mdc-cell {
+      color: #444;
+      font-size: 0.875rem;
+      padding: 0.7rem 1rem;
+      border-bottom: none !important;
+    }
+
+    // Columna acciones: centrada
+    .mat-column-acciones {
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    // Sort header: quitar el subrayado punteado de Material
+    .mat-sort-header-content {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+  }
 }
 
 .loading {
@@ -125,15 +173,51 @@ table {
   padding: 40px;
 }
 
-/* ── Estados ── */
-.status {
-  font-weight: 600;
-  letter-spacing: .3px;
+/* ── Botones de acción custom ── */
+.btn-revisar-plano {
+  color: #ccb05d !important;
+
+  &:hover {
+    background: rgba(239, 108, 0, 0.08) !important;
+  }
 }
 
-.status.revisar-plano  { color: #a67c00; }
-.status.planificado    { color: #0277bd; }
-.status.en-proceso     { color: #ef6c00; }
-.status.terminado      { color: #2e7d32; }
-.status.falta-material { color: #c62828; }
-.status.otro           { color: #616161; }
+.btn-falta-material {
+  color: #ef6c00 !important;
+
+  &:hover { background: rgba(239, 108, 0, 0.08) !important; }
+}
+
+.btn-cancelar {
+  color: #464646 !important;
+  // color: red !important;
+  &:hover { background: rgba(47, 38, 185, 0.08) !important; }
+}
+
+//#2e7d32 !important;
+.btn-primary-green {
+  // color: red !important;
+  color: #2e7d32 !important;
+  &:hover {
+    background: rgba(46, 125, 50, 0.08) !important;
+  }
+}
+
+/* ── Estados ── */
+.status {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: .3px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.status.revisar-plano  { color: #8a6200; background: #fef3d0; }
+.status.planificado    { color: #1565a8; background: #ddeef9; }
+.status.en-proceso     { color: #2e7d3e; background: #d6f0dc; }
+.status.terminado      { color: #ad1f1f; background: #fde8e8; }
+.status.falta-material { color: #b85200; background: #fde8d4; }
+.status.cancelado      { color: #555555; background: #ebebeb; }
+.status.otro           { color: #555555; background: #ebebeb; }

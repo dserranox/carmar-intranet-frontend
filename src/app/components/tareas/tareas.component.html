@@ -7,28 +7,66 @@
       <!-- Filtro Nro plan -->
       <mat-form-field appearance="outline" class="full">
         <mat-label>Nro Plan</mat-label>
-        <input matInput placeholder="Nro PLan" [(ngModel)]="filtroNroPlan"
-          (ngModelChange)="onNroPlanChange($event)">
+        <mat-select [(ngModel)]="filtroNroPlan" (ngModelChange)="onNroPlanChange($event)">
+          <mat-option value="">Todos</mat-option>
+          @for (p of nroPlanes; track p) {
+            <mat-option [value]="p">{{ p }}</mat-option>
+          }
+        </mat-select>
       </mat-form-field>
 
       <!-- Filtro Operación -->
       <mat-form-field appearance="outline" class="full">
         <mat-label>Operación</mat-label>
-        <input matInput placeholder="Nombre o nombre corto" [(ngModel)]="filtroOperacion"
-          (ngModelChange)="onOperacionChange($event)">
-      </mat-form-field>
-
-      <!-- Filtro Usuario (solo si permiso) -->
-      @if (canReadAll) {
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Usuario</mat-label>
-        <mat-select [(ngModel)]="filtroUsuario" (ngModelChange)="onUsuarioChange($event)">
-          <mat-option [value]="''">Todos</mat-option>
-          @for (u of usuariosUnicos; track u) {
-          <mat-option [value]="u">{{ u }}</mat-option>
+        <mat-select [(ngModel)]="filtroOperacion" (ngModelChange)="onOperacionChange($event)">
+          <mat-option value="">Todas</mat-option>
+          @for (op of operaciones; track op.nombreCorto) {
+            <mat-option [value]="op.nombreCorto">{{ op.nombreCorto }} — {{ op.nombre }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
+
+      <!-- Filtros solo admin -->
+      @if (canReadAll) {
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Código</mat-label>
+          <mat-select [(ngModel)]="filtroCodigoProducto" (ngModelChange)="onCodigoChange($event)">
+            <mat-option value="">Todos</mat-option>
+            @for (cod of codigos; track cod) {
+              <mat-option [value]="cod">{{ cod }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Producto</mat-label>
+          <mat-select [(ngModel)]="filtroProducto" (ngModelChange)="onProductoChange($event)">
+            <mat-option value="">Todos</mat-option>
+            @for (p of productos; track p) {
+              <mat-option [value]="p">{{ p }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nro. Máquina</mat-label>
+          <mat-select [(ngModel)]="filtroNroMaquina" (ngModelChange)="onNroMaquinaChange($event)">
+            <mat-option [value]="''">Todos</mat-option>
+            @for (m of nroMaquinas; track m) {
+              <mat-option [value]="m">{{ m }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Usuario</mat-label>
+          <mat-select [(ngModel)]="filtroUsuario" (ngModelChange)="onUsuarioChange($event)">
+            <mat-option [value]="''">Todos</mat-option>
+            @for (u of usuariosUnicos; track u) {
+              <mat-option [value]="u">{{ u }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
       }
 
       <!-- Fecha desde -->
@@ -43,11 +81,13 @@
         <input matInput type="date" [(ngModel)]="filtroFechaHasta" (ngModelChange)="onHastaChange($event)">
       </mat-form-field> -->
 
-      <div class="actions">
-        <button mat-stroked-button (click)="limpiarFiltros()">
-          Limpiar filtros
-        </button>
-      </div>
+    </div>
+
+    <div class="actions">
+      <button mat-stroked-button class="btn-clear" (click)="limpiarFiltros()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Limpiar filtros
+      </button>
     </div>
   </header>
 
@@ -59,20 +99,42 @@
     } @else {
     <table mat-table [dataSource]="filtered" class="mat-elevation-z1">
 
-      <!-- Fecha -->
+      <!-- Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let row">
+          @if (row.fechaFinalizacion == null) {
+            <button mat-icon-button color="warn" (click)="finalizarTarea(row)" matTooltip="Finalizar tarea">
+              <mat-icon>stop_circle</mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+
+      <!-- Fecha Creación -->
       <ng-container matColumnDef="fecha">
-        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+        <th mat-header-cell *matHeaderCellDef>Fecha Creación</th>
         <td mat-cell *matCellDef="let row" [class.highlight]="isHighlighted(row)">
           {{ toDate(row.fechaInicio) | date:'dd/MM/yyyy' }}
         </td>
       </ng-container>
 
-      <!-- Nro PLan -->
+      <!-- Nro Plan -->
       <ng-container matColumnDef="nroPlan">
         <th mat-header-cell *matHeaderCellDef>Nro. Plan</th>
-        <td mat-cell *matCellDef="let row">
-          {{ row.nroPlan ?? '-' }}
-        </td>
+        <td mat-cell *matCellDef="let row">{{ row.nroPlan ?? '-' }}</td>
+      </ng-container>
+
+      <!-- Código Producto -->
+      <ng-container matColumnDef="codigoProducto">
+        <th mat-header-cell *matHeaderCellDef>Código</th>
+        <td mat-cell *matCellDef="let row">{{ row.productoCodigo ?? '-' }}</td>
+      </ng-container>
+
+      <!-- Producto -->
+      <ng-container matColumnDef="producto">
+        <th mat-header-cell *matHeaderCellDef>Producto</th>
+        <td mat-cell *matCellDef="let row">{{ row.productoDescripcion ?? '-' }}</td>
       </ng-container>
 
       <!-- Operación -->
@@ -89,13 +151,12 @@
         <td mat-cell *matCellDef="let row">{{ row.nroMaquina ?? '-' }}</td>
       </ng-container>
 
-      @if (canReadAll) {
-        <!-- Operario -->
-        <ng-container matColumnDef="operario">
-          <th mat-header-cell *matHeaderCellDef>Operario</th>
-          <td mat-cell *matCellDef="let row">{{ row.username }}</td>
-        </ng-container>
-      }
+      <!-- Operario (solo admin) -->
+      <ng-container matColumnDef="operario">
+        <th mat-header-cell *matHeaderCellDef>Operario</th>
+        <td mat-cell *matCellDef="let row">{{ row.username }}</td>
+      </ng-container>
+
       <!-- Hora Inicio -->
       <ng-container matColumnDef="horaInicio">
         <th mat-header-cell *matHeaderCellDef>Hora Inicio</th>
@@ -104,9 +165,9 @@
         </td>
       </ng-container>
 
-      <!-- Hora fin -->
+      <!-- Hora Fin -->
       <ng-container matColumnDef="horaFin">
-        <th mat-header-cell *matHeaderCellDef>Hora fin</th>
+        <th mat-header-cell *matHeaderCellDef>Hora Fin</th>
         <td mat-cell *matCellDef="let row">
           {{ toDate(row.fechaFinalizacion) | date:'HH:mm' }}
         </td>
@@ -118,12 +179,35 @@
         <td mat-cell *matCellDef="let row">{{ row.cantidad ?? '-' }}</td>
       </ng-container>
 
-      <!-- Tiempo proceso -->
+      <!-- Piezas No Conforme -->
+      <ng-container matColumnDef="noConforme">
+        <th mat-header-cell *matHeaderCellDef>Piezas NC</th>
+        <td mat-cell *matCellDef="let row">{{ row.noConforme ?? '-' }}</td>
+      </ng-container>
+
+      <!-- Tiempo Proceso -->
       <ng-container matColumnDef="tiempo">
-        <th mat-header-cell *matHeaderCellDef>Tiempo proceso</th>
+        <th mat-header-cell *matHeaderCellDef>Tiempo Proceso</th>
         <td mat-cell *matCellDef="let row">
-          <span appTiempoProceso [start]="row.fechaInicio" [end]="row.fechaFinalizacion">
-          </span>
+          <span appTiempoProceso [start]="row.fechaInicio" [end]="row.fechaFinalizacion"></span>
+        </td>
+      </ng-container>
+
+      <!-- Tiempo Demora -->
+      <ng-container matColumnDef="tiempodemora">
+        <th mat-header-cell *matHeaderCellDef>Tiempo Demora</th>
+        <td mat-cell *matCellDef="let row"
+            [matTooltip]="tiempoDemoraTooltip(row)"
+            matTooltipPosition="above">
+          {{ tiempoDemora(row) }}
+        </td>
+      </ng-container>
+
+      <!-- Estado -->
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let row">
+          <span [ngClass]="estadoClass(row)">{{ estadoTarea(row) }}</span>
         </td>
       </ng-container>
 
@@ -140,28 +224,16 @@
         <th mat-header-cell *matHeaderCellDef>Documentos</th>
         <td mat-cell *matCellDef="let row" class="docs-cell">
           @if (row.documentos?.length ?? 0) {
-          <div class="docs-wrap">
-            @for (doc of row.documentos; track doc.odoId) {
-            <a class="doc-item" [href]="doc.pdoDriveUrl" target="_blank" rel="noopener" matTooltip="{{ doc.pdoNombre }}">
-              <mat-icon class="doc-icon">description</mat-icon>
-              <span class="doc-label">{{ docLabel(doc.pdoNombre) }}</span>
-            </a>
-            }
-          </div>
+            <div class="docs-wrap">
+              @for (doc of row.documentos; track doc.pdoId) {
+                <a class="doc-item" [href]="doc.pdoDriveUrl" target="_blank" rel="noopener" matTooltip="{{ doc.pdoNombre }}">
+                  <mat-icon class="doc-icon">description</mat-icon>
+                  <span class="doc-label">{{ docLabel(doc.pdoNombre) }}</span>
+                </a>
+              }
+            </div>
           } @else {
-          —
-          }
-        </td>
-      </ng-container>
-
-      <!-- Acciones -->
-      <ng-container matColumnDef="acciones">
-        <th mat-header-cell *matHeaderCellDef>Acciones</th>
-        <td mat-cell *matCellDef="let row">
-          @if (row.fechaFinalizacion == null) {
-            <button mat-icon-button color="warn" (click)="finalizarTarea(row)" matTooltip="Finalizar tarea">
-              <mat-icon>stop_circle</mat-icon>
-            </button>
+            —
           }
         </td>
       </ng-container>

@@ -39,10 +39,20 @@ export class TareasComponent implements OnInit {
   allTasks: TareasDTO[] = [];
   filtered: TareasDTO[] = [];
 
+  // filter options (populated from loaded data)
+  nroPlanes: string[] = [];
+  operaciones: { nombreCorto: string; nombre: string }[] = [];
+  codigos: string[] = [];
+  productos: string[] = [];
+  nroMaquinas: number[] = [];
+
   // filters
   filtroOperacion = signal<string>('');
   filtroNroPlan = signal<string>('');
   filtroUsuario = signal<string>('');
+  filtroCodigoProducto = signal<string>('');
+  filtroProducto = signal<string>('');
+  filtroNroMaquina = signal<number | ''>('');
   filtroFechaDesde = signal<string>(''); // 'yyyy-MM-dd'
   filtroFechaHasta = signal<string>(''); // 'yyyy-MM-dd'
 
@@ -63,18 +73,18 @@ export class TareasComponent implements OnInit {
   }
 
   displayedColumns = [
-    'fecha','nroPlan','operacion','nroMaquina','operario',
-    'horaInicio','horaFin','cantidad','tiempo','observaciones','documentos','acciones'
+    'acciones','fecha','nroPlan','codigoProducto','producto','operacion','nroMaquina','operario',
+    'horaInicio','horaFin','cantidad','noConforme','tiempo','tiempodemora','estado','observaciones','documentos'
   ];
 
   ngOnInit(): void {
     this.resolvePermissions();
 
-    if(!this.canReadAll){
+    if (!this.canReadAll) {
       this.displayedColumns = [
-    'fecha', 'nroPlan', 'operacion','nroMaquina',
-    'horaInicio','horaFin','cantidad','tiempo','observaciones','documentos','acciones'
-  ]
+        'acciones','fecha','nroPlan','codigoProducto','operacion',
+        'horaInicio','horaFin','cantidad','noConforme','tiempo','tiempodemora','estado'
+      ];
     }
     this.route.queryParamMap.subscribe(qp => {
       const tid = qp.get('taskId');
@@ -87,6 +97,7 @@ export class TareasComponent implements OnInit {
     this.tasksService.listarTareas().subscribe({
       next: (tasks) => {
         this.allTasks = tasks || [];
+        this.buildFilterOptions(this.allTasks);
         this.applyFilters();
       },
       error: () => {
@@ -96,6 +107,22 @@ export class TareasComponent implements OnInit {
       }
     });
 
+  }
+
+  private buildFilterOptions(tasks: TareasDTO[]): void {
+    this.nroPlanes = [...new Set(tasks.map(t => t.nroPlan).filter((v): v is string => !!v))].sort((a, b) => b.localeCompare(a));
+
+    const opMap = new Map<string, string>();
+    tasks.forEach(t => {
+      if (t.operacionNombreCorto) opMap.set(t.operacionNombreCorto, t.operacionNombre ?? '');
+    });
+    this.operaciones = Array.from(opMap.entries())
+      .map(([nombreCorto, nombre]) => ({ nombreCorto, nombre }))
+      .sort((a, b) => a.nombreCorto.localeCompare(b.nombreCorto));
+
+    this.codigos   = [...new Set(tasks.map(t => t.productoCodigo).filter((v): v is string => !!v))].sort();
+    this.productos = [...new Set(tasks.map(t => t.productoDescripcion).filter((v): v is string => !!v))].sort();
+    this.nroMaquinas = [...new Set(tasks.map(t => t.nroMaquina).filter((v): v is number => v != null))].sort((a, b) => a - b);
   }
 
   private resolvePermissions() {
@@ -113,6 +140,9 @@ export class TareasComponent implements OnInit {
   onOperacionChange(val: string) { this.filtroOperacion.set(val || ''); this.applyFilters(); }
   onNroPlanChange(val: string) { this.filtroNroPlan.set(val || ''); this.applyFilters(); }
   onUsuarioChange(val: string) { this.filtroUsuario.set(val || ''); this.applyFilters(); }
+  onCodigoChange(val: string) { this.filtroCodigoProducto.set(val || ''); this.applyFilters(); }
+  onProductoChange(val: string) { this.filtroProducto.set(val || ''); this.applyFilters(); }
+  onNroMaquinaChange(val: number | '') { this.filtroNroMaquina.set(val); this.applyFilters(); }
   onDesdeChange(val: string) { this.filtroFechaDesde.set(val || ''); this.applyFilters(); }
   onHastaChange(val: string) { this.filtroFechaHasta.set(val || ''); this.applyFilters(); }
 
@@ -120,15 +150,21 @@ export class TareasComponent implements OnInit {
     this.filtroOperacion.set('');
     this.filtroNroPlan.set('');
     this.filtroUsuario.set('');
+    this.filtroCodigoProducto.set('');
+    this.filtroProducto.set('');
+    this.filtroNroMaquina.set('');
     this.filtroFechaDesde.set('');
     this.filtroFechaHasta.set('');
     this.applyFilters();
   }
 
   private applyFilters() {
-    const op = this.filtroOperacion().toLowerCase().trim();
-    const nroP = this.filtroNroPlan().toLowerCase().trim();
+    const op = this.filtroOperacion();
+    const nroP = this.filtroNroPlan();
     const user = this.filtroUsuario().toLowerCase().trim();
+    const cod = this.filtroCodigoProducto();
+    const prod = this.filtroProducto();
+    const maq = this.filtroNroMaquina();
     const d = this.filtroFechaDesde();
     const h = this.filtroFechaHasta();
 
@@ -136,16 +172,14 @@ export class TareasComponent implements OnInit {
     const dTo = h ? new Date(h + 'T23:59:59') : null;
 
     this.filtered = this.allTasks.filter(t => {
-      // operacion filter
-      const opBlob = `${t.operacionNombre ?? ''} ${t.operacionNombreCorto ?? ''}`.toLowerCase();
-      if (op && !opBlob.includes(op)) return false;
+      if (op && t.operacionNombreCorto !== op) return false;
+      if (nroP && t.nroPlan !== nroP) return false;
 
-      // nro plan filter
-      const npF = `${t.nroPlan ?? ''}`.toLowerCase();
-      if (nroP && !npF.includes(nroP)) return false;
-
-      // user filter (only if canReadAll and selected any)
+      // filtros solo admin
       if (this.canReadAll && user && !(t.username ?? '').toLowerCase().includes(user)) return false;
+      if (this.canReadAll && cod && t.productoCodigo !== cod) return false;
+      if (this.canReadAll && prod && t.productoDescripcion !== prod) return false;
+      if (this.canReadAll && maq !== '' && t.nroMaquina !== maq) return false;
 
       // date range on fechaInicio
       if (dFrom || dTo) {
@@ -187,7 +221,7 @@ export class TareasComponent implements OnInit {
         next: () => {
           this.snackFinalizarTarea.open('Tarea finalizada', 'OK', { duration: 2500 });
           this.tasksService.listarTareas().subscribe({
-            next: (tasks) => { this.allTasks = tasks || []; this.applyFilters(); },
+            next: (tasks) => { this.allTasks = tasks || []; this.buildFilterOptions(this.allTasks); this.applyFilters(); },
             error: () => { this.snack.open('No se pudo refrescar la lista', 'OK', { duration: 2500 }); }
           });
         },
@@ -208,5 +242,37 @@ export class TareasComponent implements OnInit {
 
   isHighlighted(row: TareasDTO): boolean {
     return !!this.highlightedTaskId && row.id === this.highlightedTaskId;
+  }
+
+  estadoTarea(row: TareasDTO): 'EN PROCESO' | 'TERMINADO' {
+    return row.fechaFinalizacion == null ? 'EN PROCESO' : 'TERMINADO';
+  }
+
+  estadoClass(row: TareasDTO): string {
+    return row.fechaFinalizacion == null ? 'status en-proceso' : 'status terminado';
+  }
+
+  tiempoDemoraTooltip(row: TareasDTO): string {
+    const r = row.perdidaRendimiento ?? 0;
+    const m = row.perdidaMantenimiento ?? 0;
+    const c = row.perdidaCalidad ?? 0;
+    return `Rendimiento: ${r} min | Mantenimiento: ${m} min | Calidad: ${c} min`;
+  }
+
+  tiempoDemora(row: TareasDTO): string {
+    const start = row.fechaInicio ? new Date(row.fechaInicio) : null;
+    const end   = row.fechaFinalizacion ? new Date(row.fechaFinalizacion) : null;
+    const procesoMs = (start && end) ? Math.max(0, end.getTime() - start.getTime()) : 0;
+
+    const demoraMs = ((row.perdidaRendimiento ?? 0) + (row.perdidaMantenimiento ?? 0) + (row.perdidaCalidad ?? 0)) * 60_000;
+
+    const totalMs = procesoMs + demoraMs;
+    if (totalMs === 0) return '—';
+
+    const totalSeg = Math.floor(totalMs / 1000);
+    const min = Math.floor((totalSeg % 3600) / 60);
+    const seg = totalSeg % 60;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(min)}:${pad(seg)}`;
   }
 }
