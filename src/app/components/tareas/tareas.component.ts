@@ -270,7 +270,7 @@ export class TareasComponent implements OnInit {
     if (totalMs === 0) return '—';
 
     const totalSeg = Math.floor(totalMs / 1000);
-    const min = Math.floor((totalSeg % 3600) / 60);
+    const min = Math.floor(totalSeg / 60);
     const seg = totalSeg % 60;
     const pad = (n: number) => n.toString().padStart(2, '0');
     return `${pad(min)}:${pad(seg)}`;

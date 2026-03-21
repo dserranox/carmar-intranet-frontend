@@ -36,6 +36,7 @@ export interface FinishTaskDialogResult {
 })
 export class FinishTaskDialogComponent {
   form: FormGroup;
+  maxDemoraMinutos: number;
 
   constructor(
     private fb: FormBuilder,
@@ -43,14 +44,50 @@ export class FinishTaskDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: FinishTaskDialogData
   ) {
     const initialCantidad = data?.tarea?.ordCantidad ?? null;
+    this.maxDemoraMinutos = data?.tarea?.fechaInicio
+      ? Math.floor((Date.now() - new Date(data.tarea.fechaInicio).getTime()) / 60_000)
+      : Infinity;
+
     this.form = this.fb.group({
-      cantidad: [initialCantidad, [Validators.required, Validators.pattern(/^\d+$/)]],
+      cantidad: [initialCantidad, [Validators.required, Validators.pattern(/^\d+$/), Validators.min(1)]],
       observaciones: [data?.tarea?.observaciones ?? null],
       noConforme: [null],
       perdidaRendimiento: [null],
       perdidaMantenimiento: [null],
       perdidaCalidad: [null]
     });
+
+    // Revalidar noConforme cuando cambia cantidad o noConforme
+    this.form.get('noConforme')?.valueChanges.subscribe(() => this.validateNoConforme());
+    this.form.get('cantidad')?.valueChanges.subscribe(() => this.validateNoConforme());
+
+    // Revalidar demora cuando cambia cualquiera de los tres campos
+    ['perdidaRendimiento', 'perdidaMantenimiento', 'perdidaCalidad'].forEach(f =>
+      this.form.get(f)?.valueChanges.subscribe(() => this.validateDemora())
+    );
+  }
+
+  private validateNoConforme(): void {
+    const cantidad = Number(this.form.get('cantidad')?.value);
+    const noConf = Number(this.form.get('noConforme')?.value);
+    const ctrl = this.form.get('noConforme');
+    if (!isNaN(noConf) && !isNaN(cantidad) && noConf > cantidad) {
+      ctrl?.setErrors({ noConformeExcedeCantidad: true });
+    } else if (ctrl?.hasError('noConformeExcedeCantidad')) {
+      ctrl.setErrors(null);
+    }
+  }
+
+  private validateDemora(): void {
+    const total = (Number(this.form.get('perdidaRendimiento')?.value) || 0)
+                + (Number(this.form.get('perdidaMantenimiento')?.value) || 0)
+                + (Number(this.form.get('perdidaCalidad')?.value) || 0);
+    const ctrl = this.form.get('perdidaCalidad');
+    if (total > this.maxDemoraMinutos) {
+      ctrl?.setErrors({ demoraExcedeProceso: true });
+    } else if (ctrl?.hasError('demoraExcedeProceso')) {
+      ctrl.setErrors(null);
+    }
   }
 
   cancelar(): void { this.ref.close(); }

@@ -10,14 +10,21 @@
       <mat-form-field appearance="fill" class="full">
         <mat-label>Cantidad</mat-label>
         <input matInput inputmode="numeric" pattern="^\d+$" formControlName="cantidad" placeholder="Solo enteros" />
-        @if (form.get('cantidad')?.invalid && form.get('cantidad')?.touched) {
-          <mat-error>La cantidad es obligatoria y debe ser un entero.</mat-error>
+        @if (form.get('cantidad')?.touched) {
+          @if (form.get('cantidad')?.hasError('required')) {
+            <mat-error>La cantidad es obligatoria.</mat-error>
+          } @else if (form.get('cantidad')?.hasError('min') || form.get('cantidad')?.hasError('pattern')) {
+            <mat-error>La cantidad debe ser un entero mayor a 0.</mat-error>
+          }
         }
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="full">
         <mat-label>Piezas no conformes</mat-label>
         <input matInput type="number" formControlName="noConforme" placeholder="Opcional" min="0" />
+        @if (form.get('noConforme')?.hasError('noConformeExcedeCantidad')) {
+          <mat-error>No puede superar la cantidad de piezas ({{ form.get('cantidad')?.value }}).</mat-error>
+        }
       </mat-form-field>
 
       <div class="section-title">Tiempos de demora (minutos)</div>
@@ -35,6 +42,9 @@
       <mat-form-field appearance="fill" class="full">
         <mat-label>Perdida por calidad</mat-label>
         <input matInput type="number" formControlName="perdidaCalidad" placeholder="Opcional" min="0" />
+        @if (form.get('perdidaCalidad')?.hasError('demoraExcedeProceso')) {
+          <mat-error>La sumatoria no puede superar el tiempo de proceso ({{ maxDemoraMinutos }} min).</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="full">
