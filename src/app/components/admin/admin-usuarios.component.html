@@ -1,0 +1,116 @@
+<section class="admin-wrapper">
+
+  <!-- Encabezado -->
+  <header class="page-header">
+    <h2>Administrar Usuarios</h2>
+    <button mat-raised-button class="btn-nuevo" (click)="nuevoUsuario()">
+      <mat-icon>add</mat-icon>
+      Nuevo Usuario
+    </button>
+  </header>
+
+  <!-- Filtros -->
+  <div class="filter-panel">
+    <div class="filter-grid">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Usuario</mat-label>
+        <input matInput placeholder="Buscar por nombre de usuario"
+               [(ngModel)]="filtroUsername"
+               (ngModelChange)="onFiltroChange($event)">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+    <div class="filter-actions">
+      <button mat-stroked-button class="btn-clear" (click)="limpiarFiltro()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Limpiar filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  @if (loading) {
+    <div class="loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table mat-table [dataSource]="filtered">
+
+        <!-- Username -->
+        <ng-container matColumnDef="username">
+          <th mat-header-cell *matHeaderCellDef>Usuario</th>
+          <td mat-cell *matCellDef="let row">{{ row.username }}</td>
+        </ng-container>
+
+        <!-- Email -->
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let row">{{ row.email ?? '—' }}</td>
+        </ng-container>
+
+        <!-- Roles -->
+        <ng-container matColumnDef="roles">
+          <th mat-header-cell *matHeaderCellDef>Rol</th>
+          <td mat-cell *matCellDef="let row">
+            @if (row.roles?.length) {
+              <div class="roles-wrap">
+                @for (rol of row.roles; track rol) {
+                  <span class="rol-badge" [class.rol-admin]="rol === 'ADMIN'">{{ rol }}</span>
+                }
+              </div>
+            } @else {
+              <span>—</span>
+            }
+          </td>
+        </ng-container>
+
+        <!-- Fecha Creación -->
+        <ng-container matColumnDef="fechaCreacion">
+          <th mat-header-cell *matHeaderCellDef>Fecha Alta</th>
+          <td mat-cell *matCellDef="let row">{{ row.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+        </ng-container>
+
+        <!-- Activo -->
+        <ng-container matColumnDef="activo">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let row">
+            <span [class]="row.activo ? 'status activo' : 'status inactivo'">
+              {{ row.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Acciones -->
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-icon-button color="primary" (click)="verUsuario(row)" matTooltip="Ver detalle">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button class="btn-edit" (click)="editarUsuario(row)" matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            @if (row.activo) {
+              <button mat-icon-button class="btn-baja" (click)="darDeBaja(row)" matTooltip="Dar de baja">
+                <mat-icon>person_off</mat-icon>
+              </button>
+            } @else {
+              <button mat-icon-button class="btn-alta" (click)="darDeAlta(row)" matTooltip="Dar de alta">
+                <mat-icon>person_add</mat-icon>
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      @if (filtered.length === 0) {
+        <div class="empty">No hay usuarios para los filtros seleccionados.</div>
+      }
+    </div>
+  }
+
+</section>

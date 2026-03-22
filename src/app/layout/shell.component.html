@@ -10,7 +10,25 @@
 
   <div class="userbox">
     <span class="username">{{ username }}</span>
-    <mat-icon class="avatar" aria-hidden="true">account_circle</mat-icon>
+
+    <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Menú de usuario" matTooltip="Mi cuenta">
+      <mat-icon class="avatar">account_circle</mat-icon>
+    </button>
+
+    <mat-menu #userMenu="matMenu" xPosition="before">
+      <button mat-menu-item (click)="irPerfil()">
+        <mat-icon>person</mat-icon>
+        <span>Perfil</span>
+      </button>
+      @if (isAdmin) {
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="irAdminUsuarios()">
+          <mat-icon>manage_accounts</mat-icon>
+          <span>Administrar Usuarios</span>
+        </button>
+      }
+    </mat-menu>
+
     <button mat-icon-button (click)="logout()" aria-label="Salir" matTooltip="Salir">
       <mat-icon>logout</mat-icon>
     </button>

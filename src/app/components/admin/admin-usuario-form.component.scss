@@ -1,0 +1,147 @@
+.perfil-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.perfil-card {
+  background: #fff;
+  border: 1px solid #e0e4ea;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+}
+
+/* ── Header ── */
+.perfil-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.perfil-icon {
+  font-size: 52px;
+  width: 52px;
+  height: 52px;
+  color: #0b5966;
+}
+
+.perfil-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.perfil-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #607d8b;
+}
+
+/* ── Form ── */
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.full { width: 100%; }
+
+.divider {
+  margin: 12px 0 8px;
+}
+
+/* ── Sección contraseña ── */
+.section-label {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #546e7a;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.optional {
+  font-weight: 400;
+  text-transform: none;
+  color: #90a4ae;
+}
+
+/* ── Estado ── */
+.estado-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0 8px;
+}
+
+.estado-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #546e7a;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.status {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.status.activo   { color: #2e7d3e; background: #d6f0dc; }
+.status.inactivo { color: #ad1f1f; background: #fde8e8; }
+
+/* ── Acciones ── */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-cancel {
+  color: #546e7a;
+  border-color: #cfd8dc !important;
+}
+
+.btn-baja {
+  color: #b71c1c !important;
+  border-color: #ef9a9a !important;
+}
+
+.btn-alta {
+  color: #2e7d3e !important;
+  border-color: #a5d6a7 !important;
+}
+
+.btn-save {
+  background: #0b5966 !important;
+  color: #fff !important;
+}
+
+.btn-save[disabled] {
+  opacity: 0.65;
+}
+
+.btn-edit {
+  background: #0b5966 !important;
+  color: #fff !important;
+}
+
+/* ── Loading ── */
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}

@@ -14,6 +14,11 @@ export const routes: Routes = [
     children: [
       { path: 'ordenes', loadComponent: () => import('./components/orders/orders-table.component').then(m => m.OrdersTableComponent) },
       { path: 'tareas', loadComponent: () => import('./components/tareas/tareas.component').then(m => m.TareasComponent) },
+      { path: 'perfil', loadComponent: () => import('./components/perfil/perfil.component').then(m => m.PerfilComponent) },
+      { path: 'admin/usuarios', loadComponent: () => import('./components/admin/admin-usuarios.component').then(m => m.AdminUsuariosComponent) },
+      { path: 'admin/usuarios/nuevo', loadComponent: () => import('./components/admin/admin-usuario-form.component').then(m => m.AdminUsuarioFormComponent), data: { mode: 'nuevo' } },
+      { path: 'admin/usuarios/:id/ver', loadComponent: () => import('./components/admin/admin-usuario-form.component').then(m => m.AdminUsuarioFormComponent), data: { mode: 'ver' } },
+      { path: 'admin/usuarios/:id/editar', loadComponent: () => import('./components/admin/admin-usuario-form.component').then(m => m.AdminUsuarioFormComponent), data: { mode: 'editar' } },
       { path: '', pathMatch: 'full', redirectTo: 'ordenes' }
     ]
   },

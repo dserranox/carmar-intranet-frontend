@@ -1,0 +1,148 @@
+<div class="perfil-wrapper">
+  <div class="perfil-card">
+
+    <div class="perfil-header">
+      <mat-icon class="perfil-icon">manage_accounts</mat-icon>
+      <div>
+        <h2 class="perfil-title">
+          @if (modoNuevo) { Nuevo Usuario }
+          @else if (modoEdicion) { Editar Usuario }
+          @else { Ver Usuario }
+        </h2>
+        <p class="perfil-subtitle">
+          @if (modoNuevo) { Completá los datos del nuevo usuario }
+          @else if (modoEdicion) { Modificar datos del usuario }
+          @else { Datos del usuario }
+        </p>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="loading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else {
+      <form [formGroup]="form" class="form-grid">
+
+        <!-- Usuario -->
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Usuario</mat-label>
+          <input matInput formControlName="username" autocomplete="off" />
+          <mat-icon matSuffix>person</mat-icon>
+          @if (!modoNuevo) {
+            <mat-hint>El nombre de usuario no se puede modificar.</mat-hint>
+          }
+          @if (form.get('username')?.touched && form.get('username')?.hasError('required')) {
+            <mat-error>El nombre de usuario es obligatorio.</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Email -->
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" autocomplete="off" />
+          <mat-icon matSuffix>email</mat-icon>
+          @if (modoNuevo || modoEdicion) {
+            <mat-hint>Formato mail inválido.</mat-hint>
+          }
+          @if (form.get('email')?.touched && form.get('email')?.hasError('required')) {
+            <mat-error>El email es obligatorio.</mat-error>
+          } @else if (form.get('email')?.touched && (form.get('email')?.hasError('email') || form.get('email')?.hasError('carMarDomain'))) {
+            <mat-error>Dominio mail inválido.</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Roles -->
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Roles</mat-label>
+          <mat-select formControlName="roles" multiple>
+            @for (rol of rolesDisponibles; track rol) {
+              <mat-option [value]="rol">{{ rol }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Contraseña (nuevo: requerida / editar: opcional) -->
+        @if (modoNuevo || modoEdicion) {
+          <mat-divider class="divider"></mat-divider>
+          <p class="section-label">
+            Contraseña
+            @if (modoEdicion) { <span class="optional">(opcional)</span> }
+          </p>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>{{ modoNuevo ? 'Contraseña' : 'Nueva contraseña' }}</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'"
+                   formControlName="password" autocomplete="new-password" />
+            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (form.get('password')?.touched && form.get('password')?.hasError('required')) {
+              <mat-error>La contraseña es obligatoria.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Confirmar contraseña</mat-label>
+            <input matInput [type]="hideConfirmar ? 'password' : 'text'"
+                   formControlName="confirmarPassword" autocomplete="new-password" />
+            <button mat-icon-button matSuffix type="button" (click)="hideConfirmar = !hideConfirmar">
+              <mat-icon>{{ hideConfirmar ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (form.get('confirmarPassword')?.touched && form.get('confirmarPassword')?.hasError('required')) {
+              <mat-error>Confirmá la contraseña.</mat-error>
+            } @else if (form.get('confirmarPassword')?.hasError('noCoincide')) {
+              <mat-error>Las contraseñas no coinciden.</mat-error>
+            }
+          </mat-form-field>
+        }
+
+        <!-- Estado (solo en ver/editar) -->
+        @if (!modoNuevo) {
+          <mat-divider class="divider"></mat-divider>
+          <div class="estado-row">
+            <span class="estado-label">Estado</span>
+            <span [class]="activo ? 'status activo' : 'status inactivo'">
+              {{ activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+        }
+
+      </form>
+
+      <div class="actions">
+        <button mat-stroked-button class="btn-cancel" (click)="volver()" [disabled]="saving">
+          {{ modoEdicion || modoNuevo ? 'Cancelar' : 'Volver' }}
+        </button>
+
+        @if (!modoNuevo) {
+          @if (activo) {
+            <button mat-stroked-button class="btn-baja" (click)="darDeBaja()" [disabled]="saving">
+              <mat-icon>person_off</mat-icon>
+              Dar de baja
+            </button>
+          } @else {
+            <button mat-stroked-button class="btn-alta" (click)="darDeAlta()" [disabled]="saving">
+              <mat-icon>person_add</mat-icon>
+              Dar de alta
+            </button>
+          }
+        }
+
+        @if (modoEdicion || modoNuevo) {
+          <button mat-flat-button class="btn-save" (click)="guardar()" [disabled]="saving">
+            @if (saving) { Guardando... }
+            @else if (modoNuevo) { Crear usuario }
+            @else { Guardar cambios }
+          </button>
+        } @else {
+          <button mat-flat-button class="btn-edit" (click)="irEditar()">
+            <mat-icon>edit</mat-icon>
+            Editar
+          </button>
+        }
+      </div>
+    }
+
+  </div>
+</div>

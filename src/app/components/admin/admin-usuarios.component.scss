@@ -1,0 +1,162 @@
+.admin-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+/* ── Encabezado ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+}
+
+.btn-nuevo {
+  background: #0b5966 !important;
+  color: #fff !important;
+}
+
+/* ── Filtros ── */
+.filter-panel {
+  background: #ffffff;
+  border: 1px solid #e0e4ea;
+  border-radius: 12px;
+  padding: 20px 24px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 360px);
+  gap: 12px;
+}
+
+.filter-field { width: 100%; }
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 4px;
+}
+
+.btn-clear {
+  color: #5c6470;
+  border-color: #d0d4da !important;
+}
+
+/* ── Tabla ── */
+.table-container {
+  overflow: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e0e4ea;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  ::ng-deep {
+    .mat-mdc-table {
+      width: 100%;
+      background: transparent;
+    }
+
+    .mat-mdc-header-row {
+      background: #f8f9fa;
+      height: auto;
+    }
+
+    .mat-mdc-header-cell {
+      color: #2c3e50;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 2px solid #dee2e6 !important;
+      white-space: nowrap;
+    }
+
+    .mat-mdc-row {
+      border-bottom: 1px solid #e9ecef !important;
+      height: auto;
+      transition: background 0.15s;
+
+      &:last-child { border-bottom: none !important; }
+      &:hover { background: #f8f9fa; }
+    }
+
+    .mat-mdc-cell {
+      color: #444;
+      font-size: 0.875rem;
+      padding: 0.7rem 1rem;
+      border-bottom: none !important;
+    }
+
+    .mat-column-acciones {
+      text-align: center;
+      white-space: nowrap;
+    }
+  }
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+}
+
+/* ── Roles ── */
+.roles-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.rol-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: #e3f2fd;
+  color: #1565a8;
+}
+
+.rol-badge.rol-admin {
+  background: #fde8d4;
+  color: #b85200;
+}
+
+/* ── Estado ── */
+.status {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.status.activo   { color: #2e7d3e; background: #d6f0dc; }
+.status.inactivo { color: #ad1f1f; background: #fde8e8; }
+
+/* ── Botones acción ── */
+.btn-edit { color: #546e7a !important; }
+.btn-baja { color: #b71c1c !important; }
+.btn-alta { color: #2e7d3e !important; }
+
+/* ── Loading ── */
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}

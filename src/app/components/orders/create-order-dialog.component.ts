@@ -1,12 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
 import { ClientesService } from '../../services/clientes.service';
 import { ProductosService } from '../../services/productos.service';
 import { Cliente } from '../../models/cliente';
@@ -22,9 +24,11 @@ import { OrdenCreateDTO } from '../../models/orden-create';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatAutocompleteModule,
     MatButtonModule,
     MatRadioModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatIconModule
   ],
   template: `
     <h2 mat-dialog-title>Nueva Orden</h2>
@@ -34,7 +38,7 @@ import { OrdenCreateDTO } from '../../models/orden-create';
         <!-- Cliente -->
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Cliente </mat-label>
+            <mat-label>Cliente</mat-label>
             <mat-select formControlName="clienteId">
               @for (cliente of clientes(); track cliente.id) {
                 <mat-option [value]="cliente.id">{{ cliente.razonSocial }}</mat-option>
@@ -46,19 +50,33 @@ import { OrdenCreateDTO } from '../../models/orden-create';
           </mat-form-field>
         </div>
 
-        <!-- Producto -->
+        <!-- Producto con búsqueda -->
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Producto </mat-label>
-            <mat-select formControlName="productoId">
-              @for (producto of productos(); track producto.id) {
-                <mat-option [value]="producto.id">
-                  <span class="producto-code">{{ producto.codigo }}</span> - {{ producto.descripcion }}
+            <mat-label>Producto</mat-label>
+            <input matInput
+                   [formControl]="productoSearchCtrl"
+                   [matAutocomplete]="autoProducto"
+                   placeholder="Buscar por código o descripción"
+                   (blur)="onProductoBlur()">
+            <mat-icon matSuffix>search</mat-icon>
+            <mat-autocomplete #autoProducto="matAutocomplete"
+                              [displayWith]="displayProducto"
+                              (optionSelected)="onProductoSelected($event.option.value)">
+              @for (producto of productosFiltrados(); track producto.id) {
+                <mat-option [value]="producto">
+                  <span class="producto-code">{{ producto.codigo }}</span>
+                  <span class="producto-desc"> — {{ producto.descripcion }}</span>
                 </mat-option>
               }
-            </mat-select>
-            @if (form.get('productoId')?.hasError('required')) {
+              @if (productosFiltrados().length === 0) {
+                <mat-option disabled>Sin resultados</mat-option>
+              }
+            </mat-autocomplete>
+            @if (productoSearchCtrl.touched && productoSearchCtrl.hasError('required')) {
               <mat-error>El producto es obligatorio</mat-error>
+            } @else if (productoSearchCtrl.touched && productoSearchCtrl.hasError('noSeleccionado')) {
+              <mat-error>Seleccioná un producto de la lista</mat-error>
             }
           </mat-form-field>
         </div>
@@ -66,7 +84,7 @@ import { OrdenCreateDTO } from '../../models/orden-create';
         <!-- Cantidad -->
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Cantidad </mat-label>
+            <mat-label>Cantidad</mat-label>
             <input matInput type="number" formControlName="cantidad" min="1">
             @if (form.get('cantidad')?.hasError('required')) {
               <mat-error>La cantidad es obligatoria</mat-error>
@@ -83,7 +101,7 @@ import { OrdenCreateDTO } from '../../models/orden-create';
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Cancelar</button>
       <button mat-raised-button color="primary"
-              [disabled]="form.invalid || loading()"
+              [disabled]="loading()"
               (click)="onSubmit()">
         @if (!loading()) {
           <span>Crear Orden</span>
@@ -111,21 +129,13 @@ import { OrdenCreateDTO } from '../../models/orden-create';
       width: 100%;
     }
 
-    .radio-label {
-      display: block;
-      font-size: 14px;
-      color: rgba(0, 0, 0, 0.6);
-      margin-bottom: 8px;
-    }
-
-    .radio-group {
-      display: flex;
-      gap: 16px;
-    }
-
     .producto-code {
-      font-weight: 500;
+      font-weight: 600;
       color: #1976d2;
+    }
+
+    .producto-desc {
+      color: #444;
     }
 
     mat-dialog-content {
@@ -146,8 +156,12 @@ export class CreateOrderDialogComponent {
   private productosService = inject(ProductosService);
 
   clientes = signal<Cliente[]>([]);
-  productos = signal<Producto[]>([]);
+  private todosProductos = signal<Producto[]>([]);
+  productosFiltrados = signal<Producto[]>([]);
   loading = signal(false);
+
+  /** Control separado para el input de búsqueda de producto */
+  productoSearchCtrl = new FormControl<string | Producto>('');
 
   form = this.fb.group({
     clienteId: [null as number | null, Validators.required],
@@ -164,12 +178,75 @@ export class CreateOrderDialogComponent {
     });
 
     this.productosService.getAll().subscribe({
-      next: (data) => this.productos.set(data),
+      next: (data) => {
+        this.todosProductos.set(data);
+        this.productosFiltrados.set(data);
+      },
       error: (err) => console.error('Error loading productos:', err)
+    });
+
+    // Filtrar mientras el usuario escribe
+    this.productoSearchCtrl.valueChanges.subscribe(val => {
+      if (typeof val === 'string') {
+        // El usuario está escribiendo: limpiar la selección y filtrar
+        this.form.patchValue({ productoId: null });
+        this.filtrar(val);
+      }
+      // Si val es un objeto Producto, ya fue manejado por onProductoSelected
     });
   }
 
+  private filtrar(busqueda: string): void {
+    const b = busqueda.toLowerCase().trim();
+    if (!b) {
+      this.productosFiltrados.set(this.todosProductos());
+      return;
+    }
+    this.productosFiltrados.set(
+      this.todosProductos().filter(p =>
+        p.codigo.toLowerCase().includes(b) ||
+        p.descripcion.toLowerCase().includes(b)
+      )
+    );
+  }
+
+  /** Función de display para mat-autocomplete */
+  displayProducto = (value: Producto | string | null): string => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    return `${value.codigo} — ${value.descripcion}`;
+  };
+
+  onProductoSelected(producto: Producto): void {
+    this.form.patchValue({ productoId: producto.id });
+    this.productoSearchCtrl.setErrors(null);
+    // Restaurar lista completa para la próxima apertura del panel
+    this.productosFiltrados.set(this.todosProductos());
+  }
+
+  /** Al perder el foco sin haber seleccionado de la lista */
+  onProductoBlur(): void {
+    if (!this.form.get('productoId')?.value) {
+      this.productoSearchCtrl.markAsTouched();
+      if (this.productoSearchCtrl.value) {
+        this.productoSearchCtrl.setErrors({ noSeleccionado: true });
+      } else {
+        this.productoSearchCtrl.setErrors({ required: true });
+      }
+    }
+  }
+
   onSubmit(): void {
+    this.form.markAllAsTouched();
+    this.productoSearchCtrl.markAsTouched();
+
+    // Validar producto seleccionado
+    if (!this.form.get('productoId')?.value) {
+      const texto = this.productoSearchCtrl.value;
+      this.productoSearchCtrl.setErrors(texto ? { noSeleccionado: true } : { required: true });
+      return;
+    }
+
     if (this.form.invalid) return;
 
     const formValue = this.form.value;

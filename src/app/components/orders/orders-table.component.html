@@ -36,6 +36,16 @@
         </mat-select>
       </mat-form-field>
 
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Código</mat-label>
+        <mat-select [(ngModel)]="filterProductoCodigo" (ngModelChange)="applyFilters()">
+          <mat-option value="">Todos</mat-option>
+          @for (cod of codigos; track cod) {
+          <mat-option [value]="cod">{{ cod }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
       @if (isAdmin) {
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Cliente</mat-label>
@@ -43,16 +53,6 @@
             <mat-option value="">Todos</mat-option>
             @for (c of clientes; track c) {
               <mat-option [value]="c">{{ c }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Código</mat-label>
-          <mat-select [(ngModel)]="filterProductoCodigo" (ngModelChange)="applyFilters()">
-            <mat-option value="">Todos</mat-option>
-            @for (cod of codigos; track cod) {
-              <mat-option [value]="cod">{{ cod }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
