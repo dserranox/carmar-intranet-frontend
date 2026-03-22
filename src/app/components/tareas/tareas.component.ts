@@ -203,7 +203,9 @@ export class TareasComponent implements OnInit {
     
     const fechaFinalizacion = this.formatDateTime(new Date());
     this.dialog.open(FinishTaskDialogComponent, {
-      width: '520px',
+      width: '95vw',
+      maxWidth: '560px',
+      maxHeight: '90dvh',
       data: { tarea: row }
     }).afterClosed().subscribe((res: FinishTaskDialogResult | undefined) => {
       if (!res) return;
