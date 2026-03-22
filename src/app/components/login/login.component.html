@@ -1,30 +1,39 @@
 <div class="login-container">
-  <mat-card class="login-card">
-    <mat-card-header>
-      <mat-card-title>Iniciar sesión</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form (ngSubmit)="login()" #form="ngForm">
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Usuario</mat-label>
-          <input matInput name="username" [(ngModel)]="username" required>
-          <mat-icon matSuffix>person</mat-icon>
-        </mat-form-field>
+  <div class="login-card">
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Contraseña</mat-label>
-          <input matInput type="password" name="password" [(ngModel)]="password" required>
-          <mat-icon matSuffix>lock</mat-icon>
-        </mat-form-field>
+    <div class="login-header">
+      <h2 class="login-title">Car-Mar</h2>
+      <p class="login-subtitle">Sistema de gestión interna</p>
+    </div>
 
-        <button mat-flat-button color="primary" class="full" type="submit" [disabled]="loading">
-          {{ loading ? 'Ingresando...' : 'Ingresar' }}
-        </button>
+    <form (ngSubmit)="login()" #form="ngForm">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Usuario</mat-label>
+        <input matInput name="username" [(ngModel)]="username" required autocomplete="username">
+        <mat-icon matSuffix>person</mat-icon>
+      </mat-form-field>
 
-        @if (errorMessage) {
-          <p class="error-message" >{{ errorMessage }}</p>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Contraseña</mat-label>
+        <input matInput type="password" name="password" [(ngModel)]="password" required autocomplete="current-password">
+        <mat-icon matSuffix>lock</mat-icon>
+      </mat-form-field>
+
+      @if (errorMessage) {
+        <div class="error-message">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          {{ errorMessage }}
+        </div>
+      }
+
+      <button mat-flat-button class="full btn-login" type="submit" [disabled]="loading">
+        @if (loading) {
+          Ingresando...
+        } @else {
+          Ingresar
         }
-      </form>
-    </mat-card-content>
-  </mat-card>
+      </button>
+    </form>
+
+  </div>
 </div>

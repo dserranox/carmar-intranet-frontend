@@ -282,11 +282,15 @@ export class OrdersTableComponent implements OnInit {
         this.tareasDTO.ordenId = order.id;
         this.tareasDTO.operacionId = result.operacionId;
         this.tareasDTO.nroMaquina = result.nroMaquina;
-        this.tasksService.iniciarTarea(this.tareasDTO).subscribe(tareaResult => {
-          this.snack.open('Tarea iniciada correctamente', 'Cerrar', { duration: 3000 });
-          this.router.navigate(['/tareas'], {
-            queryParams: tareaResult.tarId
-          });
+        this.tasksService.iniciarTarea(this.tareasDTO).subscribe({
+          next: (tareaResult) => {
+            this.snack.open('Tarea iniciada correctamente', 'Cerrar', { duration: 3000 });
+            this.router.navigate(['/tareas'], { queryParams: tareaResult.tarId });
+          },
+          error: (err) => {
+            const msg = err?.error?.message || 'No se pudo iniciar la tarea.';
+            this.snack.open(msg, 'Cerrar', { duration: 5000 });
+          }
         });
       }
     });

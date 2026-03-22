@@ -1,22 +1,80 @@
 .login-container {
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 16px;
-  background: #f7f7f7;
+  background: linear-gradient(135deg, #2f8392 0%, #9ac1c9 100%);
 }
 
 .login-card {
+  background: #fff;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   width: 100%;
-  max-width: 380px;
-  border-radius: 16px;
+  max-width: 400px;
 }
 
+/* ── Encabezado ── */
+.login-header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.login-title {
+  margin: 0 0 4px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #0b5966;
+  letter-spacing: 1px;
+}
+
+.login-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #607d8b;
+}
+
+/* ── Inputs ── */
 .full {
   width: 100%;
 }
 
+/* ── Error ── */
 .error-message {
-  color: #b00020;
-  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8d7da;
+  color: #721c24;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.error-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* ── Botón ── */
+.btn-login {
+  background: #0b5966 !important;
+  color: #fff !important;
+  padding: 0.85rem !important;
+  font-size: 1rem !important;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+.btn-login:hover:not([disabled]) {
+  background: #094a55 !important;
+}
+
+.btn-login[disabled] {
+  opacity: 0.65;
 }

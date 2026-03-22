@@ -2,7 +2,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +14,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
-  imports: [CommonModule, FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule]
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule]
 })
 export class LoginComponent {
   username = '';
@@ -38,8 +37,11 @@ export class LoginComponent {
         }
       },
       error: (err) => {
-        const msg = err?.error?.message || err?.statusText || 'Usuario o contraseña incorrectos';
+        const msg = (err?.status === 401 || err?.status === 403)
+          ? 'Usuario o contraseña incorrectos.'
+          : (err?.error?.message || 'Error al iniciar sesión. Intentá de nuevo.');
         this.errorMessage = msg;
+        this.loading = false;
       },
       complete: () => this.loading = false
     });
