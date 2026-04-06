@@ -1,4 +1,3 @@
-import { TareasDTO } from './../../models/tarea';
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -19,7 +18,6 @@ import { OrdenResponseDTO } from '../../models/order';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TasksService } from '../../services/tasks.service';
-import { StartTaskDialogComponent } from './start-task-dialog.component';
 import { TaskSessionDialogComponent } from './task-session-dialog.component';
 import { Router } from '@angular/router';
 import { FinishOrderDialogComponent } from './finish-order-dialog.component';
@@ -44,7 +42,6 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 export class OrdersTableComponent implements OnInit {
   private ordersSvc = inject(OrdersService);
   dataSource = new MatTableDataSource<OrdenResponseDTO>([]);
-  tareasDTO : TareasDTO = {} as TareasDTO;
   displayedColumns = [
     'fechaCreacion','ordNroPlan','clienteId','productoCodigo','productoDescripcion',
     'cantidad','fechaInicio','situacionClave','fechaFinalizacion','acciones'
@@ -274,28 +271,6 @@ export class OrdersTableComponent implements OnInit {
     this.cambiarEstado(order, 'EN PROCESO');
   }
 
-  openStartTaskDialog(order: any) {
-    const dialogRef = this.dialog.open(StartTaskDialogComponent, {
-      data: { order }
-    });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.tareasDTO.ordenId = order.id;
-        this.tareasDTO.operacionId = result.operacionId;
-        this.tareasDTO.nroMaquina = result.nroMaquina;
-        this.tasksService.iniciarTarea(this.tareasDTO).subscribe({
-          next: (tareaResult) => {
-            this.snack.open('Tarea iniciada correctamente', 'Cerrar', { duration: 3000 });
-            this.router.navigate(['/tareas'], { queryParams: tareaResult.tarId });
-          },
-          error: (err) => {
-            const msg = err?.error?.message || 'No se pudo iniciar la tarea.';
-            this.snack.open(msg, 'Cerrar', { duration: 5000 });
-          }
-        });
-      }
-    });
-  }
 
   /** DEMO del nuevo flujo unificado de tarea — sin llamadas al backend */
   openTaskSessionDialog(order: OrdenResponseDTO): void {

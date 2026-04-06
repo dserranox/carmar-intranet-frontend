@@ -12,12 +12,6 @@ import { OrdenResponseDTO } from '../../models/order';
 
 
 
-export interface StartTaskDialogResult {
-  operacionId: number;
-  nroMaquina: number;
-  ordenId?: number;
-}
-
 @Component({
   selector: 'app-finish-order-dialog',
   standalone: true,
