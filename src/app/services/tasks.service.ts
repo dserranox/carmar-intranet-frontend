@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { TareasDTO } from '../models/tarea';
+import { OperarioEstadoDTO } from '../models/operario-estado';
 
 @Injectable({ providedIn: 'root' })
 export class TasksService {
@@ -20,6 +21,10 @@ export class TasksService {
 
   finalizarTarea(payload: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/finalizar-tarea`, payload);
+  }
+
+  getOperariosActivos(): Observable<OperarioEstadoDTO[]> {
+    return this.http.get<OperarioEstadoDTO[]>(`${this.baseUrl}/operarios-activos`);
   }
 
 }

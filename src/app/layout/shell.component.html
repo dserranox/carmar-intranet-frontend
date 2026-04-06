@@ -6,6 +6,10 @@
     <a mat-button routerLink="/ordenes" routerLinkActive="active">ORDENES</a>
     <span class="divider"></span>
     <a mat-button routerLink="/tareas" routerLinkActive="active">TAREAS</a>
+    @if (isAdmin) {
+      <span class="divider"></span>
+      <a mat-button routerLink="/admin/operarios" routerLinkActive="active">OPERARIOS</a>
+    }
   </nav>
 
   <div class="userbox">
