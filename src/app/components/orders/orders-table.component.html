@@ -233,7 +233,7 @@
             }
 
             @if (isEnProceso(row)) {
-              <button mat-icon-button class="btn-primary-green" (click)="openStartTaskDialog(row)" matTooltip="Iniciar tarea">
+              <button mat-icon-button class="btn-primary-green" (click)="openTaskSessionDialog(row)" matTooltip="Iniciar tarea">
                 <mat-icon>play_circle</mat-icon>
               </button>
               @if (isAdmin) {

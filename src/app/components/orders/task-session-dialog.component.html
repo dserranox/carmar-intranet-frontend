@@ -1,0 +1,192 @@
+<div class="session-shell">
+
+  <!-- ══════════════════════════════════════════════
+       ESTADO 1 · INICIAR
+  ══════════════════════════════════════════════ -->
+  @if (estado === 'iniciar') {
+
+    <div class="session-header">
+      <mat-icon class="header-icon teal">play_circle</mat-icon>
+      <div>
+        <h2 class="header-title">Nueva Tarea</h2>
+        <p class="header-sub">{{ data.ordNroPlan }}{{ data.productoCodigo ? ' · ' + data.productoCodigo : '' }}</p>
+      </div>
+    </div>
+    <div class="accent-bar teal"></div>
+
+    <div class="session-body">
+      <form [formGroup]="iniciarForm" class="form-grid">
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Operación</mat-label>
+          <mat-select formControlName="operacionId">
+            @for (op of operaciones; track op.opeId) {
+              <mat-option [value]="op.opeId">{{ op.opeNombre }}</mat-option>
+            }
+          </mat-select>
+          @if (iniciarForm.get('operacionId')?.touched && iniciarForm.get('operacionId')?.hasError('required')) {
+            <mat-error>La operación es obligatoria.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nro. Máquina</mat-label>
+          <input matInput type="number" formControlName="nroMaquina" placeholder="Opcional" />
+          @if (iniciarForm.get('nroMaquina')?.touched && iniciarForm.get('nroMaquina')?.hasError('pattern')) {
+            <mat-error>Solo números enteros.</mat-error>
+          }
+        </mat-form-field>
+
+      </form>
+    </div>
+
+    <div class="session-actions">
+      <button mat-stroked-button class="btn-cancel" (click)="cancelar()" [disabled]="loading">Cancelar</button>
+      <button mat-flat-button class="btn-teal" (click)="iniciar()" [disabled]="loading">
+        <mat-icon>play_arrow</mat-icon> Iniciar
+      </button>
+    </div>
+  }
+
+
+  <!-- ══════════════════════════════════════════════
+       ESTADO 2 · EN PROGRESO
+  ══════════════════════════════════════════════ -->
+  @if (estado === 'en-progreso') {
+
+    <div class="session-header">
+      <span class="pulse-dot"></span>
+      <div>
+        <h2 class="header-title">Tarea en curso</h2>
+        <p class="header-sub">{{ data.ordNroPlan }}{{ data.productoCodigo ? ' · ' + data.productoCodigo : '' }}</p>
+      </div>
+    </div>
+    <div class="accent-bar green"></div>
+
+    <div class="session-body progreso-body">
+
+      <div class="info-cols">
+        <div class="info-grid">
+          <div class="info-row">
+            <mat-icon class="info-icon">assignment</mat-icon>
+            <span class="info-label">Orden</span>
+            <span class="info-value">{{ data.ordNroPlan ?? '—' }}</span>
+          </div>
+          @if (data.productoCodigo) {
+            <div class="info-row">
+              <mat-icon class="info-icon">inventory_2</mat-icon>
+              <span class="info-label">Producto</span>
+              <span class="info-value">{{ data.productoCodigo }}</span>
+            </div>
+          }
+        </div>
+        <div class="info-grid">
+          <div class="info-row">
+            <mat-icon class="info-icon">settings</mat-icon>
+            <span class="info-label">Operación</span>
+            <span class="info-value">{{ operacionNombre }}</span>
+          </div>
+          <div class="info-row">
+            <mat-icon class="info-icon">precision_manufacturing</mat-icon>
+            <span class="info-label">Máquina</span>
+            <span class="info-value">{{ nroMaquina || '—' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timer-block">
+        <mat-icon class="timer-icon">timer</mat-icon>
+        <span class="timer-display">{{ timerDisplay }}</span>
+        <span class="timer-label">tiempo transcurrido</span>
+      </div>
+
+    </div>
+
+    <div class="session-actions">
+      <button mat-flat-button class="btn-finalizar" (click)="irAFinalizar()">
+        Finalizar tarea <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+      </button>
+    </div>
+  }
+
+
+  <!-- ══════════════════════════════════════════════
+       ESTADO 3 · FINALIZAR
+  ══════════════════════════════════════════════ -->
+  @if (estado === 'finalizar') {
+
+    <div class="session-header">
+      <mat-icon class="header-icon orange">task_alt</mat-icon>
+      <div>
+        <h2 class="header-title">Finalizar tarea</h2>
+        <p class="header-sub">Completá los datos de producción</p>
+      </div>
+    </div>
+    <div class="accent-bar orange"></div>
+
+    <div class="session-body">
+      <form [formGroup]="finalizarForm" class="form-grid">
+
+        <div class="row-2">
+          <mat-form-field appearance="fill" class="full">
+            <mat-label>Cantidad</mat-label>
+            <input matInput inputmode="numeric" pattern="^\d+$" formControlName="cantidad" placeholder="Solo enteros mayores a 0" />
+            @if (finalizarForm.get('cantidad')?.touched) {
+              @if (finalizarForm.get('cantidad')?.hasError('required')) {
+                <mat-error>La cantidad es obligatoria.</mat-error>
+              } @else if (finalizarForm.get('cantidad')?.hasError('min') || finalizarForm.get('cantidad')?.hasError('pattern')) {
+                <mat-error>Debe ser un entero mayor a 0.</mat-error>
+              }
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full">
+            <mat-label>Piezas no conformes</mat-label>
+            <input matInput type="number" formControlName="noConforme" placeholder="Opcional" min="0" />
+            @if (finalizarForm.get('noConforme')?.hasError('noConformeExcedeCantidad')) {
+              <mat-error>No puede superar la cantidad ({{ finalizarForm.get('cantidad')?.value }}).</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <p class="section-title">Tiempos de demora (minutos)</p>
+
+        <div class="row-3">
+          <mat-form-field appearance="fill" class="full">
+            <mat-label>Rendimiento</mat-label>
+            <input matInput type="number" formControlName="perdidaRendimiento" placeholder="Opcional" min="0" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full">
+            <mat-label>Mantenimiento</mat-label>
+            <input matInput type="number" formControlName="perdidaMantenimiento" placeholder="Opcional" min="0" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full">
+            <mat-label>Calidad</mat-label>
+            <input matInput type="number" formControlName="perdidaCalidad" placeholder="Opcional" min="0" />
+            @if (finalizarForm.get('perdidaCalidad')?.hasError('demoraExcedeProceso')) {
+              <mat-error>Sumatoria supera el tiempo de proceso ({{ maxDemoraMinutos }} min).</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="fill" class="full">
+          <mat-label>Observaciones</mat-label>
+          <textarea matInput rows="2" formControlName="observaciones" placeholder="Opcional"></textarea>
+        </mat-form-field>
+
+      </form>
+    </div>
+
+    <div class="session-actions">
+      <button mat-stroked-button class="btn-back" (click)="volverAEnProgreso()" [disabled]="loading">
+        <mat-icon>arrow_back</mat-icon> Volver
+      </button>
+      <button mat-flat-button class="btn-teal" (click)="confirmarFinalizar()" [disabled]="loading">
+        <mat-icon>check_circle</mat-icon> Confirmar
+      </button>
+    </div>
+  }
+
+</div>

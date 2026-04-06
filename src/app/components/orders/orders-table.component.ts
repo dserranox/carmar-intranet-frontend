@@ -20,6 +20,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TasksService } from '../../services/tasks.service';
 import { StartTaskDialogComponent } from './start-task-dialog.component';
+import { TaskSessionDialogComponent } from './task-session-dialog.component';
 import { Router } from '@angular/router';
 import { FinishOrderDialogComponent } from './finish-order-dialog.component';
 import { CreateOrderDialogComponent } from './create-order-dialog.component';
@@ -292,6 +293,28 @@ export class OrdersTableComponent implements OnInit {
             this.snack.open(msg, 'Cerrar', { duration: 5000 });
           }
         });
+      }
+    });
+  }
+
+  /** DEMO del nuevo flujo unificado de tarea — sin llamadas al backend */
+  openTaskSessionDialog(order: OrdenResponseDTO): void {
+    const dialogRef = this.dialog.open(TaskSessionDialogComponent, {
+      width: '660px',
+      disableClose: false,
+      data: {
+        ordenId:             order.id,
+        ordNroPlan:          order.ordNroPlan,
+        productoCodigo:      order.productoCodigo,
+        productoDescripcion: order.productoDescripcion,
+        ordCantidad:         order.cantidad
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.snack.open('Tarea finalizada correctamente', 'OK', { duration: 3000 });
+        this.load();
       }
     });
   }
