@@ -146,14 +146,7 @@ export class TaskSessionDialogComponent implements OnInit, OnDestroy {
   confirmarFinalizar(): void {
     if (this.finalizarForm.invalid) { this.finalizarForm.markAllAsTouched(); return; }
 
-    // Calcular fechaFinalizacion: fechaInicio del backend + segundos del contador
-    const fechaInicioDate = this.tareaIniciada?.fechaInicio
-      ? new Date(this.tareaIniciada.fechaInicio)
-      : this.startTime ?? new Date();
-    const fechaFinalizacion = this.formatDateTime(
-      new Date(fechaInicioDate.getTime() + this.pausedElapsedSeconds * 1000)
-    );
-
+    const fechaFinalizacion = this.formatDateTime(new Date());
     const { cantidad, noConforme, perdidaRendimiento, perdidaMantenimiento, perdidaCalidad, observaciones } = this.finalizarForm.value;
 
     const payload = {
