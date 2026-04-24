@@ -53,6 +53,10 @@ export class UsuarioService {
     return this.http.get<UsuarioAdminDTO[]>(`${this.base}/admin`);
   }
 
+  getUsuariosActivos(): Observable<UsuarioAdminDTO[]> {
+    return this.http.get<UsuarioAdminDTO[]>(`${this.base}/activos`);
+  }
+
   getUsuario(id: number): Observable<UsuarioAdminDTO> {
     return this.http.get<UsuarioAdminDTO>(`${this.base}/admin/${id}`);
   }

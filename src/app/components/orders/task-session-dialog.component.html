@@ -37,6 +37,17 @@
           }
         </mat-form-field>
 
+        @if (isAdmin) {
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Operario</mat-label>
+            <mat-select formControlName="usuarioOperario">
+              @for (u of usuariosActivos; track u.id) {
+                <mat-option [value]="u.username">{{ u.username }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+
       </form>
     </div>
 
@@ -170,6 +181,14 @@
             }
           </mat-form-field>
         </div>
+
+        @if (isAdmin) {
+          <p class="section-title">Tiempo duración tarea (minutos)</p>
+          <mat-form-field appearance="fill" class="full">
+            <mat-label>Tiempo duración tarea (minutos)</mat-label>
+            <input matInput type="number" formControlName="tiempoDuracionTarea" placeholder="Opcional" min="0" />
+          </mat-form-field>
+        }
 
         <mat-form-field appearance="fill" class="full">
           <mat-label>Observaciones</mat-label>

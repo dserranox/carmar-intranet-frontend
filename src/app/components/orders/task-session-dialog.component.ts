@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { OperationsService } from '../../services/operations.service';
 import { OperacionesDTO } from '../../models/operacion';
 import { TasksService } from '../../services/tasks.service';
+import { UsuarioService, UsuarioAdminDTO } from '../../services/usuario.service';
 
 export interface TaskSessionDialogData {
   ordenId?: number;
@@ -38,6 +39,11 @@ export class TaskSessionDialogComponent implements OnInit, OnDestroy {
   estado: DialogState = 'iniciar';
   loading = false;
 
+  // ── Admin ──────────────────────────────────────────────
+  isAdmin = false;
+  loggedUsername = '';
+  usuariosActivos: UsuarioAdminDTO[] = [];
+
   // ── Estado 1: iniciar ──────────────────────────────────
   operaciones: OperacionesDTO[] = [];
   iniciarForm: FormGroup;
@@ -61,20 +67,29 @@ export class TaskSessionDialogComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: TaskSessionDialogData,
     private operacionesService: OperationsService,
     private tasksService: TasksService,
+    private usuarioService: UsuarioService,
     private snack: MatSnackBar
   ) {
+    const stored = localStorage.getItem('user');
+    const parsed = stored ? JSON.parse(stored) : null;
+    this.loggedUsername = parsed?.username ?? '';
+    const perms: string[] = parsed?.permissions || [];
+    this.isAdmin = perms.includes('ORDENES:WRITE');
+
     this.iniciarForm = this.fb.group({
-      operacionId: [null, Validators.required],
-      nroMaquina:  [null, Validators.pattern(/^\d+$/)]
+      operacionId:    [null, Validators.required],
+      nroMaquina:     [null, Validators.pattern(/^\d+$/)],
+      usuarioOperario:[this.loggedUsername]
     });
 
     this.finalizarForm = this.fb.group({
-      cantidad:            [data?.ordCantidad ?? null, [Validators.required, Validators.pattern(/^\d+$/), Validators.min(1)]],
-      noConforme:          [null],
-      perdidaRendimiento:  [null],
-      perdidaMantenimiento:[null],
-      perdidaCalidad:      [null],
-      observaciones:       [null]
+      cantidad:              [data?.ordCantidad ?? null, [Validators.required, Validators.pattern(/^\d+$/), Validators.min(1)]],
+      noConforme:            [null],
+      perdidaRendimiento:    [null],
+      perdidaMantenimiento:  [null],
+      perdidaCalidad:        [null],
+      observaciones:         [null],
+      tiempoDuracionTarea:   [null]
     });
 
     this.finalizarForm.get('noConforme')?.valueChanges.subscribe(() => this.validateNoConforme());
@@ -89,6 +104,21 @@ export class TaskSessionDialogComponent implements OnInit, OnDestroy {
       next: (ops) => { this.operaciones = ops || []; },
       error: () => { this.operaciones = []; }
     });
+
+    if (this.isAdmin) {
+      this.usuarioService.getUsuariosActivos().subscribe({
+        next: (users) => {
+          this.usuariosActivos = users || [];
+          const seleccionado = this.usuariosActivos.find(u => u.username === this.loggedUsername);
+          if (seleccionado) {
+            this.iniciarForm.get('usuarioOperario')?.setValue(seleccionado.username);
+          } else if (this.usuariosActivos.length > 0) {
+            this.iniciarForm.get('usuarioOperario')?.setValue(this.usuariosActivos[0].username);
+          }
+        },
+        error: () => { this.usuariosActivos = []; }
+      });
+    }
   }
 
   // ── Acciones estado 1 ─────────────────────────────────
@@ -96,14 +126,20 @@ export class TaskSessionDialogComponent implements OnInit, OnDestroy {
   iniciar(): void {
     if (this.iniciarForm.invalid) { this.iniciarForm.markAllAsTouched(); return; }
 
-    const { operacionId, nroMaquina } = this.iniciarForm.value;
+    const { operacionId, nroMaquina, usuarioOperario } = this.iniciarForm.value;
     this.loading = true;
 
-    this.tasksService.iniciarTarea({
+    const payload: any = {
       ordenId: this.data.ordenId,
       operacionId: Number(operacionId),
       nroMaquina: nroMaquina ? Number(nroMaquina) : Number(0)
-    }).subscribe({
+    };
+
+    if (this.isAdmin && usuarioOperario) {
+      payload.usuarioOperario = usuarioOperario;
+    }
+
+    this.tasksService.iniciarTarea(payload).subscribe({
       next: (tarea) => {
         this.tareaIniciada = tarea;
         this.operacionNombre = this.operaciones.find(o => o.opeId === operacionId)?.opeNombre ?? '';
@@ -137,7 +173,6 @@ export class TaskSessionDialogComponent implements OnInit, OnDestroy {
   // ── Acciones estado 3 ─────────────────────────────────
 
   volverAEnProgreso(): void {
-    // Ajustar startTime para que el contador retome desde donde se pausó
     this.startTime = new Date(Date.now() - this.pausedElapsedSeconds * 1000);
     this.estado = 'en-progreso';
     this.startTimer();
@@ -146,8 +181,13 @@ export class TaskSessionDialogComponent implements OnInit, OnDestroy {
   confirmarFinalizar(): void {
     if (this.finalizarForm.invalid) { this.finalizarForm.markAllAsTouched(); return; }
 
-    const fechaFinalizacion = this.formatDateTime(new Date());
-    const { cantidad, noConforme, perdidaRendimiento, perdidaMantenimiento, perdidaCalidad, observaciones } = this.finalizarForm.value;
+    const { cantidad, noConforme, perdidaRendimiento, perdidaMantenimiento, perdidaCalidad, observaciones, tiempoDuracionTarea } = this.finalizarForm.value;
+
+    let fechaBase = new Date();
+    if (this.isAdmin && tiempoDuracionTarea != null && Number(tiempoDuracionTarea) > 0) {
+      fechaBase = new Date(fechaBase.getTime() + Number(tiempoDuracionTarea) * 60 * 1000);
+    }
+    const fechaFinalizacion = this.formatDateTime(fechaBase);
 
     const payload = {
       ...this.tareaIniciada,
