@@ -113,8 +113,18 @@ export class OrdersTableComponent implements OnInit {
     });
   }
 
+  private savedSortActive = '';
+  private savedSortDirection: 'asc' | 'desc' | '' = '';
+
   @ViewChild(MatSort) set sort(s: MatSort) {
-    if (s) this.dataSource.sort = s;
+    if (s) {
+      this.dataSource.sort = s;
+      if (this.savedSortActive) {
+        s.active = this.savedSortActive;
+        s.direction = this.savedSortDirection as 'asc' | 'desc';
+        s.sortChange.emit({ active: s.active, direction: s.direction });
+      }
+    }
   }
 
   constructor(
@@ -159,9 +169,11 @@ export class OrdersTableComponent implements OnInit {
     }
   }
 
-  load() {
+  load(resetFilters = false) {
+    this.savedSortActive = this.dataSource.sort?.active || '';
+    this.savedSortDirection = this.dataSource.sort?.direction || '';
     this.loading = true;
-    this.resetSelectFilters();
+    if (resetFilters) this.resetSelectFilters();
     this.ordersSvc.listByYear(this.year).subscribe({
       next: (orders) => {
         let data = orders || [];

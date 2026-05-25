@@ -19,7 +19,7 @@
 
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Año</mat-label>
-        <mat-select [(ngModel)]="year" (ngModelChange)="load()">
+        <mat-select [(ngModel)]="year" (ngModelChange)="load(true)">
           @for (y of years; track y) {
             <mat-option [value]="y">{{ y }}</mat-option>
           }
