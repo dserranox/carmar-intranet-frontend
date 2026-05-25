@@ -123,16 +123,16 @@
 
     // Header
     .mat-mdc-header-row {
-      background: #f8f9fa;
+      background: #1a3a5c;
       height: auto;
     }
 
     .mat-mdc-header-cell {
-      color: #2c3e50;
-      font-weight: 600;
+      color: #ffffff;
+      font-weight: 500;
       font-size: 0.85rem;
       padding: 0.75rem 1rem;
-      border-bottom: 2px solid #dee2e6 !important;
+      border-bottom: 2px solid #0d2035 !important;
       white-space: nowrap;
     }
 
@@ -161,8 +161,12 @@
 
     // Sort header: quitar el subrayado punteado de Material
     .mat-sort-header-content {
-      font-weight: 600;
-      color: #2c3e50;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .mat-sort-header-arrow {
+      color: #ffffff;
     }
   }
 }

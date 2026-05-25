@@ -1,7 +1,8 @@
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { Subscription } from 'rxjs';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -76,9 +77,42 @@ export class OrdersTableComponent implements OnInit {
 
   isAdmin = false;
 
-  @ViewChild(MatPaginator) set paginator(p: MatPaginator) {
-    if (p) this.dataSource.paginator = p;
+  private _paginatorTop?: MatPaginator;
+  private _paginatorBottom?: MatPaginator;
+  private _topSub?: Subscription;
+  private _bottomSub?: Subscription;
+
+  @ViewChild('paginatorTop') set paginatorTopSetter(p: MatPaginator) {
+    this._paginatorTop = p;
+    if (p) p.length = this.dataSource.data.length;
+    this._linkPaginators();
   }
+
+  @ViewChild('paginatorBottom') set paginatorBottomSetter(p: MatPaginator) {
+    this._paginatorBottom = p;
+    if (p) this.dataSource.paginator = p;
+    this._linkPaginators();
+  }
+
+  private _linkPaginators(): void {
+    this._topSub?.unsubscribe();
+    this._bottomSub?.unsubscribe();
+    const top = this._paginatorTop;
+    const bottom = this._paginatorBottom;
+    if (!top || !bottom) return;
+
+    this._topSub = top.page.subscribe((e: PageEvent) => {
+      bottom.pageIndex = e.pageIndex;
+      bottom.pageSize = e.pageSize;
+      bottom.page.emit(e);
+    });
+
+    this._bottomSub = bottom.page.subscribe((e: PageEvent) => {
+      top.pageIndex = e.pageIndex;
+      top.pageSize = e.pageSize;
+    });
+  }
+
   @ViewChild(MatSort) set sort(s: MatSort) {
     if (s) this.dataSource.sort = s;
   }
@@ -176,6 +210,10 @@ export class OrdersTableComponent implements OnInit {
 
     this.dataSource.data = data;
     if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+    if (this._paginatorTop) {
+      this._paginatorTop.length = data.length;
+      this._paginatorTop.pageIndex = 0;
+    }
   }
 
   private dateOf(value: string | null): number {
@@ -206,6 +244,10 @@ export class OrdersTableComponent implements OnInit {
     this.fechaFinalizacionHasta = null;
     this.dataSource.data = this.allOrders;
     if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+    if (this._paginatorTop) {
+      this._paginatorTop.length = this.allOrders.length;
+      this._paginatorTop.pageIndex = 0;
+    }
   }
 
   // openDocs(row: OrdenResponseDTO) {
