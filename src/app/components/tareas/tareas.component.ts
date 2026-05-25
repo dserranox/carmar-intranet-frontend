@@ -130,6 +130,10 @@ export class TareasComponent implements OnInit {
       }
     });
 
+    this.load();
+  }
+
+  load(): void {
     this.tasksService.listarTareas().subscribe({
       next: (tasks) => {
         this.allTasks = tasks || [];
@@ -138,10 +142,10 @@ export class TareasComponent implements OnInit {
       },
       error: () => {
         this.allTasks = [];
+        this.dataSource.data = [];
         this.snack.open('No se pudieron cargar las tareas', 'OK', { duration: 3000 });
       }
     });
-
   }
 
   private buildFilterOptions(tasks: TareasDTO[]): void {
@@ -263,10 +267,7 @@ export class TareasComponent implements OnInit {
       this.tasksService.finalizarTarea(payload).subscribe({
         next: () => {
           this.snackFinalizarTarea.open('Tarea finalizada', 'OK', { duration: 2500 });
-          this.tasksService.listarTareas().subscribe({
-            next: (tasks) => { this.allTasks = tasks || []; this.buildFilterOptions(this.allTasks); this.applyFilters(); },
-            error: () => { this.snack.open('No se pudo refrescar la lista', 'OK', { duration: 2500 }); }
-          });
+          this.load();
         },
         error: () => this.snack.open('No se pudo finalizar la tarea', 'OK', { duration: 3000 })
       });

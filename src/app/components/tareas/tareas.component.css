@@ -106,6 +106,10 @@ table {
   border-color: #d0d4da !important;
 }
 
+.btn-search {
+  min-width: 120px;
+}
+
 /* ── Estados ── */
 .status {
   display: inline-block;
