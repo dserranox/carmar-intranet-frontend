@@ -1,8 +1,10 @@
 
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { Subscription } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -23,7 +25,7 @@ import { TiempoProcesoDirective } from '../../directives/tiempo-proceso.directiv
   standalone: true,
   imports: [
     CommonModule, FormsModule, DatePipe,
-    MatTableModule, MatIconModule, MatButtonModule,
+    MatTableModule, MatPaginatorModule, MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatSnackBarModule, MatTooltipModule, TiempoProcesoDirective
   ],
@@ -37,7 +39,41 @@ export class TareasComponent implements OnInit {
 
   // raw data
   allTasks: TareasDTO[] = [];
-  filtered: TareasDTO[] = [];
+  dataSource = new MatTableDataSource<TareasDTO>([]);
+
+  private _paginatorTop?: MatPaginator;
+  private _paginatorBottom?: MatPaginator;
+  private _topSub?: Subscription;
+  private _bottomSub?: Subscription;
+
+  @ViewChild('paginatorTop') set paginatorTopSetter(p: MatPaginator) {
+    this._paginatorTop = p;
+    if (p) p.length = this.dataSource.data.length;
+    this._linkPaginators();
+  }
+
+  @ViewChild('paginatorBottom') set paginatorBottomSetter(p: MatPaginator) {
+    this._paginatorBottom = p;
+    if (p) this.dataSource.paginator = p;
+    this._linkPaginators();
+  }
+
+  private _linkPaginators(): void {
+    this._topSub?.unsubscribe();
+    this._bottomSub?.unsubscribe();
+    const top = this._paginatorTop;
+    const bottom = this._paginatorBottom;
+    if (!top || !bottom) return;
+    this._topSub = top.page.subscribe((e: PageEvent) => {
+      bottom.pageIndex = e.pageIndex;
+      bottom.pageSize = e.pageSize;
+      bottom.page.emit(e);
+    });
+    this._bottomSub = bottom.page.subscribe((e: PageEvent) => {
+      top.pageIndex = e.pageIndex;
+      top.pageSize = e.pageSize;
+    });
+  }
 
   // filter options (populated from loaded data)
   nroPlanes: string[] = [];
@@ -102,7 +138,6 @@ export class TareasComponent implements OnInit {
       },
       error: () => {
         this.allTasks = [];
-        this.filtered = [];
         this.snack.open('No se pudieron cargar las tareas', 'OK', { duration: 3000 });
       }
     });
@@ -171,7 +206,7 @@ export class TareasComponent implements OnInit {
     const dFrom = d ? new Date(d + 'T00:00:00') : null;
     const dTo = h ? new Date(h + 'T23:59:59') : null;
 
-    this.filtered = this.allTasks.filter(t => {
+    const data = this.allTasks.filter(t => {
       if (op && t.operacionNombreCorto !== op) return false;
       if (nroP && t.nroPlan !== nroP) return false;
 
@@ -190,6 +225,12 @@ export class TareasComponent implements OnInit {
       }
       return true;
     });
+    this.dataSource.data = data;
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+    if (this._paginatorTop) {
+      this._paginatorTop.length = data.length;
+      this._paginatorTop.pageIndex = 0;
+    }
   }
 
   docLabel(nombre?: string | null): string {
