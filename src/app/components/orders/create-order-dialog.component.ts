@@ -35,17 +35,30 @@ import { OrdenCreateDTO } from '../../models/orden-create';
     <mat-dialog-content>
       <form [formGroup]="form" class="form-container">
 
-        <!-- Cliente -->
+        <!-- Cliente con búsqueda -->
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Cliente</mat-label>
-            <mat-select formControlName="clienteId">
-              @for (cliente of clientes(); track cliente.id) {
-                <mat-option [value]="cliente.id">{{ cliente.razonSocial }}</mat-option>
+            <input matInput
+                   [formControl]="clienteSearchCtrl"
+                   [matAutocomplete]="autoCliente"
+                   placeholder="Buscar por razón social"
+                   (blur)="onClienteBlur()">
+            <mat-icon matSuffix>search</mat-icon>
+            <mat-autocomplete #autoCliente="matAutocomplete"
+                              [displayWith]="displayCliente"
+                              (optionSelected)="onClienteSelected($event.option.value)">
+              @for (cliente of clientesFiltrados(); track cliente.id) {
+                <mat-option [value]="cliente">{{ cliente.razonSocial }}</mat-option>
               }
-            </mat-select>
-            @if (form.get('clienteId')?.hasError('required')) {
+              @if (clientesFiltrados().length === 0) {
+                <mat-option disabled>Sin resultados</mat-option>
+              }
+            </mat-autocomplete>
+            @if (clienteSearchCtrl.touched && clienteSearchCtrl.hasError('required')) {
               <mat-error>El cliente es obligatorio</mat-error>
+            } @else if (clienteSearchCtrl.touched && clienteSearchCtrl.hasError('noSeleccionado')) {
+              <mat-error>Seleccioná un cliente de la lista</mat-error>
             }
           </mat-form-field>
         </div>
@@ -155,11 +168,13 @@ export class CreateOrderDialogComponent {
   private clientesService = inject(ClientesService);
   private productosService = inject(ProductosService);
 
-  clientes = signal<Cliente[]>([]);
+  private todosClientes = signal<Cliente[]>([]);
+  clientesFiltrados = signal<Cliente[]>([]);
   private todosProductos = signal<Producto[]>([]);
   productosFiltrados = signal<Producto[]>([]);
   loading = signal(false);
 
+  clienteSearchCtrl = new FormControl<string | Cliente>('');
   /** Control separado para el input de búsqueda de producto */
   productoSearchCtrl = new FormControl<string | Producto>('');
 
@@ -173,8 +188,18 @@ export class CreateOrderDialogComponent {
 
   constructor() {
     this.clientesService.getAll().subscribe({
-      next: (data) => this.clientes.set(data),
+      next: (data) => {
+        this.todosClientes.set(data);
+        this.clientesFiltrados.set(data);
+      },
       error: (err) => console.error('Error loading clientes:', err)
+    });
+
+    this.clienteSearchCtrl.valueChanges.subscribe(val => {
+      if (typeof val === 'string') {
+        this.form.patchValue({ clienteId: null });
+        this.filtrarClientes(val);
+      }
     });
 
     this.productosService.getAll().subscribe({
@@ -194,6 +219,37 @@ export class CreateOrderDialogComponent {
       }
       // Si val es un objeto Producto, ya fue manejado por onProductoSelected
     });
+  }
+
+  private filtrarClientes(busqueda: string): void {
+    const b = busqueda.toLowerCase().trim();
+    if (!b) { this.clientesFiltrados.set(this.todosClientes()); return; }
+    this.clientesFiltrados.set(
+      this.todosClientes().filter(c => c.razonSocial.toLowerCase().includes(b))
+    );
+  }
+
+  displayCliente = (value: Cliente | string | null): string => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    return value.razonSocial;
+  };
+
+  onClienteSelected(cliente: Cliente): void {
+    this.form.patchValue({ clienteId: cliente.id });
+    this.clienteSearchCtrl.setErrors(null);
+    this.clientesFiltrados.set(this.todosClientes());
+  }
+
+  onClienteBlur(): void {
+    if (!this.form.get('clienteId')?.value) {
+      this.clienteSearchCtrl.markAsTouched();
+      if (this.clienteSearchCtrl.value) {
+        this.clienteSearchCtrl.setErrors({ noSeleccionado: true });
+      } else {
+        this.clienteSearchCtrl.setErrors({ required: true });
+      }
+    }
   }
 
   private filtrar(busqueda: string): void {
@@ -238,7 +294,15 @@ export class CreateOrderDialogComponent {
 
   onSubmit(): void {
     this.form.markAllAsTouched();
+    this.clienteSearchCtrl.markAsTouched();
     this.productoSearchCtrl.markAsTouched();
+
+    // Validar cliente seleccionado
+    if (!this.form.get('clienteId')?.value) {
+      const texto = this.clienteSearchCtrl.value;
+      this.clienteSearchCtrl.setErrors(texto ? { noSeleccionado: true } : { required: true });
+      return;
+    }
 
     // Validar producto seleccionado
     if (!this.form.get('productoId')?.value) {
