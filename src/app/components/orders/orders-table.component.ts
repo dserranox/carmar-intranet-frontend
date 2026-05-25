@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -119,11 +119,10 @@ export class OrdersTableComponent implements OnInit {
   @ViewChild(MatSort) set sort(s: MatSort) {
     if (s) {
       this.dataSource.sort = s;
-      if (this.savedSortActive) {
-        s.active = this.savedSortActive;
-        s.direction = this.savedSortDirection as 'asc' | 'desc';
-        s.sortChange.emit({ active: s.active, direction: s.direction });
-      }
+      s.sortChange.subscribe(({ active, direction }) => {
+        this.savedSortActive = active;
+        this.savedSortDirection = direction;
+      });
     }
   }
 
@@ -169,24 +168,35 @@ export class OrdersTableComponent implements OnInit {
     }
   }
 
-  load(resetFilters = false) {
-    this.savedSortActive = this.dataSource.sort?.active || '';
-    this.savedSortDirection = this.dataSource.sort?.direction || '';
+  async load(resetFilters = false) {
     this.loading = true;
-    if (resetFilters) this.resetSelectFilters();
-    this.ordersSvc.listByYear(this.year).subscribe({
-      next: (orders) => {
-        let data = orders || [];
-        if (!this.isAdmin) {
-          data = data.filter(o => (o.situacionClave || '').toUpperCase() === 'EN PROCESO');
-        }
-        this.allOrders = data;
-        this.buildFilterOptions(data);
-        this.applyFilters();
-      },
-      error: (err) => console.error(err),
-      complete: () => this.loading = false
-    });
+    if (resetFilters) {
+      this.resetSelectFilters();
+      this.savedSortActive = '';
+      this.savedSortDirection = '';
+    }
+    try {
+      const orders = await firstValueFrom(this.ordersSvc.listByYear(this.year));
+      let data = orders || [];
+      if (!this.isAdmin) {
+        data = data.filter(o => (o.situacionClave || '').toUpperCase() === 'EN PROCESO');
+      }
+      this.allOrders = data;
+      this.buildFilterOptions(data);
+      this.applyFilters();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      this.loading = false;
+      if (this.savedSortActive && this.savedSortDirection) {
+        await new Promise(r => setTimeout(r, 0));
+        this.dataSource.sort?.sort({
+          id: this.savedSortActive,
+          start: this.savedSortDirection as 'asc' | 'desc',
+          disableClear: false
+        });
+      }
+    }
   }
 
   private buildFilterOptions(orders: OrdenResponseDTO[]): void {
@@ -246,6 +256,9 @@ export class OrdersTableComponent implements OnInit {
   }
 
   clearFilter() {
+    this.savedSortActive = '';
+    this.savedSortDirection = '';
+    this.dataSource.sort?.sort({ id: '', start: 'asc', disableClear: false });
     this.filterValue = '';
     this.resetSelectFilters();
     this.fechaCreacionDesde = null;
