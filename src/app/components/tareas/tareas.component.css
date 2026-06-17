@@ -110,6 +110,12 @@ table {
   min-width: 120px;
 }
 
+.btn-export {
+  color: #1a3a5c;
+  border-color: #1a3a5c !important;
+  min-width: 120px;
+}
+
 /* ── Estados ── */
 .status {
   display: inline-block;

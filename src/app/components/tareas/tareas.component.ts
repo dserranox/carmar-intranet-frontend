@@ -19,6 +19,8 @@ import { TareasDTO } from '../../models/tarea';
 import { MatDialog } from '@angular/material/dialog';
 import { FinishTaskDialogComponent, FinishTaskDialogResult } from './finish-task-dialog.component';
 import { TiempoProcesoDirective } from '../../directives/tiempo-proceso.directive';
+import { Workbook } from 'exceljs';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-tareas',
@@ -301,6 +303,123 @@ export class TareasComponent implements OnInit {
     const m = row.perdidaMantenimiento ?? 0;
     const c = row.perdidaCalidad ?? 0;
     return `Rendimiento: ${r} min | Mantenimiento: ${m} min | Calidad: ${c} min`;
+  }
+
+  async exportarExcel(): Promise<void> {
+    const data = this.dataSource.filteredData;
+    if (!data.length) {
+      this.snack.open('No hay datos para exportar', 'OK', { duration: 2500 });
+      return;
+    }
+
+    const wb = new Workbook();
+    const ws = wb.addWorksheet('Tareas');
+
+    const columnas = this.displayedColumns.filter(c => c !== 'acciones');
+
+    const headerMap: Record<string, string> = {
+      fecha: 'Fecha Creación',
+      nroPlan: 'Nro. Plan',
+      codigoProducto: 'Código',
+      producto: 'Producto',
+      operacion: 'Operación',
+      nroMaquina: 'Nro. Máquina',
+      operario: 'Operario',
+      horaInicio: 'Hora Inicio',
+      horaFin: 'Hora Fin',
+      cantidad: 'Cantidad',
+      noConforme: 'Piezas NC',
+      tiempo: 'Tiempo Proceso',
+      tiempodemora: 'Tiempo Demora',
+      estado: 'Estado',
+      observaciones: 'Observaciones',
+      documentos: 'Documentos'
+    };
+
+    const headerRow = ws.addRow(columnas.map(c => headerMap[c] ?? c));
+    headerRow.eachCell(cell => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A3A5C' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        bottom: { style: 'thin', color: { argb: 'FF0D2035' } }
+      };
+    });
+
+    for (const row of data) {
+      const valores = columnas.map(col => this.valorCelda(row, col));
+      ws.addRow(valores);
+    }
+
+    columnas.forEach((_, i) => {
+      const col = ws.getColumn(i + 1);
+      let maxLen = String(headerMap[columnas[i]] ?? columnas[i]).length;
+      col.eachCell({ includeEmpty: false }, cell => {
+        const len = String(cell.value ?? '').length;
+        if (len > maxLen) maxLen = len;
+      });
+      col.width = Math.min(maxLen + 4, 40);
+    });
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const fecha = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const nombre = `tareas_${fecha.getFullYear()}${pad(fecha.getMonth() + 1)}${pad(fecha.getDate())}_${pad(fecha.getHours())}${pad(fecha.getMinutes())}.xlsx`;
+    saveAs(blob, nombre);
+  }
+
+  private valorCelda(row: TareasDTO, col: string): string | number {
+    switch (col) {
+      case 'fecha': {
+        const d = row.fechaInicio ? new Date(row.fechaInicio) : null;
+        if (!d || isNaN(d.getTime())) return '-';
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+      }
+      case 'nroPlan': return row.nroPlan ?? '-';
+      case 'codigoProducto': return row.productoCodigo ?? '-';
+      case 'producto': return row.productoDescripcion ?? '-';
+      case 'operacion': return `${row.operacionNombreCorto ?? ''} — ${row.operacionNombre ?? ''}`;
+      case 'nroMaquina': return row.nroMaquina ?? '-';
+      case 'operario': return row.username ?? '-';
+      case 'horaInicio': {
+        const d = row.fechaInicio ? new Date(row.fechaInicio) : null;
+        if (!d || isNaN(d.getTime())) return '-';
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+      case 'horaFin': {
+        const d = row.fechaFinalizacion ? new Date(row.fechaFinalizacion) : null;
+        if (!d || isNaN(d.getTime())) return '-';
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+      case 'cantidad': return row.cantidad ?? '-';
+      case 'noConforme': return row.noConforme ?? '-';
+      case 'tiempo': return this.tiempoProceso(row);
+      case 'tiempodemora': return this.tiempoDemora(row);
+      case 'estado': return row.fechaFinalizacion == null ? 'EN PROCESO' : 'TERMINADO';
+      case 'observaciones': return row.observaciones ?? '-';
+      case 'documentos': {
+        if (!row.documentos?.length) return '-';
+        return row.documentos.map(d => d.pdoNombre).join(', ');
+      }
+      default: return '-';
+    }
+  }
+
+  private tiempoProceso(row: TareasDTO): string {
+    const start = row.fechaInicio ? new Date(row.fechaInicio) : null;
+    const end = row.fechaFinalizacion ? new Date(row.fechaFinalizacion) : null;
+    if (!start || !end) return '—';
+    let ms = end.getTime() - start.getTime();
+    if (ms < 0) ms = 0;
+    const totalSeg = Math.floor(ms / 1000);
+    const min = Math.floor(totalSeg / 60);
+    const seg = totalSeg % 60;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(min)}:${pad(seg)}`;
   }
 
   tiempoDemora(row: TareasDTO): string {

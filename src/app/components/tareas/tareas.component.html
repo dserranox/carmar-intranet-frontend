@@ -92,6 +92,10 @@
         <mat-icon>search</mat-icon>
         Buscar
       </button>
+      <button mat-stroked-button class="btn-export" (click)="exportarExcel()" [disabled]="!dataSource.data.length">
+        <mat-icon>download</mat-icon>
+        Exportar Excel
+      </button>
     </div>
   </header>
 
