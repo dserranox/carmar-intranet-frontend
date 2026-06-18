@@ -84,6 +84,10 @@
     </div>
 
     <div class="actions">
+      <button mat-stroked-button class="btn-export" (click)="exportarExcel()" [disabled]="!dataSource.data.length">
+        <mat-icon>download</mat-icon>
+        Exportar a Excel
+      </button>
       <button mat-stroked-button class="btn-clear" (click)="limpiarFiltros()">
         <mat-icon>filter_alt_off</mat-icon>
         Limpiar filtros
@@ -91,10 +95,6 @@
       <button mat-raised-button color="primary" class="btn-search" (click)="load()">
         <mat-icon>search</mat-icon>
         Buscar
-      </button>
-      <button mat-stroked-button class="btn-export" (click)="exportarExcel()" [disabled]="!dataSource.data.length">
-        <mat-icon>download</mat-icon>
-        Exportar Excel
       </button>
     </div>
   </header>
