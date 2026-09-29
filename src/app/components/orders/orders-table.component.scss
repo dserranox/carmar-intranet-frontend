@@ -10,6 +10,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 
   h2 {
     margin: 0;
@@ -95,15 +97,6 @@
   padding-top: 4px;
   border-top: 1px solid #f0f0f0;
   margin-top: 4px;
-}
-
-.btn-clear {
-  color: #5c6470;
-  border-color: #d0d4da !important;
-}
-
-.btn-search {
-  min-width: 120px;
 }
 
 /* ── Tabla ── */
@@ -225,3 +218,9 @@
 .status.falta-material { color: #b85200; background: #fde8d4; }
 .status.cancelado      { color: #555555; background: #ebebeb; }
 .status.otro           { color: #555555; background: #ebebeb; }
+
+/* Cliente sin asignar: la orden la carga producción y el admin lo completa. */
+.celda-cliente { white-space: nowrap; }
+.celda-cliente .sin-cliente { color: rgba(0, 0, 0, .4); font-style: italic; }
+.celda-cliente .mini { width: 30px; height: 30px; line-height: 30px; }
+.celda-cliente .mini mat-icon { font-size: 17px; width: 17px; height: 17px; }

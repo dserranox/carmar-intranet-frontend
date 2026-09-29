@@ -1,0 +1,199 @@
+<section class="form-wrapper">
+
+  <header class="page-header">
+    <button mat-icon-button (click)="volver()" matTooltip="Volver al listado">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="titulo">
+      <h2>
+        @if (esNueva()) { Nueva no conformidad }
+        @else { No conformidad N° {{ nc().numero }} }
+      </h2>
+      <span class="sub">
+        @if (!esNueva()) {
+          {{ nc().fechaEmision | date:'dd/MM/yyyy' }} · abierta por {{ nc().abiertaPor }}
+          @if (cerrada()) { · cerrada el {{ nc().fechaCierre | date:'dd/MM/yy HH:mm' }} por {{ nc().cerradaPor }} }
+        } @else {
+          Formulario FQ-02 · el número se asigna al guardarla
+        }
+      </span>
+    </div>
+
+    <div class="botonera">
+      @if (cerrada()) {
+        <span class="sello"><mat-icon>lock</mat-icon> CERRADA</span>
+        <button mat-stroked-button (click)="descargar()">
+          <mat-icon>download</mat-icon>
+          Formulario FQ-02
+        </button>
+        @if (puedeEscribir) {
+          <button mat-stroked-button (click)="reabrir()">
+            <mat-icon>lock_open</mat-icon>
+            Reabrir
+          </button>
+        }
+      } @else if (puedeEscribir) {
+        <button mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()">
+          <mat-icon>save</mat-icon>
+          {{ guardando() ? 'Guardando…' : 'Guardar' }}
+        </button>
+        @if (!esNueva()) {
+          <button mat-stroked-button (click)="cerrar()">
+            <mat-icon>flag</mat-icon>
+            Cerrar
+          </button>
+        }
+      }
+    </div>
+  </header>
+
+  <!-- ---------------------------------------------- cabecera del formulario -->
+  <div class="bloque">
+    <h3>Datos de la no conformidad</h3>
+    <div class="grilla">
+      <app-select-buscable label="Tipo" [conTodos]="false" [opciones]="opcionesTipo"
+                           [ngModel]="nc().tipo" (ngModelChange)="cambiarTipo($event)"
+                           [disabled]="soloLectura()" />
+
+      <app-select-buscable label="Emitida a" [conTodos]="false" [opciones]="opcionesEmitidaA"
+                           [ngModel]="nc().emitidaA" (ngModelChange)="actualizar('emitidaA', $event)"
+                           [disabled]="soloLectura()" />
+
+      @if (nc().emitidaA === 'OTRO') {
+        <mat-form-field appearance="outline">
+          <mat-label>¿A quién?</mat-label>
+          <input matInput [ngModel]="nc().emitidaAOtro" (ngModelChange)="actualizar('emitidaAOtro', $event)"
+                 [disabled]="soloLectura()" />
+        </mat-form-field>
+      }
+
+      <app-select-buscable label="Emite" [conTodos]="false" [opciones]="opcionesEmite"
+                           [ngModel]="nc().emite" (ngModelChange)="actualizar('emite', $event)"
+                           [disabled]="soloLectura()" />
+
+      @if (nc().emite === 'CLIENTE') {
+        <app-select-buscable label="Cliente" placeholder="Buscar cliente…" [conTodos]="false"
+                             [opciones]="opcionesCliente"
+                             [ngModel]="nc().clienteId" (ngModelChange)="actualizar('clienteId', $event)"
+                             [disabled]="soloLectura()" />
+      }
+      @if (nc().emite === 'OTRO') {
+        <mat-form-field appearance="outline">
+          <mat-label>¿Quién emite?</mat-label>
+          <input matInput [ngModel]="nc().emiteOtro" (ngModelChange)="actualizar('emiteOtro', $event)"
+                 [disabled]="soloLectura()" />
+        </mat-form-field>
+      }
+
+      <app-select-buscable label="Origen de la detección" [conTodos]="false"
+                           [opciones]="opcionesOrigen()"
+                           [ngModel]="nc().origen" (ngModelChange)="actualizar('origen', $event)"
+                           [disabled]="soloLectura()" />
+
+      @if (pideOrigenOtro()) {
+        <mat-form-field appearance="outline" class="ancho">
+          <mat-label>Especificar el origen</mat-label>
+          <input matInput [ngModel]="nc().origenOtro" (ngModelChange)="actualizar('origenOtro', $event)"
+                 [disabled]="soloLectura()" />
+        </mat-form-field>
+      }
+    </div>
+
+    @if (nc().nroPlan || nc().productoCodigo) {
+      <div class="trazabilidad">
+        <mat-icon>link</mat-icon>
+        <span>
+          @if (nc().productoCodigo) { <b>{{ nc().productoCodigo }}</b> }
+          @if (nc().productoDescripcion) { — {{ nc().productoDescripcion }} }
+          @if (nc().nroPlan) { · plan {{ nc().nroPlan }} }
+          @if (nc().puesto) { · {{ nc().puesto }} }
+          @if (nc().operario) { · operario {{ nc().operario }} }
+        </span>
+      </div>
+    }
+  </div>
+
+  <!-- ---------------------------------------------- los cinco puntos -->
+  <div class="bloque">
+    <h3>1° Descripción del desvío</h3>
+    <textarea class="texto" rows="4" [ngModel]="nc().descripcion"
+              (ngModelChange)="actualizar('descripcion', $event)" [disabled]="soloLectura()"
+              placeholder="Qué se encontró, dónde y sobre qué producto"></textarea>
+
+    <div class="fotos">
+      @for (a of nc().adjuntos ?? []; track a.ncaId) {
+        <figure class="foto">
+          @if (vistaDe(a)) {
+            <img [src]="vistaDe(a)" [alt]="a.nombre" />
+          } @else {
+            <div class="sin-vista"><mat-icon>description</mat-icon></div>
+          }
+          <figcaption>
+            <span class="nombre" [matTooltip]="a.nombre">{{ a.nombre }}</span>
+            <span class="peso">{{ tamanio(a.tamanio) }}</span>
+          </figcaption>
+          @if (!soloLectura()) {
+            <button mat-icon-button class="quitar" matTooltip="Sacar la foto" (click)="borrarFoto(a)">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </figure>
+      }
+
+      @if (!soloLectura()) {
+        <label class="sumar-foto" [class.deshabilitado]="esNueva() || subiendo()">
+          <mat-icon>{{ subiendo() ? 'hourglass_top' : 'add_a_photo' }}</mat-icon>
+          <span>{{ subiendo() ? 'Subiendo…' : (esNueva() ? 'Guardá primero' : 'Sacar foto') }}</span>
+          <input type="file" accept="image/*,application/pdf" capture="environment"
+                 [disabled]="esNueva() || subiendo()" (change)="alElegirFoto($event)" />
+        </label>
+      }
+    </div>
+  </div>
+
+  <div class="bloque">
+    <h3>2° Acción inmediata</h3>
+    <textarea class="texto" rows="3" [ngModel]="nc().accionInmediata"
+              (ngModelChange)="actualizar('accionInmediata', $event)" [disabled]="soloLectura()"
+              placeholder="Qué se hizo en el momento para contener el problema"></textarea>
+  </div>
+
+  <div class="bloque">
+    <h3>3° Análisis y definición de las causas</h3>
+    <textarea class="texto" rows="3" [ngModel]="nc().analisisCausas"
+              (ngModelChange)="actualizar('analisisCausas', $event)" [disabled]="soloLectura()"
+              placeholder="Por qué pasó"></textarea>
+  </div>
+
+  <div class="bloque">
+    <h3>4° Acción correctiva</h3>
+    <textarea class="texto" rows="3" [ngModel]="nc().accionCorrectiva"
+              (ngModelChange)="actualizar('accionCorrectiva', $event)" [disabled]="soloLectura()"
+              placeholder="Qué se cambia para que no vuelva a pasar"></textarea>
+  </div>
+
+  <div class="bloque">
+    <h3>5° Verificación de la eficacia de las acciones correctivas</h3>
+    <textarea class="texto" rows="3" [ngModel]="nc().verificacionEficacia"
+              (ngModelChange)="actualizar('verificacionEficacia', $event)" [disabled]="soloLectura()"
+              placeholder="Cómo se comprobó que la acción funcionó"></textarea>
+
+    <div class="grilla cierre">
+      <app-select-buscable label="Responsables" placeholder="Buscar…" [multiple]="true"
+                           textoVacio="Sin asignar" [opciones]="opcionesUsuario"
+                           [ngModel]="nc().responsables ?? []"
+                           (ngModelChange)="actualizar('responsables', $event)"
+                           [disabled]="soloLectura()" />
+
+      <app-select-buscable label="Ejecución" [conTodos]="false" [opciones]="opcionesEjecucion"
+                           [ngModel]="nc().ejecucion" (ngModelChange)="actualizar('ejecucion', $event)"
+                           [disabled]="soloLectura()" />
+    </div>
+  </div>
+
+  <div class="bloque">
+    <h3>Observaciones adicionales</h3>
+    <textarea class="texto" rows="2" [ngModel]="nc().observaciones"
+              (ngModelChange)="actualizar('observaciones', $event)" [disabled]="soloLectura()"></textarea>
+  </div>
+</section>

@@ -1,0 +1,47 @@
+.titulo { display: flex; align-items: center; gap: 8px; }
+
+.contenido {
+  display: flex;
+  flex-direction: column;
+  min-width: 430px;
+  padding-top: 8px;
+}
+
+.bloque {
+  border: 1px solid rgba(0, 0, 0, .12);
+  border-radius: 10px;
+  padding: 12px 14px 0;
+  margin-bottom: 14px;
+  background: #fafafa;
+}
+
+.bloque header { display: flex; flex-direction: column; margin-bottom: 8px; }
+.etiqueta { font-weight: 600; font-size: 1rem; }
+.rango { font-size: .82rem; color: rgba(0, 0, 0, .6); }
+
+.campo { width: 100%; }
+
+.veredicto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0 10px;
+  font-weight: 600;
+  font-size: .9rem;
+}
+.veredicto.ok { color: #2e7d32; }
+.veredicto.mal { color: #c62828; }
+.veredicto mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+.aviso-rechazo {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fff3e0;
+  border-left: 4px solid #ef6c00;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: .88rem;
+  color: #6d4c00;
+  margin: 0;
+}

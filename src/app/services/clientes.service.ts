@@ -12,4 +12,8 @@ export class ClientesService {
   getAll(): Observable<Cliente[]> {
     return this.http.get<Cliente[]>(this.baseUrl);
   }
+
+  crear(cliente: { razonSocial: string; cuit: string }): Observable<Cliente> {
+    return this.http.post<Cliente>(this.baseUrl, cliente);
+  }
 }

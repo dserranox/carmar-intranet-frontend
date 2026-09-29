@@ -1,0 +1,77 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.corrugado {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.nervadura {
+  stroke: rgba(0, 0, 0, .45);
+  stroke-width: 3;
+}
+
+.ranura {
+  fill: #f4f6f8;
+  stroke: #1c2329;
+  stroke-width: 2;
+  stroke-dasharray: 14 9;
+}
+
+.cota {
+  stroke: #37474f;
+  stroke-width: 2;
+}
+
+.cota-guia {
+  stroke: rgba(0, 0, 0, .3);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.largo {
+  font-size: 40px;
+  font-weight: 800;
+  fill: #00695c;
+}
+
+.diametro {
+  font-size: 30px;
+  font-weight: 800;
+  fill: #1a3a5c;
+}
+
+.rotulo-cota {
+  font-size: 15px;
+  font-weight: 700;
+  fill: rgba(0, 0, 0, .5);
+  letter-spacing: 2px;
+}
+
+.codigo {
+  font-size: 24px;
+  font-weight: 700;
+  fill: #263238;
+  letter-spacing: .5px;
+}
+
+.tipo {
+  font-size: 22px;
+  font-weight: 800;
+  fill: #455a64;
+  letter-spacing: 1px;
+}
+
+.tipo.abierto {
+  fill: #ef6c00;
+}
+
+.programa {
+  font-size: 20px;
+  font-weight: 700;
+  fill: #5a6678;
+  letter-spacing: 1px;
+}

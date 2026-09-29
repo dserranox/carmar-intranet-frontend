@@ -1,0 +1,81 @@
+.form-wrapper { padding: 4px 0 24px; max-width: 1100px; }
+
+.page-header {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.page-header .titulo { display: flex; flex-direction: column; line-height: 1.2; flex: 1; min-width: 260px; }
+.page-header h2 { margin: 0; font-size: 1.4rem; font-weight: 600; color: #1a1a2e; }
+.page-header .sub { font-size: .82rem; color: rgba(0, 0, 0, .55); }
+
+.sello {
+  display: flex; align-items: center; gap: 5px;
+  background: #e8f5e9; color: #2e7d32;
+  border-radius: 999px; padding: 6px 14px;
+  font-size: .8rem; font-weight: 700;
+}
+.sello mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+.bloque {
+  background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 12px;
+  padding: 14px 18px; margin-bottom: 12px;
+}
+.bloque h3 {
+  margin: 0 0 10px; font-size: .88rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .03em; color: #00695c;
+}
+
+.grilla {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px; align-items: start;
+}
+.grilla .ancho { grid-column: 1 / -1; }
+.grilla.cierre { margin-top: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 260px)); }
+
+.texto {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: .92rem;
+  padding: 10px 12px; border-radius: 9px; resize: vertical;
+  border: 1px solid rgba(0, 0, 0, .18); background: #fff;
+}
+.texto:focus { outline: 2px solid #26a69a; outline-offset: -1px; }
+.texto:disabled { background: #fafafa; color: rgba(0, 0, 0, .65); }
+
+.trazabilidad {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  padding: 8px 12px; border-radius: 9px; background: #e0f2f1; color: #00564b;
+  font-size: .85rem;
+}
+.trazabilidad mat-icon { font-size: 19px; width: 19px; height: 19px; }
+
+/* ---------------------------------------------------- fotos */
+.fotos { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+
+.foto {
+  position: relative; margin: 0; width: 150px;
+  border: 1px solid rgba(0, 0, 0, .12); border-radius: 10px; overflow: hidden; background: #fafafa;
+}
+.foto img { width: 100%; height: 110px; object-fit: cover; display: block; }
+.foto .sin-vista {
+  height: 110px; display: flex; align-items: center; justify-content: center; color: rgba(0, 0, 0, .35);
+}
+.foto figcaption { padding: 6px 8px; display: flex; flex-direction: column; }
+.foto .nombre { font-size: .74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.foto .peso { font-size: .68rem; color: rgba(0, 0, 0, .5); }
+.foto .quitar {
+  position: absolute; top: 2px; right: 2px;
+  background: rgba(255, 255, 255, .9); width: 28px; height: 28px; line-height: 28px;
+}
+.foto .quitar mat-icon { font-size: 17px; width: 17px; height: 17px; }
+
+/* El botón grande de cámara: en la tablet abre directamente el visor. */
+.sumar-foto {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  width: 150px; height: 152px; cursor: pointer;
+  border: 2px dashed #26a69a; border-radius: 10px; color: #00695c; background: #f1f8f7;
+  font-size: .8rem; font-weight: 600; text-align: center;
+}
+.sumar-foto:hover { background: #e0f2f1; }
+.sumar-foto mat-icon { font-size: 30px; width: 30px; height: 30px; }
+.sumar-foto input { display: none; }
+.sumar-foto.deshabilitado {
+  opacity: .5; cursor: not-allowed; border-color: #b0bec5; color: rgba(0, 0, 0, .5);
+}

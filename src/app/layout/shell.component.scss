@@ -50,3 +50,61 @@
 .avatar { color: #263238; font-size: 28px; width: 28px; height: 28px; }
 
 .content { padding: 12px; }
+
+/* Campanita de notificaciones: el globo rojo se ve desde lejos. */
+.campanita {
+  position: relative;
+
+  mat-icon { color: #263238; }
+  mat-icon.con-avisos { color: #c62828; }
+
+  .globo {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #c62828;
+    color: #fff;
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 17px;
+    text-align: center;
+    pointer-events: none;
+  }
+}
+
+/* La tarea que está corriendo: con el reloj andando la app se queda ahí. */
+.tarea-abierta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  margin-right: 12px;
+  padding: 5px 14px;
+  border-radius: 18px;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  color: #1b5e20;
+  text-decoration: none;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    animation: latido 2s ease-in-out infinite;
+  }
+
+  .que { font-size: .82rem; font-weight: 700; }
+  .donde { font-size: .74rem; opacity: .75; }
+
+  &:hover { background: #c8e6c9; }
+}
+
+@keyframes latido {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .45; }
+}

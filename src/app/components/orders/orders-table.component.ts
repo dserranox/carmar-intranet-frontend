@@ -20,12 +20,17 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TasksService } from '../../services/tasks.service';
 import { TaskSessionDialogComponent } from './task-session-dialog.component';
+import { AsignarDialogComponent } from './asignar-dialog.component';
 import { Router } from '@angular/router';
 import { FinishOrderDialogComponent } from './finish-order-dialog.component';
 import { CreateOrderDialogComponent } from './create-order-dialog.component';
 import { OrdenCreateDTO } from '../../models/orden-create';
 import { FechaFormatoDirective } from '../../directives/fecha-formato.directive';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+import { OpcionBuscable, SelectBuscableComponent } from '../../shared/select-buscable.component';
+import { NuevoClienteDialogComponent } from './nuevo-cliente-dialog.component';
+import { NuevoProductoDialogComponent } from './nuevo-producto-dialog.component';
+import { AsignarClienteDialogComponent } from './asignar-cliente-dialog.component';
 
 @Component({
   selector: 'app-orders-table',
@@ -35,7 +40,8 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
     MatTableModule, MatPaginatorModule, MatSortModule,
     MatIconModule, MatButtonModule, MatTooltipModule,
     MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
-    MatSelectModule, MatDatepickerModule, MatNativeDateModule
+    MatSelectModule, MatDatepickerModule, MatNativeDateModule,
+    SelectBuscableComponent
   ],
   templateUrl: './orders-table.component.html',
   styleUrls: ['./orders-table.component.scss']
@@ -52,12 +58,13 @@ export class OrdersTableComponent implements OnInit {
   loading = false;
   filterValue = '';
 
-  // Listas de opciones para los selects (extraídas de los datos cargados)
-  nroPlanes: string[] = [];
-  clientes: number[] = [];
-  codigos: string[] = [];
-  productos: string[] = [];
-  estados: string[] = [];
+  // Opciones de los filtros buscables (extraídas de los datos cargados)
+  opcionesAnio: OpcionBuscable[] = [];
+  opcionesNroPlan: OpcionBuscable[] = [];
+  opcionesCliente: OpcionBuscable[] = [];
+  opcionesCodigo: OpcionBuscable[] = [];
+  opcionesProducto: OpcionBuscable[] = [];
+  opcionesEstado: OpcionBuscable[] = [];
 
   // Valores seleccionados en los filtros
   filterNroPlan = '';
@@ -76,6 +83,8 @@ export class OrdersTableComponent implements OnInit {
   private allOrders: OrdenResponseDTO[] = [];
 
   isAdmin = false;
+  /** Solo quien tenga CLIENTES:READ ve la razón social. */
+  puedeVerClientes = false;
 
   private _paginatorTop?: MatPaginator;
   private _paginatorBottom?: MatPaginator;
@@ -135,8 +144,11 @@ export class OrdersTableComponent implements OnInit {
 
   ngOnInit(): void {
     this.resolveIsAdmin();
+    // La columna Cliente muestra la razón social, así que también ordena por ella.
+    this.dataSource.sortingDataAccessor = (row: any, columna: string) =>
+      columna === 'clienteId' ? this.nombreCliente(row).toLowerCase() : row[columna];
     this.dataSource.filterPredicate = (row, filter) => {
-      const blob = `${row.ordNroPlan} ${row.clienteId} ${row.productoDescripcion} ${row.productoCodigo} ${row.situacionClave}`.toLowerCase();
+      const blob = `${row.ordNroPlan} ${row.clienteRazonSocial ?? ''} ${row.productoDescripcion} ${row.productoCodigo} ${row.situacionClave}`.toLowerCase();
       return blob.includes(filter.trim().toLowerCase());
     };
     this.loadYears();
@@ -146,6 +158,7 @@ export class OrdersTableComponent implements OnInit {
     this.ordersSvc.getYears().subscribe({
       next: (years) => {
         this.years = years;
+        this.opcionesAnio = years.map(y => ({ valor: y, texto: String(y) }));
         if (years.length > 0) {
           this.year = years[0];
         }
@@ -163,8 +176,14 @@ export class OrdersTableComponent implements OnInit {
       const username = (obj?.username || '').toString().toLowerCase();
       const permissions: string[] = Array.isArray(obj?.permissions) ? obj.permissions.map((r:any)=>String(r).toUpperCase()) : [];
       this.isAdmin = username === 'admin' || permissions.includes('ORDENES:WRITE');
+      // En planta no se muestra para qué cliente se fabrica.
+      this.puedeVerClientes = permissions.includes('CLIENTES:READ');
     } catch {
       this.isAdmin = false;
+      this.puedeVerClientes = false;
+    }
+    if (!this.puedeVerClientes) {
+      this.displayedColumns = this.displayedColumns.filter(c => c !== 'clienteId');
     }
   }
 
@@ -200,11 +219,32 @@ export class OrdersTableComponent implements OnInit {
   }
 
   private buildFilterOptions(orders: OrdenResponseDTO[]): void {
-    this.nroPlanes = [...new Set(orders.map(o => o.ordNroPlan).filter((v): v is string => !!v))].sort();
-    this.clientes  = [...new Set(orders.map(o => o.clienteId).filter((v): v is number => v != null))].sort((a, b) => a - b);
-    this.codigos   = [...new Set(orders.map(o => o.productoCodigo).filter((v): v is string => !!v))].sort();
-    this.productos = [...new Set(orders.map(o => o.productoDescripcion).filter((v): v is string => !!v))].sort();
-    this.estados   = [...new Set(orders.map(o => o.situacionClave).filter((v): v is string => !!v))].sort();
+    this.opcionesNroPlan = this.opcionesDeTexto(orders.map(o => o.ordNroPlan));
+    this.opcionesCodigo  = this.opcionesDeTexto(orders.map(o => o.productoCodigo));
+    this.opcionesProducto = this.opcionesDeTexto(orders.map(o => o.productoDescripcion));
+    this.opcionesEstado  = this.opcionesDeTexto(orders.map(o => o.situacionClave));
+
+    // El cliente se busca y se muestra por razón social, no por su id interno.
+    const porId = new Map<number, string>();
+    for (const o of orders) {
+      if (o.clienteId == null) continue;
+      if (!porId.has(o.clienteId)) porId.set(o.clienteId, this.nombreCliente(o));
+    }
+    this.opcionesCliente = [...porId.entries()]
+      .map(([valor, texto]) => ({ valor, texto }))
+      .sort((a, b) => a.texto.localeCompare(b.texto));
+  }
+
+  /** Razón social del cliente; si la orden no la trae, al menos el id para no dejarlo vacío. */
+  nombreCliente(orden: OrdenResponseDTO): string {
+    if (orden.clienteRazonSocial) return orden.clienteRazonSocial;
+    return orden.clienteId != null ? `Cliente ${orden.clienteId}` : '—';
+  }
+
+  private opcionesDeTexto(valores: (string | null | undefined)[]): OpcionBuscable[] {
+    return [...new Set(valores.filter((v): v is string => !!v))]
+      .sort((a, b) => a.localeCompare(b))
+      .map(v => ({ valor: v, texto: v }));
   }
 
   private resetSelectFilters(): void {
@@ -340,6 +380,34 @@ export class OrdersTableComponent implements OnInit {
 
 
   /** DEMO del nuevo flujo unificado de tarea — sin llamadas al backend */
+  /** Permiso para repartir el trabajo de una orden entre los operarios. */
+  get puedeAsignar(): boolean {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return false;
+      const perms = JSON.parse(raw)?.permissions;
+      return Array.isArray(perms) && perms.includes('ASIGNACIONES:WRITE');
+    } catch { return false; }
+  }
+
+  openAsignarDialog(order: OrdenResponseDTO): void {
+    this.dialog.open(AsignarDialogComponent, {
+      width: '1040px',
+      maxWidth: '96vw',
+      data: {
+        ordenId: order.id,
+        nroPlan: order.ordNroPlan,
+        productoCodigo: order.productoCodigo,
+        productoDescripcion: order.productoDescripcion,
+        cantidad: order.cantidad
+      }
+    }).afterClosed().subscribe(asignado => {
+      if (asignado) {
+        this.snack.open('Trabajo asignado', 'OK', { duration: 3000 });
+      }
+    });
+  }
+
   openTaskSessionDialog(order: OrdenResponseDTO): void {
     const dialogRef = this.dialog.open(TaskSessionDialogComponent, {
       width: '660px',
@@ -394,5 +462,33 @@ export class OrdersTableComponent implements OnInit {
         }
       });
     });
+  }
+
+  /** Alta de cliente sin salir de Órdenes. */
+  abrirNuevoCliente(): void {
+    this.dialog.open(NuevoClienteDialogComponent, { width: '440px' })
+      .afterClosed().subscribe(cliente => {
+        if (!cliente) return;
+        this.snack.open(`Cliente "${cliente.razonSocial}" creado`, 'Cerrar', { duration: 3000 });
+      });
+  }
+
+  /** El administrador le pone el cliente a una orden que se cargó sin él. */
+  abrirAsignarCliente(orden: OrdenResponseDTO): void {
+    this.dialog.open(AsignarClienteDialogComponent, { data: { orden } })
+      .afterClosed().subscribe(actualizada => {
+        if (!actualizada) return;
+        this.snack.open('Cliente asignado', 'Cerrar', { duration: 3000 });
+        this.load();
+      });
+  }
+
+  /** Alta de producto sin salir de Órdenes. */
+  abrirNuevoProducto(): void {
+    this.dialog.open(NuevoProductoDialogComponent, { width: '440px' })
+      .afterClosed().subscribe(producto => {
+        if (!producto) return;
+        this.snack.open(`Producto ${producto.codigo} creado`, 'Cerrar', { duration: 3000 });
+      });
   }
 }

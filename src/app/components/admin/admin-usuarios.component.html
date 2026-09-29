@@ -3,7 +3,7 @@
   <!-- Encabezado -->
   <header class="page-header">
     <h2>Administrar Usuarios</h2>
-    <button mat-raised-button class="btn-nuevo" (click)="nuevoUsuario()">
+    <button mat-flat-button color="primary" (click)="nuevoUsuario()">
       <mat-icon>add</mat-icon>
       Nuevo Usuario
     </button>
@@ -20,8 +20,8 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
     </div>
-    <div class="filter-actions">
-      <button mat-stroked-button class="btn-clear" (click)="limpiarFiltro()">
+    <div class="filter-actions botonera">
+      <button mat-stroked-button (click)="limpiarFiltro()">
         <mat-icon>filter_alt_off</mat-icon>
         Limpiar filtros
       </button>

@@ -1,0 +1,86 @@
+<h2 mat-dialog-title class="titulo">
+  <mat-icon>{{ esTraccion ? 'speed' : 'visibility' }}</mat-icon>
+  {{ control.operacionNombre }}
+</h2>
+
+<mat-dialog-content class="contenido">
+
+  <p class="contexto">
+    @if (control.productoCodigo) { <b>{{ control.productoCodigo }}</b> }
+    @if (control.nroPlan) { · plan {{ control.nroPlan }} }
+    @if (control.actividadPausada) {
+      <span class="pausado">
+        <mat-icon>pause_circle</mat-icon>
+        {{ control.actividadPausada }} en pausa
+      </span>
+    }
+  </p>
+
+  @if (esTraccion) {
+
+    <app-select-buscable label="Sección del cable" placeholder="Buscar sección…"
+                         [conTodos]="false" [opciones]="opcionesSeccion"
+                         [ngModel]="seccion()" (ngModelChange)="seccion.set($event)" />
+
+    @if (minimoExigido() !== null) {
+      <div class="exigido">
+        <mat-icon>bolt</mat-icon>
+        <span>Tiene que aguantar <b>{{ minimoExigido() }} N</b> como mínimo</span>
+      </div>
+    }
+
+    <mat-form-field appearance="outline" class="campo">
+      <mat-label>Código del terminal</mat-label>
+      <input matInput [ngModel]="terminal()" (ngModelChange)="terminal.set($event)"
+             placeholder="770854-1-A" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="campo">
+      <mat-label>Fuerza obtenida (N)</mat-label>
+      <input matInput type="number" inputmode="decimal"
+             [ngModel]="valorMedido()" (ngModelChange)="valorMedido.set($event)" />
+    </mat-form-field>
+
+    @if (veredicto(); as v) {
+      <div class="veredicto" [class.ok]="v === 'OK'" [class.ko]="v === 'NO_OK'">
+        <mat-icon>{{ v === 'OK' ? 'check_circle' : 'error' }}</mat-icon>
+        {{ v === 'OK' ? 'Pasa el control' : 'No llega al mínimo' }}
+      </div>
+    }
+
+  } @else {
+
+    <p class="pregunta">¿El control pasó?</p>
+    <div class="botones-conforme">
+      <button type="button" class="btn-grande ok" [class.activo]="conforme() === true"
+              (click)="conforme.set(true)">
+        <mat-icon>check_circle</mat-icon> CONFORME
+      </button>
+      <button type="button" class="btn-grande ko" [class.activo]="conforme() === false"
+              (click)="conforme.set(false)">
+        <mat-icon>error</mat-icon> NO CONFORME
+      </button>
+    </div>
+
+    <mat-form-field appearance="outline" class="campo">
+      <mat-label>Piezas revisadas</mat-label>
+      <input matInput type="number" [ngModel]="cantidad()" (ngModelChange)="cantidad.set($event)" />
+    </mat-form-field>
+
+  }
+
+  <mat-form-field appearance="outline" class="campo">
+    <mat-label>{{ pideObservacion() ? 'Qué encontraste (obligatorio)' : 'Observaciones' }}</mat-label>
+    <textarea matInput rows="2" [ngModel]="observaciones()"
+              (ngModelChange)="observaciones.set($event)"></textarea>
+  </mat-form-field>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar el control</button>
+  <button mat-flat-button color="primary" [disabled]="!completo()" (click)="guardar()">
+    <mat-icon>save</mat-icon>
+    Cerrar control
+  </button>
+</mat-dialog-actions>

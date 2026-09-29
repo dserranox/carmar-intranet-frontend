@@ -1,0 +1,205 @@
+<div class="pagina">
+
+  <header class="encabezado">
+    <h1><mat-icon>assignment_ind</mat-icon> Mi trabajo</h1>
+    <button mat-stroked-button (click)="cargar()" matTooltip="Actualizar">
+      <mat-icon>refresh</mat-icon>
+      Actualizar
+    </button>
+  </header>
+
+  @if (cargando()) {
+    <p class="vacio">Cargando…</p>
+  } @else if (!actual()) {
+    <section class="sin-trabajo">
+      <mat-icon>inbox</mat-icon>
+      <h2>No tenés trabajo asignado</h2>
+      <p>Cuando el administrador te asigne un código, va a aparecer acá.</p>
+    </section>
+  }
+
+  @if (actual(); as a) {
+
+    <!-- La tarea está parada: el reloj de producción no corre -->
+    @if (tareaAbierta(); as t) {
+      @if (tareaPausada) {
+        <section class="pausa-activa">
+          <mat-icon>pause_circle</mat-icon>
+          <div class="pausa-texto">
+            <span class="pausa-titulo">EN PAUSA — {{ etiquetaPausa(t.subtipoPausa ?? '') }}</span>
+            @if (t.motivoPausa) { <span class="pausa-sub">{{ t.motivoPausa }}</span> }
+          </div>
+          <span class="pausa-reloj">{{ relojPausa }}</span>
+          <button mat-flat-button color="primary" (click)="retomarTarea()">Reanudar</button>
+        </section>
+      } @else if (tareaSuspendida) {
+        <section class="pausa-activa suspendida">
+          <mat-icon>bedtime</mat-icon>
+          <div class="pausa-texto">
+            <span class="pausa-titulo">TAREA SUSPENDIDA</span>
+            <span class="pausa-sub">Sigue donde quedó: {{ transcurrido }} trabajados</span>
+          </div>
+          <button mat-flat-button color="primary" (click)="retomarTarea()">Retomar</button>
+        </section>
+      }
+    }
+
+    <!-- El código en el que está trabajando -->
+    <section class="codigo" [class.activo]="!!tareaAbierta()">
+      <div class="cabecera">
+        <div class="chips">
+          <span class="etiqueta">{{ a.estado === 'SUSPENDIDA' ? 'CÓDIGO SUSPENDIDO' : 'CÓDIGO ACTUAL' }}</span>
+          <span class="chip codigo-chip">{{ a.productoCodigo || '—' }}</span>
+          <span class="chip plan">Plan {{ a.nroPlan }}</span>
+          @if (a.cantidad) {
+            <span class="chip cant">{{ a.cantidad }} u.
+              @if (a.cantidadOrden && a.cantidad !== a.cantidadOrden) { <em>de {{ a.cantidadOrden }}</em> }
+            </span>
+          }
+        </div>
+        <span class="resumen">
+          {{ a.tareasHechas }} tareas hechas · {{ duracion(a.minutosTrabajados) }} trabajados
+          @if (a.minutosPausa) { · {{ duracion(a.minutosPausa) }} de pausas }
+        </span>
+      </div>
+
+      <p class="descripcion">{{ a.productoDescripcion || 'Sin descripción' }}</p>
+
+      @if (a.estado === 'SUSPENDIDA') {
+        <p class="aviso-suspendida">
+          <mat-icon>pause_presentation</mat-icon>
+          Lo habías suspendido — {{ etiquetaSuspension(a.subtipoSuspension) }}.
+          Arrancá cualquier actividad para retomarlo.
+        </p>
+      }
+
+      <!-- Con una tarea abierta -->
+      @if (tareaAbierta(); as t) {
+        <div class="en-curso">
+          <div class="datos-tarea">
+            <span class="rotulo">ESTÁS HACIENDO</span>
+            <span class="actividad">{{ t.operacionNombre }}</span>
+            <span class="puesto"><mat-icon>precision_manufacturing</mat-icon> {{ puestoDe(t) }}</span>
+          </div>
+          <div class="reloj-tarea">
+            <span class="rotulo">TRABAJADO</span>
+            <span class="reloj" [class.detenido]="!tareaCorriendo">{{ transcurrido }}</span>
+            @if ((t.segundosPausa ?? 0) > 0) {
+              <span class="pausa-acumulada">+ {{ relojPausa }} en pausa</span>
+            }
+          </div>
+          <div class="acciones-tarea">
+            <button mat-flat-button color="primary" class="btn-grande"
+                    [disabled]="!tareaCorriendo" (click)="finalizarTarea()">
+              <mat-icon>check_circle</mat-icon>
+              Finalizar tarea
+            </button>
+            <button mat-stroked-button [disabled]="!tareaCorriendo" (click)="alternarPausa()">
+              <mat-icon>pause</mat-icon>
+              Pausa
+            </button>
+            <button mat-stroked-button [disabled]="!tareaCorriendo" (click)="suspenderTarea()"
+                    matTooltip="Terminás el día sin terminar la tarea: mañana seguís desde acá">
+              <mat-icon>bedtime</mat-icon>
+              Suspender tarea
+            </button>
+          </div>
+
+          <!-- Los controles que el operario hace mientras produce. Cada uno es
+               una tarea propia y deja su registro en calidad. -->
+          <div class="controles">
+            <span class="rotulo-controles">CONTROLES</span>
+            <button mat-stroked-button class="btn-control" [disabled]="!tareaCorriendo"
+                    (click)="hacerControl('TRACCION')"
+                    matTooltip="Ensayo de arrancamiento sobre un cable crimpeado">
+              <mat-icon>speed</mat-icon>
+              Tracción
+            </button>
+            <button mat-stroked-button class="btn-control" [disabled]="!tareaCorriendo"
+                    (click)="hacerControl('VISUAL')"
+                    matTooltip="Verificación visual durante el montaje">
+              <mat-icon>visibility</mat-icon>
+              Visual
+            </button>
+            <button mat-stroked-button class="btn-control" [disabled]="!tareaCorriendo"
+                    (click)="hacerControl('DIMENSIONAL')"
+                    matTooltip="Verificación de medidas contra el plano">
+              <mat-icon>straighten</mat-icon>
+              Dimensional
+            </button>
+          </div>
+        </div>
+      } @else {
+
+        <!-- Sin tarea abierta: elige qué actividad arrancar -->
+        <div class="actividades">
+          <span class="rotulo">ELEGÍ QUÉ HACER</span>
+          <div class="grilla-actividades">
+            @for (act of a.actividades; track act.aacId) {
+              <button class="tarjeta-actividad" [disabled]="trabajando()" (click)="iniciar(act)">
+                <mat-icon>play_arrow</mat-icon>
+                <span class="nombre">{{ act.operacionNombre }}</span>
+                <span class="detalle">
+                  @if (act.cantidad) { {{ act.cantidad }} u. · }
+                  {{ puestoDe(act) }}
+                </span>
+                @if (act.vecesHechas) {
+                  <span class="hecho">
+                    <mat-icon>history</mat-icon>
+                    {{ act.vecesHechas }}
+                    {{ act.vecesHechas === 1 ? 'vez' : 'veces' }} · {{ duracion(act.minutosAcumulados) }}
+                  </span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="acciones-codigo">
+          <button mat-flat-button color="primary" class="btn-termine" (click)="terminarCodigo()">
+            <mat-icon>task_alt</mat-icon>
+            Terminé este código
+          </button>
+          <button mat-stroked-button (click)="suspender()">
+            <mat-icon>pause_presentation</mat-icon>
+            Suspender
+          </button>
+          <span class="nota">Al terminar el código se habilita el próximo de tu lista.</span>
+        </div>
+      }
+    </section>
+
+    <!-- Cola -->
+    <section class="cola">
+      <h3>Después seguís con</h3>
+
+      @if (!siguientes().length) {
+        <p class="cola-vacia">No hay más códigos en tu cola.</p>
+      }
+
+      <div class="lista">
+        @for (s of siguientes(); track s.asgId) {
+          <article class="item" [class.suspendida]="s.estado === 'SUSPENDIDA'">
+            <span class="orden">{{ s.prioridad }}</span>
+            <div class="datos">
+              <span class="linea1">
+                <strong>{{ s.productoCodigo || '—' }}</strong>
+                · Plan {{ s.nroPlan }}
+                @if (s.cantidad) { · {{ s.cantidad }} u. }
+                @if (s.estado === 'SUSPENDIDA') { <span class="tag">suspendido</span> }
+              </span>
+              <span class="linea2">
+                @for (act of s.actividades; track act.aacId) {
+                  <span class="mini-act">{{ act.operacionNombreCorto || act.operacionNombre }}</span>
+                }
+              </span>
+            </div>
+            @if (s.estado === 'SUSPENDIDA') {
+              <button mat-stroked-button (click)="retomar(s)">Retomar</button>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  }
+</div>

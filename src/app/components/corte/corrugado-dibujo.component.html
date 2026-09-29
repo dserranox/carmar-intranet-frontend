@@ -1,0 +1,76 @@
+@if (corte; as c) {
+  <svg class="corrugado" [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" preserveAspectRatio="xMidYMid meet">
+
+    <defs>
+      <linearGradient id="cuerpoCorrugado" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#5b6975" />
+        <stop offset="18%" stop-color="#8b98a5" />
+        <stop offset="50%" stop-color="#48535e" />
+        <stop offset="100%" stop-color="#2b333b" />
+      </linearGradient>
+      <marker id="flechaIni" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 5 L 10 0 L 10 10 z" fill="#37474f" />
+      </marker>
+      <marker id="flechaFin" viewBox="0 0 10 10" refX="1" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M 10 5 L 0 0 L 0 10 z" fill="#37474f" />
+      </marker>
+    </defs>
+
+    <!-- Cuerpo del tubo -->
+    <rect [attr.x]="tuboX" [attr.y]="tuboY" [attr.width]="tuboAncho" [attr.height]="tuboAlto"
+          rx="8" fill="url(#cuerpoCorrugado)" stroke="#1c2329" stroke-width="2" />
+
+    <!-- Nervaduras: es lo que hace que se lea como corrugado y no como caño liso -->
+    @for (x of nervaduras; track x) {
+      <line [attr.x1]="x" [attr.y1]="tuboY + 2" [attr.x2]="x" [attr.y2]="tuboYFin - 2"
+            class="nervadura" />
+    }
+
+    <!-- Ranura longitudinal del corrugado abierto -->
+    @if (esAbierto) {
+      <rect [attr.x]="tuboX + 4" [attr.y]="ranuraY" [attr.width]="tuboAncho - 8"
+            [attr.height]="ranuraAlto" rx="3" class="ranura" />
+    }
+
+    <!-- Cota del largo total -->
+    <line [attr.x1]="tuboX" [attr.y1]="cotaY" [attr.x2]="tuboFin" [attr.y2]="cotaY"
+          class="cota" marker-start="url(#flechaIni)" marker-end="url(#flechaFin)" />
+    <line [attr.x1]="tuboX" [attr.y1]="tuboYFin + 6" [attr.x2]="tuboX" [attr.y2]="cotaY + 10"
+          class="cota-guia" />
+    <line [attr.x1]="tuboFin" [attr.y1]="tuboYFin + 6" [attr.x2]="tuboFin" [attr.y2]="cotaY + 10"
+          class="cota-guia" />
+    <text [attr.x]="(tuboX + tuboFin) / 2" [attr.y]="cotaY - 12" text-anchor="middle" class="largo">
+      {{ c.longitud }} mm
+    </text>
+    <text [attr.x]="(tuboX + tuboFin) / 2" [attr.y]="cotaY + 32" text-anchor="middle" class="rotulo-cota">
+      LARGO TOTAL
+    </text>
+
+    <!-- Cota del diámetro -->
+    <line [attr.x1]="cotaDiametroX" [attr.y1]="tuboY" [attr.x2]="cotaDiametroX" [attr.y2]="tuboYFin"
+          class="cota" marker-start="url(#flechaIni)" marker-end="url(#flechaFin)" />
+    <line [attr.x1]="cotaDiametroX - 10" [attr.y1]="tuboY" [attr.x2]="tuboX" [attr.y2]="tuboY"
+          class="cota-guia" />
+    <line [attr.x1]="cotaDiametroX - 10" [attr.y1]="tuboYFin" [attr.x2]="tuboX" [attr.y2]="tuboYFin"
+          class="cota-guia" />
+    <text [attr.x]="textoDiametroX" [attr.y]="centroY - 4" text-anchor="end" class="diametro">
+      Ø {{ diametro }}
+    </text>
+    <text [attr.x]="textoDiametroX" [attr.y]="centroY + 20" text-anchor="end" class="rotulo-cota">
+      {{ diametroMm || 'mm' }}
+    </text>
+
+    <!-- Tipo, código y programa -->
+    <text [attr.x]="tuboFin" y="34" text-anchor="end" class="tipo" [class.abierto]="esAbierto">
+      {{ etiquetaTipo }}
+    </text>
+    <text [attr.x]="tuboX" y="34" class="codigo">{{ c.codigo }}</text>
+    @if (c.programa) {
+      <text [attr.x]="tuboFin" [attr.y]="alto - 12" text-anchor="end" class="programa">
+        PROGRAMA {{ c.programa }}
+      </text>
+    }
+  </svg>
+}

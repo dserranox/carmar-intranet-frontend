@@ -1,0 +1,44 @@
+.titulo { display: flex; align-items: center; gap: 8px; }
+
+.contenido { min-width: 420px; padding-top: 8px; }
+
+.nota {
+  font-size: .85rem;
+  color: rgba(0, 0, 0, .6);
+  margin: 0 0 14px;
+}
+
+.motivos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.motivo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 2px solid rgba(0, 0, 0, .12);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: .98rem;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color .12s, background .12s;
+}
+.motivo:hover { border-color: #80cbc4; }
+.motivo.activo {
+  border-color: #00695c;
+  background: #e0f2f1;
+  font-weight: 600;
+  color: #00564b;
+}
+.motivo mat-icon { color: #00695c; }
+
+/* "Otros" ocupa el ancho completo de la última fila */
+.motivo:last-child { grid-column: 1 / -1; }
+
+.campo { width: 100%; }

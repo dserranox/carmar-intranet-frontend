@@ -1,0 +1,184 @@
+/* Tablet de 10" en horizontal: todo en una pantalla, sin scroll. */
+.pagina {
+  --alto-toolbar: 64px;
+  --pad-shell: 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 14px 12px;
+  height: calc(100vh - var(--alto-toolbar) - var(--pad-shell));
+  height: calc(100dvh - var(--alto-toolbar) - var(--pad-shell));
+  overflow: hidden;
+  box-sizing: border-box;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.encabezado { display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; }
+.encabezado h1 {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 1.4rem; margin: 0; color: #00695c;
+}
+
+/* --------------------------------------------------------------- pausa */
+.pausa-activa {
+  display: flex; align-items: center; gap: 14px;
+  background: #e3f2fd; border: 2px solid #1565c0; border-radius: 10px;
+  padding: 8px 16px; flex: 0 0 auto;
+}
+.pausa-activa > mat-icon { color: #1565c0; font-size: 32px; width: 32px; height: 32px; }
+.pausa-texto { display: flex; flex-direction: column; flex: 1; }
+.pausa-titulo { font-size: 1.1rem; font-weight: 700; color: #0d47a1; }
+.pausa-sub { font-size: .82rem; color: #1565c0; }
+.pausa-reloj { font-variant-numeric: tabular-nums; font-size: 1.6rem; font-weight: 700; color: #0d47a1; }
+
+/* -------------------------------------------------------------- código */
+.codigo {
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, .12);
+  border-radius: 14px;
+  padding: 12px 18px 14px;
+  flex: 0 0 auto;
+}
+.codigo.activo { border-color: #00695c; background: #f2faf9; }
+
+.cabecera { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.etiqueta { font-size: .7rem; letter-spacing: 2px; font-weight: 700; color: #00695c; }
+.chip { border-radius: 999px; padding: 4px 14px; font-weight: 600; font-size: .92rem; white-space: nowrap; }
+.chip.codigo-chip { background: #00695c; color: #fff; font-size: 1.1rem; }
+.chip.plan { background: #eceff1; color: #37474f; }
+.chip.cant { background: #ede7f6; color: #4527a0; }
+.chip.cant em { font-style: normal; opacity: .7; font-weight: 500; }
+.resumen { font-size: .8rem; color: rgba(0, 0, 0, .6); }
+
+.descripcion {
+  margin: 6px 0 10px; font-size: .92rem; color: rgba(0, 0, 0, .7);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.aviso-suspendida {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff3e0; border-left: 4px solid #ef6c00; border-radius: 6px;
+  padding: 6px 12px; margin: 0 0 10px; font-size: .86rem; color: #7c4a00;
+}
+.aviso-suspendida mat-icon { font-size: 20px; width: 20px; height: 20px; color: #ef6c00; }
+
+/* ------------------------------------------------------- tarea abierta */
+.en-curso { display: flex; align-items: center; gap: 24px; }
+.datos-tarea { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.rotulo { font-size: .68rem; letter-spacing: 2px; color: rgba(0, 0, 0, .5); font-weight: 700; }
+.actividad { font-size: 2rem; font-weight: 700; color: #263238; line-height: 1.05; }
+.puesto { display: flex; align-items: center; gap: 6px; font-size: 1rem; color: #00695c; font-weight: 600; }
+.puesto mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+.reloj-tarea { display: flex; flex-direction: column; align-items: flex-end; }
+.reloj { font-variant-numeric: tabular-nums; font-size: 2.4rem; font-weight: 800; color: #00695c; line-height: 1; }
+
+.acciones-tarea { display: flex; flex-direction: column; gap: 8px; min-width: 240px; }
+
+.btn-grande {
+  min-height: 58px;
+  font-size: 1.15rem !important; font-weight: 700 !important; border-radius: 12px !important;
+}
+.btn-grande mat-icon { font-size: 24px; width: 24px; height: 24px; margin-right: 6px; }
+
+/* --------------------------------------------------------- actividades */
+.actividades { display: flex; flex-direction: column; gap: 6px; }
+.grilla-actividades {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+.tarjeta-actividad {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  border: 2px solid #b2dfdb; border-radius: 12px;
+  background: #fff; cursor: pointer; padding: 12px 14px;
+  font-family: inherit; text-align: left;
+  transition: border-color .12s, background .12s, transform .06s;
+}
+.tarjeta-actividad:hover { border-color: #00695c; background: #e0f2f1; }
+.tarjeta-actividad:active { transform: scale(.99); }
+.tarjeta-actividad:disabled { opacity: .5; cursor: default; }
+.tarjeta-actividad > mat-icon { color: #00695c; }
+.tarjeta-actividad .nombre { font-size: 1.15rem; font-weight: 700; color: #263238; line-height: 1.15; }
+.tarjeta-actividad .detalle { font-size: .82rem; color: rgba(0, 0, 0, .6); }
+.tarjeta-actividad .hecho {
+  display: flex; align-items: center; gap: 4px; margin-top: 4px;
+  font-size: .76rem; color: #00695c; background: #e0f2f1;
+  border-radius: 999px; padding: 2px 8px;
+}
+.tarjeta-actividad .hecho mat-icon { font-size: 14px; width: 14px; height: 14px; }
+
+.acciones-codigo { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.btn-termine {
+  min-height: 52px; min-width: 250px;
+  font-size: 1.1rem !important; font-weight: 700 !important; border-radius: 12px !important;
+}
+.acciones-codigo .nota { font-size: .78rem; color: rgba(0, 0, 0, .5); }
+
+/* ---------------------------------------------------------------- cola */
+.cola {
+  background: #fff; border: 1px solid rgba(0, 0, 0, .10); border-radius: 12px;
+  padding: 8px 16px 12px; flex: 1 1 auto; min-height: 0;
+  display: flex; flex-direction: column;
+}
+.cola h3 { margin: 0 0 6px; font-size: .95rem; color: rgba(0, 0, 0, .7); }
+.cola-vacia { color: rgba(0, 0, 0, .5); font-size: .88rem; margin: 0; }
+.lista { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; min-height: 0; }
+
+.item {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid rgba(0, 0, 0, .10); border-radius: 10px;
+  padding: 6px 12px; background: #fafafa;
+}
+.item.suspendida { border-color: #ffcc80; background: #fff8f2; }
+.orden {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex: 0 0 30px; border-radius: 50%;
+  background: #00695c; color: #fff; font-weight: 700; font-size: 1rem;
+}
+.datos { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.linea1 { font-size: .95rem; }
+.linea2 { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+.mini-act {
+  background: #eceff1; color: #37474f; border-radius: 999px;
+  padding: 1px 8px; font-size: .74rem;
+}
+.tag {
+  background: #ffe0b2; color: #e65100; border-radius: 999px;
+  padding: 1px 8px; font-size: .72rem; font-weight: 700; margin-left: 6px;
+}
+
+/* -------------------------------------------------------------- varios */
+.vacio { text-align: center; color: rgba(0, 0, 0, .55); padding: 40px; }
+.sin-trabajo { text-align: center; padding: 50px 20px; color: rgba(0, 0, 0, .6); }
+.sin-trabajo mat-icon { font-size: 64px; width: 64px; height: 64px; color: #b0bec5; }
+.sin-trabajo h2 { margin: 10px 0 4px; color: rgba(0, 0, 0, .75); }
+
+@media (max-height: 620px), (max-width: 900px) {
+  .pagina { height: auto; max-height: none; overflow: visible; }
+  .en-curso { flex-wrap: wrap; }
+  .acciones-tarea { min-width: 100%; }
+}
+
+/* El reloj parado se ve gris: el tiempo no está corriendo. */
+.reloj.detenido { color: rgba(0, 0, 0, .35); }
+.pausa-acumulada { font-size: .72rem; color: #ef6c00; font-weight: 600; }
+.pausa-activa.suspendida { background: #eceff1; border-left-color: #546e7a; }
+.pausa-activa.suspendida mat-icon { color: #546e7a; }
+
+/* Los controles de calidad, a mano durante la producción. */
+.controles {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px dashed rgba(0, 0, 0, .15);
+}
+.rotulo-controles {
+  font-size: .7rem; font-weight: 700; letter-spacing: .06em;
+  color: rgba(0, 0, 0, .45); margin-right: 4px;
+}
+.btn-control { border-color: #26a69a !important; color: #00695c !important; }
+.btn-control[disabled] { opacity: .45; }

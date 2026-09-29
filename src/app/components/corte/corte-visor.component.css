@@ -1,0 +1,324 @@
+/*
+ * El visor está pensado para una tablet de 10" en horizontal: todo entra en una
+ * pantalla y el operario nunca tiene que hacer scroll. Por eso la página ocupa
+ * el alto disponible y el dibujo del cable se estira con lo que sobra.
+ */
+.visor {
+  /* Alto de la toolbar del shell + su padding vertical: lo que queda es el visor. */
+  --alto-toolbar: 64px;
+  --pad-shell: 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 10px 8px;
+  height: calc(100vh - var(--alto-toolbar) - var(--pad-shell));
+  height: calc(100dvh - var(--alto-toolbar) - var(--pad-shell));
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------- barra superior */
+.barra {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, .10);
+  border-radius: 10px;
+  padding: 6px 12px;
+  flex: 0 0 auto;
+}
+.barra .izq { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.titulos { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.titulos .nombre {
+  font-weight: 600; font-size: .98rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.titulos .sub { font-size: .72rem; color: rgba(0, 0, 0, .6); }
+
+.centro { min-width: 300px; text-align: center; }
+.centro .contador { font-size: .95rem; margin-bottom: 3px; }
+.centro .contador strong { font-size: 1.2rem; }
+.centro .acumulado { font-size: .72rem; color: rgba(0, 0, 0, .6); margin-top: 3px; }
+
+.der { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.reloj-caja { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.05; }
+.rotulo-reloj { font-size: .64rem; letter-spacing: 2px; font-weight: 700; color: rgba(0, 0, 0, .45); }
+.rotulo-reloj.setup { color: #ef6c00; }
+.rotulo-reloj.parada { color: #1565c0; }
+.reloj {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #00695c;
+  min-width: 104px;
+  text-align: right;
+}
+.reloj.setup { color: #ef6c00; }
+.reloj.pausa { color: #1565c0; }
+
+/* -------------------------------------------------------------- avisos */
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff3e0;
+  border: 2px solid #ef6c00;
+  border-radius: 10px;
+  padding: 8px 16px;
+  flex: 0 0 auto;
+  animation: latido 1.4s ease-in-out infinite;
+}
+.aviso > mat-icon { color: #ef6c00; font-size: 34px; width: 34px; height: 34px; }
+.aviso-texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.aviso-titulo { font-size: 1.15rem; font-weight: 700; color: #bf360c; letter-spacing: .3px; }
+.aviso-sub { font-size: .82rem; color: #7c4a00; }
+
+@keyframes latido {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 108, 0, .45); }
+  50%      { box-shadow: 0 0 0 8px rgba(239, 108, 0, 0); }
+}
+
+.pausa-activa {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #e3f2fd;
+  border: 2px solid #1565c0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  flex: 0 0 auto;
+}
+.pausa-activa > mat-icon { color: #1565c0; font-size: 32px; width: 32px; height: 32px; }
+.pausa-texto { display: flex; flex-direction: column; flex: 1; }
+.pausa-titulo { font-size: 1.1rem; font-weight: 700; color: #0d47a1; }
+.pausa-sub { font-size: .82rem; color: #1565c0; }
+.pausa-reloj { font-variant-numeric: tabular-nums; font-size: 1.6rem; font-weight: 700; color: #0d47a1; }
+
+/* ----------------------------------------------------- identificación */
+.identificacion {
+  display: flex; align-items: center; gap: 8px;
+  flex: 0 0 auto; min-width: 0; overflow: hidden;
+}
+.chip {
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-weight: 600;
+  font-size: .9rem;
+  white-space: nowrap;
+  background: #e0f2f1;
+  color: #00695c;
+}
+.chip.codigo { background: #00695c; color: #fff; font-size: 1.05rem; }
+.chip.plan { background: #eceff1; color: #37474f; }
+.chip.cant { background: #ede7f6; color: #4527a0; }
+.chip.cable { background: #fff8e1; color: #855b00; }
+.descripcion {
+  font-size: .82rem; color: rgba(0, 0, 0, .6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---------------------------------------------------------- tarjeta */
+.tarjeta {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, .10);
+  border-radius: 12px;
+  padding: 10px 16px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.tarjeta.bloqueada { opacity: .45; pointer-events: none; filter: grayscale(.4); }
+
+.medidas {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 0 0 auto;
+}
+.muestra {
+  min-width: 150px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+  border: 2px solid rgba(0, 0, 0, .2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+}
+.seccion { font-size: 1.3rem; font-weight: 700; color: #37474f; white-space: nowrap; }
+
+.bloque-longitud { display: flex; align-items: baseline; gap: 8px; margin-left: auto; }
+.bloque-longitud .rotulo { font-size: .7rem; letter-spacing: 2px; color: rgba(0, 0, 0, .5); }
+.bloque-longitud .valor {
+  font-size: 3.6rem; font-weight: 800; line-height: 1;
+  color: #00695c; font-variant-numeric: tabular-nums;
+}
+.bloque-longitud .unidad { font-size: 1.2rem; color: rgba(0, 0, 0, .55); }
+
+.bloque-impresion { display: flex; flex-direction: column; align-items: flex-end; margin-left: 18px; }
+.bloque-impresion .rotulo { font-size: .68rem; letter-spacing: 1.5px; color: rgba(0, 0, 0, .5); }
+.texto-impresion {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.2rem; font-weight: 700;
+  background: #212121; color: #fff;
+  padding: 4px 12px; border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* El dibujo se queda con todo el alto que sobra. */
+.dibujo { flex: 1 1 auto; min-height: 0; display: block; }
+
+/* ------------------------------------------------- controles pedidos */
+.controles-pedidos {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 5px 12px;
+  background: #e8f5e9; border-left: 4px solid #2e7d32; border-radius: 8px;
+  font-size: .85rem; color: #1b5e20;
+  flex: 0 0 auto;
+}
+.controles-pedidos mat-icon { color: #2e7d32; font-size: 20px; width: 20px; height: 20px; }
+.pedido { background: #fff; border-radius: 999px; padding: 2px 10px; font-weight: 600; }
+
+/* ---------------------------------------------------------- acciones */
+.acciones {
+  display: flex; align-items: center; gap: 14px;
+  flex: 0 0 auto; min-width: 0;
+}
+.no-conforme {
+  display: flex; align-items: center; gap: 4px;
+  border: 1px solid rgba(0, 0, 0, .12); border-radius: 10px; padding: 2px 10px; background: #fff;
+  white-space: nowrap;
+}
+.no-conforme span { font-size: .78rem; color: rgba(0, 0, 0, .6); }
+.no-conforme strong { min-width: 20px; text-align: center; font-size: 1.1rem; }
+
+.btn-siguiente {
+  flex: 0 0 auto;
+  min-width: 300px;
+  min-height: 60px;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+}
+.btn-siguiente mat-icon { font-size: 28px; width: 28px; height: 28px; margin-right: 6px; }
+
+/* ---------------------------------------------------------- próximos */
+.proximos {
+  display: flex; align-items: center; gap: 6px;
+  flex: 1 1 auto; min-width: 0; overflow: hidden;
+}
+.proximos .rotulo { font-size: .74rem; color: rgba(0, 0, 0, .5); white-space: nowrap; }
+.prox {
+  display: flex; align-items: center; gap: 6px;
+  border: 1px solid rgba(0, 0, 0, .10); border-radius: 999px;
+  padding: 3px 10px; background: #fff; font-size: .8rem; white-space: nowrap;
+}
+.prox.marcado { border-color: #ef6c00; background: #fff8f2; }
+.prox mat-icon { font-size: 17px; width: 17px; height: 17px; color: #ef6c00; }
+.prox .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .2); }
+
+/* ------------------------------------------------------------ varios */
+.estado-vacio { text-align: center; color: rgba(0, 0, 0, .55); padding: 40px; }
+.final { text-align: center; padding: 40px 20px; }
+.final .tilde { font-size: 64px; width: 64px; height: 64px; color: #2e7d32; }
+.final h2 { margin: 10px 0 4px; }
+.final p { color: rgba(0, 0, 0, .6); margin-bottom: 16px; }
+
+/* Pantallas más chicas que la tablet objetivo: se permite scroll. */
+@media (max-height: 620px), (max-width: 900px) {
+  .visor { height: auto; max-height: none; overflow: visible; }
+  .medidas { flex-wrap: wrap; }
+  .bloque-longitud .valor { font-size: 2.6rem; }
+}
+
+.btn-suspender { white-space: nowrap; }
+
+/* ── Sábana de corrugado ── */
+.titulos .sub .tipo-sabana {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: #eceff1;
+  color: #37474f;
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.chip.programa { background: #ede7f6; color: #4527a0; }
+
+.bloque-diametro { display: flex; align-items: baseline; gap: 6px; }
+.bloque-diametro .rotulo { font-size: .7rem; letter-spacing: 2px; color: rgba(0, 0, 0, .5); }
+.bloque-diametro .valor { font-size: 2rem; font-weight: 800; color: #1a3a5c; line-height: 1; }
+.bloque-diametro .unidad { font-size: 1rem; color: rgba(0, 0, 0, .55); }
+
+.bloque-tipo { display: flex; flex-direction: column; margin-left: 14px; }
+.bloque-tipo .rotulo { font-size: .68rem; letter-spacing: 1.5px; color: rgba(0, 0, 0, .5); }
+.bloque-tipo .texto-tipo { font-size: 1.15rem; font-weight: 800; color: #455a64; letter-spacing: 1px; }
+.bloque-tipo.abierto .texto-tipo { color: #ef6c00; }
+
+.prox .dot.corrugado {
+  width: auto;
+  height: auto;
+  min-width: 34px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: #eceff1;
+  color: #37474f;
+  font-size: .68rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* Cuántas piezas cortar: el número que el operario mira todo el tiempo. */
+.bloque-piezas {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-left: auto;
+  padding: 6px 18px;
+  border-radius: 12px;
+  background: #fff3e0;
+  border: 2px solid #ffcc80;
+}
+
+.bloque-piezas .rotulo {
+  font-size: .7rem;
+  letter-spacing: 2px;
+  color: #a35200;
+  font-weight: 700;
+}
+
+.bloque-piezas .valor {
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #e65100;
+  font-variant-numeric: tabular-nums;
+}
+
+.bloque-piezas .unidad {
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+  color: #a35200;
+  font-weight: 600;
+}
+
+.bloque-piezas .unidad em {
+  font-size: .72rem;
+  font-style: normal;
+  font-weight: 500;
+  color: rgba(0, 0, 0, .5);
+  white-space: nowrap;
+}
+
+/* Con el bloque de piezas, el largo ya no necesita empujar al borde. */
+.bloque-piezas + .bloque-longitud { margin-left: 24px; }

@@ -3,70 +3,51 @@
   <header class="filters">
     <h2 class="title">Tareas</h2>
 
+    <!-- Sub-áreas: cada operación cae en una según su área. -->
+    <nav class="areas" role="tablist">
+      @for (a of areas; track a.clave) {
+        @if (areaVisible(a.clave)) {
+          <button type="button" class="area" role="tab"
+                  [class.activa]="areaActiva() === a.clave"
+                  [attr.aria-selected]="areaActiva() === a.clave"
+                  (click)="elegirArea(a.clave)">
+            <mat-icon>{{ a.icono }}</mat-icon>
+            <span class="area-titulo">{{ a.titulo }}</span>
+            <span class="area-cuenta">{{ cantidadDeArea(a.clave) }}</span>
+          </button>
+        }
+      }
+    </nav>
+
     <div class="grid">
       <!-- Filtro Nro plan -->
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Nro Plan</mat-label>
-        <mat-select [(ngModel)]="filtroNroPlan" (ngModelChange)="onNroPlanChange($event)">
-          <mat-option value="">Todos</mat-option>
-          @for (p of nroPlanes; track p) {
-            <mat-option [value]="p">{{ p }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <app-select-buscable class="full" label="Nro Plan" placeholder="Buscar plan…"
+                           [opciones]="opcionesNroPlan"
+                           [(ngModel)]="filtroNroPlan" (ngModelChange)="onNroPlanChange($event)" />
 
       <!-- Filtro Operación -->
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Operación</mat-label>
-        <mat-select [(ngModel)]="filtroOperacion" (ngModelChange)="onOperacionChange($event)">
-          <mat-option value="">Todas</mat-option>
-          @for (op of operaciones; track op.nombreCorto) {
-            <mat-option [value]="op.nombreCorto">{{ op.nombreCorto }} — {{ op.nombre }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <app-select-buscable class="full" label="Operación" textoTodos="Todas"
+                           placeholder="Buscar operación…"
+                           [opciones]="opcionesOperacion"
+                           [(ngModel)]="filtroOperacion" (ngModelChange)="onOperacionChange($event)" />
 
       <!-- Filtros solo admin -->
       @if (canReadAll) {
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Código</mat-label>
-          <mat-select [(ngModel)]="filtroCodigoProducto" (ngModelChange)="onCodigoChange($event)">
-            <mat-option value="">Todos</mat-option>
-            @for (cod of codigos; track cod) {
-              <mat-option [value]="cod">{{ cod }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <app-select-buscable class="full" label="Código" placeholder="Buscar código…"
+                             [opciones]="opcionesCodigo"
+                             [(ngModel)]="filtroCodigoProducto" (ngModelChange)="onCodigoChange($event)" />
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Producto</mat-label>
-          <mat-select [(ngModel)]="filtroProducto" (ngModelChange)="onProductoChange($event)">
-            <mat-option value="">Todos</mat-option>
-            @for (p of productos; track p) {
-              <mat-option [value]="p">{{ p }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <app-select-buscable class="full" label="Producto" placeholder="Buscar producto…"
+                             [opciones]="opcionesProducto"
+                             [(ngModel)]="filtroProducto" (ngModelChange)="onProductoChange($event)" />
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Nro. Máquina</mat-label>
-          <mat-select [(ngModel)]="filtroNroMaquina" (ngModelChange)="onNroMaquinaChange($event)">
-            <mat-option [value]="''">Todos</mat-option>
-            @for (m of nroMaquinas; track m) {
-              <mat-option [value]="m">{{ m }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <app-select-buscable class="full" label="Nro. Máquina" placeholder="Buscar máquina…"
+                             [opciones]="opcionesNroMaquina"
+                             [(ngModel)]="filtroNroMaquina" (ngModelChange)="onNroMaquinaChange($event)" />
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Usuario</mat-label>
-          <mat-select [(ngModel)]="filtroUsuario" (ngModelChange)="onUsuarioChange($event)">
-            <mat-option [value]="''">Todos</mat-option>
-            @for (u of usuariosUnicos; track u) {
-              <mat-option [value]="u">{{ u }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <app-select-buscable class="full" label="Usuario" placeholder="Buscar operario…"
+                             [opciones]="opcionesUsuario"
+                             [(ngModel)]="filtroUsuario" (ngModelChange)="onUsuarioChange($event)" />
       }
 
       <!-- Fecha desde -->
@@ -83,16 +64,16 @@
 
     </div>
 
-    <div class="actions">
-      <button mat-stroked-button class="btn-export" (click)="exportarExcel()" [disabled]="!dataSource.data.length">
+    <div class="actions botonera">
+      <button mat-stroked-button (click)="exportarExcel()" [disabled]="!dataSource.data.length">
         <mat-icon>download</mat-icon>
         Exportar a Excel
       </button>
-      <button mat-stroked-button class="btn-clear" (click)="limpiarFiltros()">
+      <button mat-stroked-button (click)="limpiarFiltros()">
         <mat-icon>filter_alt_off</mat-icon>
         Limpiar filtros
       </button>
-      <button mat-raised-button color="primary" class="btn-search" (click)="load()">
+      <button mat-flat-button color="primary" (click)="load()">
         <mat-icon>search</mat-icon>
         Buscar
       </button>
@@ -189,11 +170,24 @@
         <td mat-cell *matCellDef="let row">{{ row.noConforme ?? '-' }}</td>
       </ng-container>
 
-      <!-- Tiempo Proceso -->
+      <!-- Tiempo Proceso: el efectivo del reloj de tarea, sin las pausas -->
       <ng-container matColumnDef="tiempo">
         <th mat-header-cell *matHeaderCellDef>Tiempo Proceso</th>
-        <td mat-cell *matCellDef="let row">
-          <span appTiempoProceso [start]="row.fechaInicio" [end]="row.fechaFinalizacion"></span>
+        <td mat-cell *matCellDef="let row"
+            [matTooltip]="tiempoProcesoTooltip(row)" matTooltipPosition="above">
+          @if (row.segundosEfectivos != null) {
+            {{ hhmmss(row.segundosEfectivos) }}
+          } @else {
+            <span appTiempoProceso [start]="row.fechaInicio" [end]="row.fechaFinalizacion"></span>
+          }
+        </td>
+      </ng-container>
+
+      <!-- En pausa -->
+      <ng-container matColumnDef="pausa">
+        <th mat-header-cell *matHeaderCellDef>En Pausa</th>
+        <td mat-cell *matCellDef="let row" class="pausa-cel">
+          {{ row.segundosPausa ? hhmmss(row.segundosPausa) : '—' }}
         </td>
       </ng-container>
 
@@ -246,7 +240,11 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell empty" [attr.colspan]="displayedColumns.length">
-          No hay tareas para los filtros seleccionados.
+          @if (areaActiva()) {
+            Todavía no hay tareas de {{ tituloAreaActiva }} para estos filtros.
+          } @else {
+            No hay tareas para los filtros seleccionados.
+          }
         </td>
       </tr>
     </table>

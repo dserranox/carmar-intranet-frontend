@@ -1,0 +1,82 @@
+.titulo { display: flex; align-items: center; gap: 8px; }
+
+/* Pantalla de administrador: se aprovecha el ancho de la PC. */
+.contenido { min-width: 940px; max-height: 72vh; padding-top: 8px; }
+
+.cabecera-orden {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.chip {
+  border-radius: 999px; padding: 4px 14px;
+  font-weight: 600; font-size: .92rem;
+  background: #e0f2f1; color: #00695c;
+}
+.chip.codigo { background: #00695c; color: #fff; font-size: 1.05rem; }
+.chip.cant { background: #ede7f6; color: #4527a0; }
+.descripcion { color: rgba(0, 0, 0, .65); font-size: .9rem; }
+
+h4 { margin: 0 0 8px; font-size: .95rem; color: rgba(0, 0, 0, .75); }
+
+/* ---------------------------------------------------- ya asignado */
+.ya-asignado {
+  background: #f5f7f7; border-radius: 10px; padding: 12px 14px; margin-bottom: 18px;
+}
+.tabla-asignadas { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.tabla-asignadas th {
+  text-align: left; font-weight: 600; color: rgba(0, 0, 0, .55);
+  padding: 4px 8px; border-bottom: 1px solid rgba(0, 0, 0, .12);
+}
+.tabla-asignadas td { padding: 5px 8px; border-bottom: 1px solid rgba(0, 0, 0, .06); }
+.tabla-asignadas .num { text-align: right; }
+.maq { color: rgba(0, 0, 0, .5); margin-left: 6px; font-size: .82rem; }
+
+.estado {
+  border-radius: 999px; padding: 2px 10px; font-size: .74rem; font-weight: 700;
+}
+.estado.pendiente { background: #eceff1; color: #455a64; }
+.estado.en_curso { background: #e3f2fd; color: #1565c0; }
+.estado.finalizada { background: #e8f5e9; color: #2e7d32; }
+
+/* -------------------------------------------------------- nuevas */
+.encabezado-nuevas {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+}
+.acciones-nuevas { display: flex; gap: 8px; }
+
+.tabla-filas { width: 100%; border-collapse: collapse; }
+.tabla-filas th {
+  text-align: left; font-weight: 600; font-size: .8rem; color: rgba(0, 0, 0, .55);
+  padding: 0 6px 2px;
+}
+.tabla-filas td { padding: 0 6px; vertical-align: top; }
+.col-actividad { width: 26%; }
+.col-operario { width: 20%; }
+.col-cant { width: 12%; }
+.col-puesto { width: 22%; }
+.col-maq { width: 12%; }
+.col-borrar { width: 6%; }
+
+.campo { width: 100%; }
+.campo.corto { width: 100%; }
+.nota-asignado {
+  display: block; margin-top: -14px; margin-bottom: 8px;
+  font-size: .74rem; color: #855b00;
+}
+
+.ayuda { font-size: .82rem; color: rgba(0, 0, 0, .6); margin: 4px 0 0; }
+
+.error, .advertencia {
+  display: flex; align-items: center; gap: 6px; margin: 10px 0 0;
+  font-size: .88rem; font-weight: 600;
+}
+.error { color: #c62828; }
+.advertencia { color: #e65100; }
+.error mat-icon, .advertencia mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+.mini-act {
+  display: inline-block;
+  background: #e0f2f1; color: #00564b;
+  border-radius: 999px; padding: 1px 9px; margin: 1px 2px;
+  font-size: .78rem;
+}

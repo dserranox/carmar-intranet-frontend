@@ -15,8 +15,8 @@
       </mat-form-field>
     </div>
 
-    <div class="actions">
-      <button mat-stroked-button class="btn-clear" (click)="limpiarFiltros()">
+    <div class="actions botonera">
+      <button mat-stroked-button (click)="limpiarFiltros()">
         <mat-icon>filter_alt_off</mat-icon>
         Limpiar filtros
       </button>
@@ -62,12 +62,54 @@
 
       <ng-container matColumnDef="operacion">
         <th mat-header-cell *matHeaderCellDef>Operación</th>
-        <td mat-cell *matCellDef="let row">{{ row.operacionNombre ?? '—' }}</td>
+        <td mat-cell *matCellDef="let row">
+          @if (row.operacionNombre) {
+            <span class="que-hace">{{ row.operacionNombre }}</span>
+            <!-- El reloj puede estar corriendo o parado: no es lo mismo. -->
+            @if (row.estadoTarea && row.estadoTarea !== 'EN_CURSO') {
+              <span class="estado-reloj" [class.suspendida]="row.estadoTarea === 'SUSPENDIDA'"
+                    [matTooltip]="row.motivoParada || ''">
+                {{ row.estadoTarea === 'SUSPENDIDA' ? 'suspendida' : 'en pausa' }}
+              </span>
+            }
+          } @else { — }
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="nroMaquina">
-        <th mat-header-cell *matHeaderCellDef>Nro. Máquina</th>
-        <td mat-cell *matCellDef="let row">{{ row.nroMaquina ?? '—' }}</td>
+        <th mat-header-cell *matHeaderCellDef>Puesto / Máquina</th>
+        <td mat-cell *matCellDef="let row">{{ puestoActual(row) }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="cola">
+        <th mat-header-cell *matHeaderCellDef>Trabajo asignado después</th>
+        <td mat-cell *matCellDef="let row">
+          @if (!row.proximas?.length) {
+            <span class="sin-cola">— sin cola —</span>
+          } @else {
+            <div class="cola">
+              @for (a of row.proximas; track a.asgId) {
+                <span class="tarea-cola" [class.suspendida]="a.estado === 'SUSPENDIDA'"
+                      [matTooltip]="detalleAsignacion(a)">
+                  <b>{{ a.prioridad }}</b>
+                  {{ a.productoCodigo }} · {{ actividadesDe(a) }}
+                  @if (a.cantidad) { · {{ a.cantidad }}u }
+                </span>
+                <button mat-icon-button class="mini" matTooltip="Subir en la cola"
+                        [disabled]="a.prioridad === 1" (click)="mover(a, -1)">
+                  <mat-icon>arrow_upward</mat-icon>
+                </button>
+                <button mat-icon-button class="mini" matTooltip="Bajar en la cola" (click)="mover(a, 1)">
+                  <mat-icon>arrow_downward</mat-icon>
+                </button>
+                <button mat-icon-button class="mini" color="warn" matTooltip="Cancelar asignación"
+                        (click)="cancelar(a)">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </div>
+          }
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

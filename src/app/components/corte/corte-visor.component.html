@@ -1,0 +1,215 @@
+<div class="visor">
+
+  <!-- Barra superior: sábana, progreso y cronómetro -->
+  <header class="barra">
+    <div class="izq">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver a mis sábanas">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="titulos">
+        <span class="nombre">{{ sabana()?.nombre }}</span>
+        <span class="sub">
+          <span class="tipo-sabana">{{ esCorrugado ? 'CORRUGADO' : 'CABLE' }}</span>
+          @if (sabana()?.nroMaquina) { Máquina {{ sabana()?.nroMaquina }} · }
+          Tol. −{{ sabana()?.toleranciaInf }}% / +{{ sabana()?.toleranciaSup }}%
+        </span>
+      </div>
+    </div>
+
+    <div class="centro">
+      <div class="contador">
+        {{ esCorrugado ? 'Renglón' : 'Corte' }}
+        <strong>{{ corte()?.posicion ?? sabana()?.cortesHechos }}</strong> de {{ sabana()?.totalCortes }}
+      </div>
+      <mat-progress-bar mode="determinate" [value]="progreso"></mat-progress-bar>
+      <div class="acumulado">
+        corte {{ duracion(sabana()?.segundosAcumulados) }}
+        · set up {{ duracion(sabana()?.segundosSetup) }}
+        · pausas {{ duracion(sabana()?.segundosPausa) }}
+      </div>
+    </div>
+
+    <div class="der">
+      <div class="reloj-caja">
+        <span class="rotulo-reloj" [class.setup]="avisoPendiente()" [class.parada]="enPausa()">
+          {{ rotuloReloj }}
+        </span>
+        <div class="reloj" [class.pausa]="enPausa()" [class.setup]="avisoPendiente()">{{ relojActivo }}</div>
+      </div>
+      <button mat-stroked-button (click)="alternarPausa()" [disabled]="!corte() || avisoPendiente()">
+        <mat-icon>{{ enPausa() ? 'play_arrow' : 'pause' }}</mat-icon>
+        {{ enPausa() ? 'Reanudar' : 'Pausa' }}
+      </button>
+      <button mat-stroked-button class="btn-suspender" (click)="suspender()"
+              [disabled]="!corte()" matTooltip="Dejarla para retomar después en este mismo corte">
+        <mat-icon>pause_presentation</mat-icon>
+        Suspender
+      </button>
+    </div>
+  </header>
+
+  @if (cargando()) {
+    <p class="estado-vacio">Cargando…</p>
+  }
+
+  @if (terminada()) {
+    <section class="final">
+      <mat-icon class="tilde">task_alt</mat-icon>
+      <h2>Sábana terminada</h2>
+      <p>Se registraron los {{ sabana()?.totalCortes }} cortes y se cargaron las tareas por código y plan.</p>
+      <button mat-flat-button color="primary" (click)="volver()">Volver a mis sábanas</button>
+    </section>
+  }
+
+  @if (corte(); as c) {
+
+    <!-- Aviso bloqueante de cambio de bobina o de terminal -->
+    @if (avisoPendiente()) {
+      <section class="aviso">
+        <mat-icon>report</mat-icon>
+        <div class="aviso-texto">
+          <span class="aviso-titulo">{{ textoAviso }}</span>
+          <span class="aviso-sub">Midiendo set up ({{ relojActivo }}). El reloj del corte arranca al confirmar.</span>
+        </div>
+        <button mat-flat-button color="warn" (click)="confirmarAviso()">Listo, ya lo cambié</button>
+      </section>
+    }
+
+    <!-- Pausa en curso -->
+    @if (enPausa() && motivoPausa(); as m) {
+      <section class="pausa-activa">
+        <mat-icon>pause_circle</mat-icon>
+        <div class="pausa-texto">
+          <span class="pausa-titulo">EN PAUSA — {{ etiquetaPausa(m.subtipo) }}</span>
+          @if (m.motivo) { <span class="pausa-sub">{{ m.motivo }}</span> }
+        </div>
+        <span class="pausa-reloj">{{ relojActivo }}</span>
+        <button mat-flat-button color="primary" (click)="alternarPausa()">Reanudar</button>
+      </section>
+    }
+
+    <!-- Identificación del corte -->
+    <section class="identificacion">
+      <div class="chip codigo">{{ c.codigo }}</div>
+      <div class="chip plan">Plan {{ c.nroPlan }}</div>
+      @if (c.cantidad && !esCorrugado) { <div class="chip cant">{{ c.cantidad }} u.</div> }
+      @if (!esCorrugado && c.nroCable) { <div class="chip cable">Cable N° {{ c.nroCable }}</div> }
+      @if (esCorrugado && c.programa) { <div class="chip programa">Programa {{ c.programa }}</div> }
+      @if (c.productoDescripcion) { <span class="descripcion">{{ c.productoDescripcion }}</span> }
+    </section>
+
+    <!-- Datos del corte: medidas grandes + dibujo -->
+    <section class="tarjeta" [class.bloqueada]="avisoPendiente()">
+
+      <div class="medidas">
+        @if (esCorrugado) {
+          <div class="bloque-diametro">
+            <span class="rotulo">DIÁMETRO</span>
+            <span class="valor">Ø {{ c.diametroTxt ?? c.diametro }}</span>
+            @if (c.diametroTxt && c.diametro) { <span class="unidad">({{ c.diametro }} mm)</span> }
+          </div>
+          <div class="bloque-tipo" [class.abierto]="c.tipoCorrugado === 'ABIERTO'">
+            <span class="rotulo">TIPO</span>
+            <span class="texto-tipo">{{ c.tipoCorrugado ?? 'SIN DATO' }}</span>
+          </div>
+        } @else {
+          <div class="muestra" [style.background]="colorFondo(c.color)" [style.color]="colorTexto(c.color)">
+            {{ c.color }}
+          </div>
+          <div class="seccion">{{ c.seccion }} mm<sup>2</sup></div>
+        }
+
+        <!-- Cuántas piezas hay que cortar: es el número que el operario mira todo el
+             tiempo mientras produce, así que va grande junto al largo. -->
+        @if (esCorrugado && c.cantidad) {
+          <div class="bloque-piezas">
+            <span class="rotulo">CORTAR</span>
+            <span class="valor">{{ c.cantidad }}</span>
+            <span class="unidad">
+              piezas
+              @if (c.cantPorProducto) { <em>{{ c.cantPorProducto }} por producto</em> }
+            </span>
+          </div>
+        }
+
+        <div class="bloque-longitud">
+          <span class="rotulo">{{ esCorrugado ? 'LARGO TOTAL' : 'LONGITUD' }}</span>
+          <span class="valor">{{ c.longitud }}</span>
+          <span class="unidad">mm</span>
+        </div>
+
+        @if (!esCorrugado && c.impresion) {
+          <div class="bloque-impresion">
+            <span class="rotulo">IMPRESIÓN</span>
+            <span class="texto-impresion">{{ c.impresion }}</span>
+          </div>
+        }
+      </div>
+
+      @if (esCorrugado) {
+        <app-corrugado-dibujo class="dibujo" [corte]="c"></app-corrugado-dibujo>
+      } @else {
+        <app-cable-dibujo class="dibujo" [corte]="c"></app-cable-dibujo>
+      }
+
+      @if (c.reqCtrlLongitud || c.reqCtrlTraccionA || c.reqCtrlTraccionB) {
+        <div class="controles-pedidos">
+          <mat-icon>fact_check</mat-icon>
+          <span>Exige control:</span>
+          @if (c.reqCtrlLongitud) {
+            <span class="pedido">
+              {{ esCorrugado ? 'largo' : 'longitud' }} {{ c.longitudMin }}–{{ c.longitudMax }} mm
+            </span>
+          }
+          @if (c.reqCtrlTraccionA) {
+            <span class="pedido">tracción A · {{ c.terminalA }}@if (c.fuerzaMinimaA) { · mín {{ c.fuerzaMinimaA }} N }</span>
+          }
+          @if (c.reqCtrlTraccionB) {
+            <span class="pedido">tracción B · {{ c.terminalB }}@if (c.fuerzaMinimaB) { · mín {{ c.fuerzaMinimaB }} N }</span>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Acciones y qué viene después, en la misma franja -->
+    <section class="acciones">
+      <div class="no-conforme">
+        <span>No conformes</span>
+        <button mat-icon-button (click)="restarNoConforme()" [disabled]="noConforme() === 0">
+          <mat-icon>remove</mat-icon>
+        </button>
+        <strong>{{ noConforme() }}</strong>
+        <button mat-icon-button (click)="sumarNoConforme()">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+
+      <button mat-flat-button color="primary" class="btn-siguiente"
+              [disabled]="avisoPendiente() || guardando()" (click)="siguiente()">
+        <mat-icon>skip_next</mat-icon>
+        {{ esCorrugado ? 'Siguiente' : 'Siguiente corte' }}
+      </button>
+
+      <div class="proximos">
+        <span class="rotulo">Vienen:</span>
+        @for (p of proximos(); track p.scdId) {
+          <div class="prox" [class.marcado]="p.cambioBobina || p.cambioTerminal">
+            @if (esCorrugado) {
+              <span class="dot corrugado">Ø{{ p.diametroTxt ?? p.diametro }}</span>
+            } @else {
+              <span class="dot" [style.background]="colorFondo(p.color)"></span>
+            }
+            <span class="txt">
+              #{{ p.nroCorte }} · {{ p.longitud }} mm
+              @if (esCorrugado && p.cantidad) { · {{ p.cantidad }} pz }
+            </span>
+            @if (p.cambioBobina) {
+              <mat-icon [matTooltip]="esCorrugado ? 'Cambia el diámetro' : 'Cambia la bobina'">swap_horiz</mat-icon>
+            }
+            @if (p.cambioTerminal) { <mat-icon matTooltip="Cambia el terminal">build</mat-icon> }
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

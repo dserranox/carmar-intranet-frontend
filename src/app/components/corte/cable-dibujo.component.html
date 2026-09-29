@@ -1,0 +1,80 @@
+@if (corte; as c) {
+  <svg class="cable" [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" preserveAspectRatio="xMidYMid meet">
+
+    <defs>
+      <linearGradient id="brilloCable" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(255,255,255,.35)" />
+        <stop offset="45%" stop-color="rgba(255,255,255,0)" />
+        <stop offset="100%" stop-color="rgba(0,0,0,.25)" />
+      </linearGradient>
+      <pattern id="bicolor" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+        <rect width="26" height="26" [attr.fill]="colorPrincipal" />
+        <rect width="13" height="26" [attr.fill]="colorSecundario" />
+      </pattern>
+    </defs>
+
+    <!-- Cuerpo del cable -->
+    <rect [attr.x]="cuerpoX" [attr.y]="cableY" [attr.width]="cuerpoAncho" [attr.height]="cableAlto"
+          rx="6" [attr.fill]="esBicolor ? 'url(#bicolor)' : colorPrincipal"
+          stroke="rgba(0,0,0,.35)" stroke-width="2" />
+    <rect [attr.x]="cuerpoX" [attr.y]="cableY" [attr.width]="cuerpoAncho" [attr.height]="cableAlto"
+          rx="6" fill="url(#brilloCable)" />
+
+    <!-- Impresión repetida a lo largo del cable -->
+    @for (i of repeticionesImpresion; track i) {
+      <text [attr.x]="posicionImpresion(i)" [attr.y]="cableYMedio + 9"
+            text-anchor="middle" class="impresion" [attr.fill]="colorTextoImpresion">
+        {{ c.impresion }}
+      </text>
+    }
+
+    <!-- Puntas -->
+    @for (s of extremoA.segmentos; track $index) {
+      <rect [attr.x]="s.x" [attr.y]="s.clase === 'cobre' ? cableY + 14 : cableY"
+            [attr.width]="s.ancho" [attr.height]="s.clase === 'cobre' ? cableAlto - 28 : cableAlto"
+            [attr.rx]="s.clase === 'cobre' ? 3 : 5"
+            [attr.fill]="s.clase === 'pvc' && esBicolor ? 'url(#bicolor)' : s.relleno"
+            [attr.stroke]="colorDeBorde(s.clase)" stroke-width="2" />
+    }
+    @for (s of extremoB.segmentos; track $index) {
+      <rect [attr.x]="s.x" [attr.y]="s.clase === 'cobre' ? cableY + 14 : cableY"
+            [attr.width]="s.ancho" [attr.height]="s.clase === 'cobre' ? cableAlto - 28 : cableAlto"
+            [attr.rx]="s.clase === 'cobre' ? 3 : 5"
+            [attr.fill]="s.clase === 'pvc' && esBicolor ? 'url(#bicolor)' : s.relleno"
+            [attr.stroke]="colorDeBorde(s.clase)" stroke-width="2" />
+    }
+
+    <!-- Datos del extremo A -->
+    <text [attr.x]="margen" y="30" class="rotulo-extremo">EXTREMO A · {{ c.origenA || '—' }}</text>
+    <text [attr.x]="margen" [attr.y]="alto - 34" class="medida" [class.alerta]="extremoA.alerta">
+      {{ extremoA.etiqueta }}
+    </text>
+    <text [attr.x]="margen" [attr.y]="alto - 10" class="detalle" [class.alerta]="extremoA.alerta">
+      {{ extremoA.alerta ? '¡El terminal se agrafaría sobre el plástico!' : extremoA.detalle }}
+    </text>
+    @if (extremoA.terminal) {
+      <text [attr.x]="margen" y="56" class="terminal">{{ extremoA.terminal }}</text>
+    }
+
+    <!-- Datos del extremo B -->
+    <text [attr.x]="ancho - margen" y="30" text-anchor="end" class="rotulo-extremo">
+      {{ c.destinoB || '—' }} · EXTREMO B
+    </text>
+    <text [attr.x]="ancho - margen" [attr.y]="alto - 34" text-anchor="end" class="medida"
+          [class.alerta]="extremoB.alerta">
+      {{ extremoB.etiqueta }}
+    </text>
+    <text [attr.x]="ancho - margen" [attr.y]="alto - 10" text-anchor="end" class="detalle"
+          [class.alerta]="extremoB.alerta">
+      {{ extremoB.alerta ? '¡El terminal se agrafaría sobre el plástico!' : extremoB.detalle }}
+    </text>
+    @if (extremoB.terminal) {
+      <text [attr.x]="ancho - margen" y="56" text-anchor="end" class="terminal">{{ extremoB.terminal }}</text>
+    }
+
+    <!-- Longitud total, sobre el cuerpo -->
+    <text [attr.x]="ancho / 2" y="30" text-anchor="middle" class="largo-total">
+      {{ c.longitud }} mm
+    </text>
+  </svg>
+}

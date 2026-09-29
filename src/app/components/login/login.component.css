@@ -1,19 +1,60 @@
+/* Los azules son los mismos que usa el resto de la app: el de las botoneras
+   (#1a3a5c) y el más oscuro de los encabezados de tabla (#0d2035). */
 .login-container {
+  position: relative;
+  box-sizing: border-box;
   min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  background: linear-gradient(135deg, #2f8392 0%, #9ac1c9 100%);
+  gap: 18px;
+  padding: 24px 16px;
+  overflow: hidden;
+  background: radial-gradient(1200px 700px at 70% 10%, #24507c 0%, transparent 60%),
+              linear-gradient(140deg, #0d2035 0%, #1a3a5c 55%, #12293f 100%);
 }
 
-.login-card {
-  background: #fff;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+/* Ramales de cable al fondo, apenas insinuados. */
+.fondo {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  max-width: 400px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.fondo path {
+  fill: none;
+  stroke: rgba(255, 255, 255, .07);
+  stroke-width: 26;
+  stroke-linecap: round;
+}
+
+.fondo path:nth-child(2) { stroke: rgba(255, 255, 255, .05); stroke-width: 18; }
+.fondo path:nth-child(3) { stroke: rgba(255, 255, 255, .045); stroke-width: 32; }
+
+.login-card {
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #fff;
+  padding: 2.5rem 2.25rem 2.25rem;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .38);
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Filete superior, con el azul de las botoneras. */
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #1a3a5c, #4a7fb5);
 }
 
 /* ── Encabezado ── */
@@ -22,36 +63,36 @@
   margin-bottom: 1.75rem;
 }
 
-.login-title {
-  margin: 0 0 4px;
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #0b5966;
-  letter-spacing: 1px;
+.logo {
+  width: 190px;
+  max-width: 80%;
+  height: auto;
+  display: block;
+  margin: 0 auto 10px;
 }
 
 .login-subtitle {
   margin: 0;
-  font-size: 0.9rem;
-  color: #607d8b;
+  font-size: .86rem;
+  color: #5a6678;
+  letter-spacing: .3px;
 }
 
 /* ── Inputs ── */
-.full {
-  width: 100%;
-}
+.full { width: 100%; }
 
 /* ── Error ── */
 .error-message {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f8d7da;
-  color: #721c24;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
+  background: #fdecea;
+  color: #b3261e;
+  border: 1px solid #f5c6c2;
+  padding: .7rem .9rem;
+  border-radius: 8px;
   margin-bottom: 1rem;
-  font-size: 0.9rem;
+  font-size: .88rem;
 }
 
 .error-icon {
@@ -63,18 +104,24 @@
 
 /* ── Botón ── */
 .btn-login {
-  background: #0b5966 !important;
+  background: #1a3a5c !important;
   color: #fff !important;
-  padding: 0.85rem !important;
+  height: 48px !important;
+  border-radius: 24px !important;
   font-size: 1rem !important;
-  letter-spacing: 0.5px;
-  margin-top: 4px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  margin-top: 6px;
 }
 
-.btn-login:hover:not([disabled]) {
-  background: #094a55 !important;
-}
+.btn-login:hover:not([disabled]) { background: #24507c !important; }
+.btn-login[disabled] { opacity: .6; }
 
-.btn-login[disabled] {
-  opacity: 0.65;
+.pie {
+  position: relative;
+  margin: 0;
+  color: rgba(255, 255, 255, .55);
+  font-size: .74rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }

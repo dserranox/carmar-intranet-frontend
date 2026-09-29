@@ -1,0 +1,68 @@
+<section class="notificaciones-wrapper">
+
+  <header class="page-header">
+    <h2>Notificaciones</h2>
+    <div class="acciones botonera">
+      <button mat-stroked-button [class.activo]="soloNoLeidas()" (click)="alternarFiltro()">
+        <mat-icon>mark_email_unread</mat-icon>
+        Solo sin leer
+        @if (sinLeer() > 0) { <span class="globo">{{ sinLeer() }}</span> }
+      </button>
+      <button mat-stroked-button [disabled]="sinLeer() === 0" (click)="marcarTodas()">
+        <mat-icon>done_all</mat-icon>
+        Marcar todas como leídas
+      </button>
+      <button mat-icon-button matTooltip="Actualizar" (click)="cargar()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  <div class="lista">
+    @for (n of visibles(); track n.nodId) {
+      <article class="aviso" [class.sin-leer]="!n.leida"
+               [class.critica]="n.severidad === 'CRITICA'"
+               [class.alerta]="n.severidad === 'ALERTA'">
+
+        <div class="icono">
+          <mat-icon>{{ icono(n) }}</mat-icon>
+        </div>
+
+        <div class="texto">
+          <div class="linea-titulo">
+            <span class="titulo">{{ n.titulo }}</span>
+            <span class="etiqueta">{{ etiquetaTipo(n) }}</span>
+            @if (!n.leida) { <span class="punto-nuevo" matTooltip="Sin leer"></span> }
+          </div>
+          <p class="mensaje">{{ n.mensaje }}</p>
+          <div class="pie">
+            <span>{{ n.fecha | date:'dd/MM/yy HH:mm' }}</span>
+            @if (n.generadaPor) { <span>· {{ n.generadaPor }}</span> }
+            @if (n.nroPlan) { <span>· plan {{ n.nroPlan }}</span> }
+          </div>
+        </div>
+
+        <div class="botones">
+          @if (n.origenTipo) {
+            <button mat-stroked-button (click)="irAlOrigen(n)">
+              <mat-icon>open_in_new</mat-icon>
+              Ver
+            </button>
+          }
+          @if (!n.leida) {
+            <button mat-icon-button matTooltip="Marcar como leída" (click)="marcarLeida(n)">
+              <mat-icon>check</mat-icon>
+            </button>
+          }
+        </div>
+      </article>
+    }
+
+    @if (!cargando() && visibles().length === 0) {
+      <div class="vacio">
+        <mat-icon>notifications_none</mat-icon>
+        <p>{{ soloNoLeidas() ? 'No tenés notificaciones sin leer.' : 'No hay notificaciones.' }}</p>
+      </div>
+    }
+  </div>
+</section>

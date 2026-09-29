@@ -3,16 +3,56 @@
   <img src="/car-mar-logo.png" alt="Logo" class="logo-img" />
 
   <nav class="nav">
-    <a mat-button routerLink="/ordenes" routerLinkActive="active">ORDENES</a>
-    <span class="divider"></span>
-    <a mat-button routerLink="/tareas" routerLinkActive="active">TAREAS</a>
+    <!-- El operario no ve ORDENES: su trabajo le llega asignado a MI TRABAJO. -->
+    @if (esOperario) {
+      <a mat-button routerLink="/mi-trabajo" routerLinkActive="active">MI TRABAJO</a>
+    } @else {
+      <a mat-button routerLink="/ordenes" routerLinkActive="active">ORDENES</a>
+    }
+    @if (esAdmin) {
+      <span class="divider"></span>
+      <a mat-button routerLink="/tareas" routerLinkActive="active">TAREAS</a>
+    }
+    @if (puedeCortar) {
+      <span class="divider"></span>
+      <a mat-button routerLink="/corte" routerLinkActive="active">CORTE</a>
+    }
+    @if (puedeVerCalidad) {
+      <span class="divider"></span>
+      <a mat-button routerLink="/calidad" routerLinkActive="active">CALIDAD</a>
+    }
     @if (isAdmin) {
       <span class="divider"></span>
       <a mat-button routerLink="/admin/operarios" routerLinkActive="active">OPERARIOS</a>
     }
   </nav>
 
+  <!-- Con el reloj corriendo, la app se queda en esa tarea: acá se ve cuál es. -->
+  @if (tareaAbierta(); as t) {
+    <a class="tarea-abierta" [routerLink]="t.ruta" matTooltip="Volver a la tarea">
+      <mat-icon>timer</mat-icon>
+      <span class="que">{{ t.operacionNombre }}</span>
+      @if (t.nroPlan) { <span class="donde">plan {{ t.nroPlan }}</span> }
+    </a>
+  }
+
   <div class="userbox">
+    <!-- Recarga la app entera: sirve cuando la pantalla quedó con datos viejos. -->
+    <button mat-icon-button (click)="actualizar()"
+            aria-label="Actualizar" matTooltip="Actualizar la app">
+      <mat-icon>refresh</mat-icon>
+    </button>
+
+    <button mat-icon-button class="campanita" routerLink="/notificaciones"
+            aria-label="Notificaciones" matTooltip="Notificaciones">
+      <mat-icon [class.con-avisos]="sinLeer() > 0">
+        {{ sinLeer() > 0 ? 'notifications_active' : 'notifications' }}
+      </mat-icon>
+      @if (sinLeer() > 0) {
+        <span class="globo">{{ sinLeer() > 99 ? '99+' : sinLeer() }}</span>
+      }
+    </button>
+
     <span class="username">{{ username }}</span>
 
     <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Menú de usuario" matTooltip="Mi cuenta">
