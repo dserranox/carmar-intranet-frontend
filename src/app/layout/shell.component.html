@@ -17,6 +17,10 @@
       <span class="divider"></span>
       <a mat-button routerLink="/corte" routerLinkActive="active">CORTE</a>
     }
+    @if (puedeVerPicking) {
+      <span class="divider"></span>
+      <a mat-button routerLink="/picking" routerLinkActive="active">PICKING</a>
+    }
     @if (puedeVerCalidad) {
       <span class="divider"></span>
       <a mat-button routerLink="/calidad" routerLinkActive="active">CALIDAD</a>
@@ -27,16 +31,16 @@
     }
   </nav>
 
-  <!-- Con el reloj corriendo, la app se queda en esa tarea: acá se ve cuál es. -->
-  @if (tareaAbierta(); as t) {
-    <a class="tarea-abierta" [routerLink]="t.ruta" matTooltip="Volver a la tarea">
-      <mat-icon>timer</mat-icon>
-      <span class="que">{{ t.operacionNombre }}</span>
-      @if (t.nroPlan) { <span class="donde">plan {{ t.nroPlan }}</span> }
-    </a>
-  }
-
   <div class="userbox">
+    <!-- Con el reloj corriendo, la app se queda en esa tarea: acá se ve cuál es. -->
+    @if (tareaAbierta(); as t) {
+      <a class="tarea-abierta" [routerLink]="t.ruta" matTooltip="Volver a la tarea">
+        <mat-icon>timer</mat-icon>
+        <span class="que">{{ t.operacionNombre }}</span>
+        @if (t.nroPlan) { <span class="donde">plan {{ t.nroPlan }}</span> }
+      </a>
+    }
+
     <!-- Recarga la app entera: sirve cuando la pantalla quedó con datos viejos. -->
     <button mat-icon-button (click)="actualizar()"
             aria-label="Actualizar" matTooltip="Actualizar la app">

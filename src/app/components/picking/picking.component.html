@@ -1,0 +1,239 @@
+<div class="pagina">
+
+  <header class="encabezado">
+    <h1><mat-icon>inventory_2</mat-icon> Picking de abastecimiento</h1>
+    @if (puedeImportar && pestania() === 'PICKINGS') {
+      <div class="botonera">
+        <button mat-flat-button color="primary" (click)="panelImportar.set(!panelImportar())">
+          <mat-icon>upload_file</mat-icon>
+          {{ panelImportar() ? 'Cerrar' : 'Cargar Excel' }}
+        </button>
+      </div>
+    }
+  </header>
+
+  <nav class="pestanias" role="tablist">
+    @for (p of pestanias; track p.clave) {
+      <button type="button" class="pestania" role="tab"
+              [class.activa]="pestania() === p.clave"
+              [attr.aria-selected]="pestania() === p.clave"
+              (click)="pestania.set(p.clave)">
+        <mat-icon>{{ p.icono }}</mat-icon>
+        <span>{{ p.titulo }}</span>
+      </button>
+    }
+  </nav>
+
+  @if (pestania() === 'COMPRAS') {
+    <app-pendientes-compra />
+  } @else {
+
+    <!-- ── Carga del Excel, con vista previa antes de confirmar ── -->
+    @if (panelImportar()) {
+      <section class="importar">
+        <div class="fila">
+          <button mat-stroked-button (click)="fileInput.click()">
+            <mat-icon>attach_file</mat-icon> Elegir Excel
+          </button>
+          <input #fileInput type="file" accept=".xlsx" hidden (change)="archivoElegido($event)" />
+          <span class="archivo">{{ archivo?.name || 'Ningún archivo elegido' }}</span>
+          @if (previsualizando()) { <span class="leyendo">Leyendo el archivo…</span> }
+        </div>
+
+        <p class="nota-import">
+          Una fila por componente: plan, código de producto, código de pieza, ubicación,
+          cantidad por producto y cantidad total. Opcionales: código de proveedor, descripción,
+          unidad de medida, cantidad a producir y observaciones. Si el archivo no trae la
+          cantidad a producir, se calcula dividiendo el total por la cantidad de cada producto.
+        </p>
+
+        @if (preview(); as p) {
+
+          @if (p.errores.length) {
+            <div class="bloque error">
+              <mat-icon>error</mat-icon>
+              <div>
+                <strong>El archivo no se puede importar:</strong>
+                <ul>@for (e of p.errores; track e) { <li>{{ e }}</li> }</ul>
+              </div>
+            </div>
+          }
+
+          @if (p.advertencias.length) {
+            <div class="bloque aviso">
+              <mat-icon>warning</mat-icon>
+              <div>
+                <strong>Para mirar antes de confirmar:</strong>
+                <ul>@for (a of p.advertencias; track a) { <li>{{ a }}</li> }</ul>
+              </div>
+            </div>
+          }
+
+          @if (p.planes.length) {
+            <div class="resumen-import">
+              <span><strong>{{ p.planes.length }}</strong> planes</span>
+              <span><strong>{{ p.filasLeidas }}</strong> líneas en total</span>
+            </div>
+
+            <div class="planes">
+              @for (plan of p.planes; track plan.nroPlan) {
+                <article class="plan" [class.bloqueado]="plan.conAvance">
+                  <header>
+                    <span class="nro">{{ plan.nroPlan }}</span>
+                    <span class="codigo">{{ plan.codigoProducto }}</span>
+                    @if (plan.productoDescripcion) {
+                      <span class="desc">{{ plan.productoDescripcion }}</span>
+                    }
+                  </header>
+
+                  <div class="datos">
+                    <span><strong>{{ plan.lineas }}</strong> líneas</span>
+                    <span>
+                      @if (plan.cantidadProducir) {
+                        <strong>{{ plan.cantidadProducir }}</strong> a producir
+                      } @else {
+                        <em>sin cantidad a producir</em>
+                      }
+                    </span>
+                  </div>
+
+                  @if (plan.sinOrden) {
+                    <p class="marca sin-orden">
+                      <mat-icon>help_outline</mat-icon>
+                      El plan no está cargado como orden. El picking se crea igual, sin vincular.
+                    </p>
+                  }
+
+                  @if (plan.conAvance) {
+                    <p class="marca bloqueo">
+                      <mat-icon>block</mat-icon>
+                      Ya se empezó a preparar ({{ plan.estadoExistente }}). No se puede reemplazar
+                      sin perder lo que el operario ya retiró: <strong>se saltea</strong>.
+                    </p>
+                  } @else if (plan.yaExiste) {
+                    <label class="marca reemplazo">
+                      <input type="checkbox" [checked]="estaMarcado(plan.nroPlan)"
+                             (change)="alternarReemplazo(plan.nroPlan)" />
+                      <span>
+                        Ya existe un picking de este plan ({{ plan.estadoExistente }}), sin avance.
+                        Si no lo marcás, <strong>se saltea</strong>.
+                      </span>
+                    </label>
+                  }
+
+                  @for (a of plan.advertencias; track a) {
+                    <p class="marca aviso-plan"><mat-icon>warning</mat-icon> {{ a }}</p>
+                  }
+                </article>
+              }
+            </div>
+          }
+
+          <div class="acciones-import">
+            <span class="nota-import-final">
+              @if (aImportar().length) {
+                Entran <strong>{{ aImportar().length }}</strong> plan(es).
+              } @else {
+                No queda nada para importar: todos los planes del archivo ya están cargados.
+              }
+              @if (salteados().length) {
+                Se saltean {{ salteados().length }}, que ya estaban cargados.
+              }
+            </span>
+            <button mat-button (click)="cerrarImportacion()">Cancelar</button>
+            <button mat-flat-button color="primary"
+                    [disabled]="!listoParaImportar() || importando()" (click)="importar()">
+              <mat-icon>check</mat-icon>
+              {{ importando() ? 'Importando…' : 'Confirmar e importar' }}
+            </button>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ── Filtros ── -->
+    <div class="filtros">
+      <div class="chips">
+        @for (e of estados; track e.clave) {
+          <button type="button" class="chip-estado" [class.activo]="filtroEstado() === e.clave"
+                  (click)="elegirEstado(e.clave)">
+            <mat-icon>{{ e.icono }}</mat-icon>
+            {{ e.titulo }}
+          </button>
+        }
+      </div>
+      <div class="buscador">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Buscar por plan…" [value]="filtroPlan()"
+               (input)="buscarPlan($any($event.target).value)" />
+      </div>
+    </div>
+
+    <!-- ── Listado ── -->
+    @if (cargando()) {
+      <p class="vacio">Cargando…</p>
+    } @else if (!pickings().length) {
+      <p class="vacio">
+        <mat-icon>inbox</mat-icon>
+        No hay pickings para este filtro.
+      </p>
+    }
+
+    <section class="grilla">
+      @for (p of pickings(); track p.pckId) {
+        <article class="tarjeta" [class]="'estado-' + p.estado.toLowerCase()">
+          <header>
+            <span class="plan">{{ p.nroPlan }}</span>
+            <span class="estado" [class]="p.estado.toLowerCase()">{{ etiquetaEstado(p.estado) }}</span>
+          </header>
+
+          <div class="producto">
+            <strong>{{ p.codigoProducto }}</strong>
+            @if (p.cantidadProducir) { <span class="cant">{{ p.cantidadProducir }} u.</span> }
+            @if (p.productoDescripcion) { <span class="desc">{{ p.productoDescripcion }}</span> }
+          </div>
+
+          @if (p.sinOrden) {
+            <p class="sin-orden-chip">
+              <mat-icon>help_outline</mat-icon> Sin orden cargada
+            </p>
+          }
+
+          <div class="progreso">
+            <mat-progress-bar mode="determinate" [value]="avance(p)"></mat-progress-bar>
+            <span class="cuenta">{{ p.lineasRetiradas }} / {{ p.totalLineas }} líneas</span>
+          </div>
+
+          @if (p.lineasFaltantes || p.lineasParciales) {
+            <p class="faltan">
+              <mat-icon>error_outline</mat-icon>
+              @if (p.lineasFaltantes) { {{ p.lineasFaltantes }} sin material }
+              @if (p.lineasFaltantes && p.lineasParciales) { · }
+              @if (p.lineasParciales) { {{ p.lineasParciales }} parcial(es) }
+            </p>
+          }
+
+          <div class="pie-datos">
+            @if (p.operario) { <span><mat-icon>person</mat-icon> {{ p.operario }}</span> }
+            @if (p.segundos) { <span><mat-icon>timer</mat-icon> {{ duracion(p.segundos) }}</span> }
+            @if (p.fechaCarga) {
+              <span><mat-icon>event</mat-icon> {{ p.fechaCarga | date:'dd/MM' }}</span>
+            }
+          </div>
+
+          <footer>
+            <button mat-flat-button color="primary" (click)="abrir(p)">
+              <mat-icon>{{ p.estado === 'COMPLETO' ? 'visibility' : 'play_arrow' }}</mat-icon>
+              {{ textoBoton(p) }}
+            </button>
+            @if (puedeImportar && p.estado === 'PENDIENTE') {
+              <button mat-icon-button color="warn" matTooltip="Eliminar picking" (click)="eliminar(p)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
+          </footer>
+        </article>
+      }
+    </section>
+  }
+</div>

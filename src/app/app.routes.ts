@@ -22,6 +22,8 @@ export const routes: Routes = [
       { path: 'corte', loadComponent: () => import('./components/corte/corte.component').then(m => m.CorteComponent) },
       { path: 'corte/config/traccion', loadComponent: () => import('./components/corte/traccion-minima.component').then(m => m.TraccionMinimaComponent) },
       { path: 'corte/:sabId', loadComponent: () => import('./components/corte/corte-visor.component').then(m => m.CorteVisorComponent) },
+      { path: 'picking', loadComponent: () => import('./components/picking/picking.component').then(m => m.PickingComponent) },
+      { path: 'picking/:pckId', loadComponent: () => import('./components/picking/picking-preparacion.component').then(m => m.PickingPreparacionComponent) },
       { path: 'calidad', loadComponent: () => import('./components/calidad/calidad.component').then(m => m.CalidadComponent) },
       { path: 'calidad/puntos-control', loadComponent: () => import('./components/calidad/puntos-control.component').then(m => m.PuntosControlComponent) },
       { path: 'calidad/ruta/:rcaId', loadComponent: () => import('./components/calidad/ruta-visor.component').then(m => m.RutaVisorComponent) },

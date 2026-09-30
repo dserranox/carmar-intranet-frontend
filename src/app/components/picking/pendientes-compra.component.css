@@ -1,0 +1,96 @@
+.pendientes { display: flex; flex-direction: column; gap: 14px; }
+
+.cabecera {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+
+.resumen { display: flex; align-items: center; gap: 16px; font-size: .9rem; color: #37474f; }
+.resumen .sin-pedir {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #c62828; font-weight: 700;
+}
+.resumen mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+.botonera { display: flex; gap: 10px; margin-left: auto; }
+.botonera button.activo { background: #e3f2fd; }
+
+.vacio {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 48px; color: rgba(0, 0, 0, .5);
+}
+
+.lista { display: flex; flex-direction: column; gap: 10px; }
+
+.pendiente {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e0e4ea;
+  border-left: 6px solid #90a4ae;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .05);
+}
+/* Cuanto más tiempo lleva esperando, más fuerte se ve. */
+.pendiente.urgencia-alta { border-left-color: #c62828; }
+.pendiente.urgencia-media { border-left-color: #ef6c00; }
+.pendiente.urgencia-baja { border-left-color: #1a3a5c; }
+.pendiente.pedido { opacity: .72; background: #fafbfc; }
+
+.antiguedad {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 62px; padding: 6px 0;
+  border-radius: 10px; background: #eceff1;
+}
+.antiguedad .dias {
+  font-size: 1.6rem; font-weight: 800; line-height: 1; color: #37474f;
+  font-variant-numeric: tabular-nums;
+}
+.antiguedad .rotulo { font-size: .62rem; letter-spacing: 1px; color: rgba(0, 0, 0, .5); }
+.urgencia-alta .antiguedad { background: #ffebee; }
+.urgencia-alta .antiguedad .dias { color: #c62828; }
+.urgencia-media .antiguedad { background: #fff3e0; }
+.urgencia-media .antiguedad .dias { color: #ef6c00; }
+
+.datos { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.datos .titulo-pieza { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.datos .pieza { font-size: 1.15rem; font-weight: 800; color: #263238; letter-spacing: .3px; }
+.datos .proveedor {
+  padding: 1px 9px; border-radius: 9px;
+  background: #ede7f6; color: #4527a0; font-size: .76rem; font-weight: 700;
+}
+.datos .desc { font-size: .88rem; color: #37474f; }
+.datos .planes { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.datos .planes mat-icon {
+  font-size: 15px; width: 15px; height: 15px; color: rgba(0, 0, 0, .4);
+}
+.datos .plan {
+  padding: 1px 9px; border-radius: 9px;
+  background: #e3f2fd; color: #1a3a5c; font-size: .74rem; font-weight: 700;
+}
+
+.cantidad {
+  display: flex; flex-direction: column; align-items: flex-end;
+  min-width: 96px;
+}
+.cantidad .rotulo { font-size: .62rem; letter-spacing: 1.5px; color: rgba(0, 0, 0, .5); font-weight: 700; }
+.cantidad .valor {
+  font-size: 1.9rem; font-weight: 800; line-height: 1; color: #c62828;
+  font-variant-numeric: tabular-nums;
+}
+.cantidad .um { font-size: .72rem; color: rgba(0, 0, 0, .5); }
+
+.acciones { display: flex; align-items: center; gap: 8px; min-width: 180px; justify-content: flex-end; }
+
+.marca-pedido {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 16px;
+  background: #e8f5e9; color: #2e7d32; font-size: .82rem; font-weight: 700;
+}
+.marca-pedido mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+@media (max-width: 900px) {
+  .pendiente { flex-wrap: wrap; }
+  .acciones { width: 100%; }
+}

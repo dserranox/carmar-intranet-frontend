@@ -6,6 +6,9 @@
   padding: 4px 12px;
   background: #fff;
   border-bottom: 1px solid rgba(0,0,0,0.08);
+  /* Sin esto, un hijo largo estira la grilla y toda la página se corre al costado. */
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .logo-btn {
@@ -26,6 +29,11 @@
   align-items: center;
   gap: 12px;
   margin-left: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
 }
 
 .nav a.active { font-weight: 700; text-decoration: underline; text-underline-offset: 6px; }
@@ -44,6 +52,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  /* Que la barra se apriete antes de empujar la página fuera de la pantalla. */
+  min-width: 0;
+  justify-self: end;
 }
 
 .username { font-size: 0.9rem; color: #333; font-weight: 600; }
@@ -81,8 +92,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
-  margin-right: 12px;
+  margin-right: 8px;
   padding: 5px 14px;
   border-radius: 18px;
   background: #e8f5e9;
@@ -90,6 +100,11 @@
   color: #1b5e20;
   text-decoration: none;
   white-space: nowrap;
+  /* Va dentro del bloque de usuario: si no entra, se achica en vez de empujar
+     la barra y sacar la página de la pantalla. */
+  min-width: 0;
+  max-width: 260px;
+  overflow: hidden;
 
   mat-icon {
     font-size: 18px;
@@ -98,8 +113,11 @@
     animation: latido 2s ease-in-out infinite;
   }
 
-  .que { font-size: .82rem; font-weight: 700; }
-  .donde { font-size: .74rem; opacity: .75; }
+  .que {
+    font-size: .82rem; font-weight: 700;
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .donde { font-size: .74rem; opacity: .75; flex-shrink: 0; }
 
   &:hover { background: #c8e6c9; }
 }

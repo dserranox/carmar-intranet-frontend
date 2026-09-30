@@ -1,0 +1,91 @@
+<section class="pendientes">
+
+  <header class="cabecera">
+    <div class="resumen">
+      @if (pendientes().length) {
+        <span class="total"><strong>{{ pendientes().length }}</strong> códigos con faltante</span>
+        @if (sinPedir()) {
+          <span class="sin-pedir"><mat-icon>shopping_cart</mat-icon> {{ sinPedir() }} sin pedir</span>
+        }
+      }
+    </div>
+
+    <div class="botonera">
+      <button mat-stroked-button (click)="soloSinPedir.set(!soloSinPedir())"
+              [class.activo]="soloSinPedir()">
+        <mat-icon>{{ soloSinPedir() ? 'filter_alt' : 'filter_alt_off' }}</mat-icon>
+        {{ soloSinPedir() ? 'Solo sin pedir' : 'Ver todos' }}
+      </button>
+      <button mat-stroked-button (click)="exportar()" [disabled]="!visibles().length">
+        <mat-icon>download</mat-icon>
+        Exportar a Excel
+      </button>
+      <button mat-flat-button color="primary" (click)="cargar()">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+    </div>
+  </header>
+
+  @if (cargando()) {
+    <p class="vacio">Cargando…</p>
+  } @else if (!visibles().length) {
+    <p class="vacio">
+      <mat-icon>task_alt</mat-icon>
+      @if (soloSinPedir() && pendientes().length) {
+        Ya se pidió todo lo que falta.
+      } @else {
+        No hay materiales pendientes. Todos los cajones están completos.
+      }
+    </p>
+  }
+
+  <div class="lista">
+    @for (p of visibles(); track p.codigoPieza) {
+      <article class="pendiente" [class]="'urgencia-' + urgencia(p)" [class.pedido]="p.pedido">
+
+        <div class="antiguedad" [matTooltip]="p.desde ? ('Detectado el ' + (p.desde | date:'dd/MM/yyyy HH:mm')) : ''">
+          <span class="dias">{{ p.diasEsperando }}</span>
+          <span class="rotulo">{{ p.diasEsperando === 1 ? 'día' : 'días' }}</span>
+        </div>
+
+        <div class="datos">
+          <span class="titulo-pieza">
+            <span class="pieza">{{ p.codigoPieza }}</span>
+            @if (p.codigoProveedor) {
+              <span class="proveedor" matTooltip="Código del proveedor">{{ p.codigoProveedor }}</span>
+            }
+          </span>
+          @if (p.descripcion) { <span class="desc">{{ p.descripcion }}</span> }
+          <span class="planes">
+            <mat-icon>assignment</mat-icon>
+            @for (plan of p.planes; track plan) { <span class="plan">{{ plan }}</span> }
+          </span>
+        </div>
+
+        <div class="cantidad">
+          <span class="rotulo">FALTAN</span>
+          <span class="valor">{{ p.cantidadFaltante }}</span>
+          @if (p.um) { <span class="um">{{ p.um }}</span> }
+        </div>
+
+        <div class="acciones">
+          @if (p.pedido) {
+            <span class="marca-pedido" [matTooltip]="p.fechaPedido ? ('Pedido el ' + (p.fechaPedido | date:'dd/MM/yyyy')) : ''">
+              <mat-icon>check_circle</mat-icon>
+              Pedido
+            </span>
+            @if (puedeMarcar) {
+              <button mat-button (click)="alternarPedido(p)">Deshacer</button>
+            }
+          } @else if (puedeMarcar) {
+            <button mat-flat-button color="primary" (click)="alternarPedido(p)">
+              <mat-icon>shopping_cart</mat-icon>
+              Marcar pedido
+            </button>
+          }
+        </div>
+      </article>
+    }
+  </div>
+</section>

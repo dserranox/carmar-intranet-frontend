@@ -76,6 +76,11 @@ export class ShellComponent implements OnInit, OnDestroy {
     return this.tienePermiso('CALIDAD:READ');
   }
 
+  /** PICKING la ve logística, más quien siga la planta. */
+  get puedeVerPicking(): boolean {
+    return this.tienePermiso('PICKING:READ');
+  }
+
   /** Las no conformidades las llevan calidad, el jefe de producción y el admin. */
   get puedeVerNoConformidades(): boolean {
     return this.tienePermiso('NOCONFORMIDADES:READ');
