@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -11,6 +11,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
@@ -41,6 +43,7 @@ import { AsignarClienteDialogComponent } from './asignar-cliente-dialog.componen
     MatIconModule, MatButtonModule, MatTooltipModule,
     MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
     MatSelectModule, MatDatepickerModule, MatNativeDateModule,
+    MatMenuModule, MatCheckboxModule,
     SelectBuscableComponent
   ],
   templateUrl: './orders-table.component.html',
@@ -49,10 +52,33 @@ import { AsignarClienteDialogComponent } from './asignar-cliente-dialog.componen
 export class OrdersTableComponent implements OnInit {
   private ordersSvc = inject(OrdersService);
   dataSource = new MatTableDataSource<OrdenResponseDTO>([]);
-  displayedColumns = [
-    'fechaCreacion','ordNroPlan','clienteId','productoCodigo','productoDescripcion',
-    'cantidad','fechaInicio','situacionClave','fechaFinalizacion','acciones'
+
+  /**
+   * Las columnas con su nombre, en el orden de fábrica. Cada uno se arma su
+   * vista: esconde las que no mira y sube las que usa. Queda guardado en esta
+   * máquina, así la próxima vez abre como la dejó.
+   *
+   * «Acciones» no está acá: va siempre al final y pegada al borde derecho,
+   * porque es la columna que más se usa.
+   */
+  readonly columnasDisponibles: { clave: string; etiqueta: string }[] = [
+    { clave: 'fechaCreacion',       etiqueta: 'Fecha creación' },
+    { clave: 'ordNroPlan',          etiqueta: 'Nro plan' },
+    { clave: 'clienteId',           etiqueta: 'Cliente' },
+    { clave: 'productoCodigo',      etiqueta: 'Código' },
+    { clave: 'productoDescripcion', etiqueta: 'Producto' },
+    { clave: 'cantidad',            etiqueta: 'Cantidad' },
+    { clave: 'fechaInicio',         etiqueta: 'Fecha inicio' },
+    { clave: 'situacionClave',      etiqueta: 'Estado' },
+    { clave: 'fechaFinalizacion',   etiqueta: 'Fecha finalización' }
   ];
+
+  private static readonly CLAVE_VISTA = 'ordenes.columnas';
+
+  /** El orden y la visibilidad elegidos; se completa con los valores de fábrica. */
+  vistaColumnas: { clave: string; visible: boolean }[] = [];
+
+  displayedColumns: string[] = [];
   years: number[] = [];
   year = new Date().getFullYear();
   loading = false;
@@ -79,6 +105,103 @@ export class OrdersTableComponent implements OnInit {
   fechaInicioHasta: Date | null = null;
   fechaFinalizacionDesde: Date | null = null;
   fechaFinalizacionHasta: Date | null = null;
+
+  /**
+   * A la vista quedan los tres que se usan siempre — año, plan y estado — y el
+   * resto se despliega. Las tres fechas juntas ocupaban media pantalla y casi
+   * nunca se tocan.
+   */
+  masFiltros = signal(false);
+
+  // ==================== la vista de la tabla ====================
+
+  /** Carga lo que el usuario dejó elegido, o el orden de fábrica si es la primera vez. */
+  private cargarVista(): void {
+    let guardada: { clave: string; visible: boolean }[] = [];
+    try {
+      const crudo = localStorage.getItem(OrdersTableComponent.CLAVE_VISTA);
+      if (crudo) guardada = JSON.parse(crudo) ?? [];
+    } catch { /* si está rota, se arranca de cero */ }
+
+    const conocidas = new Set(this.columnasDisponibles.map(c => c.clave));
+    const vista = guardada.filter(c => conocidas.has(c.clave));
+
+    // Las columnas nuevas de una versión posterior entran visibles al final.
+    for (const columna of this.columnasDisponibles) {
+      if (!vista.some(v => v.clave === columna.clave)) {
+        vista.push({ clave: columna.clave, visible: true });
+      }
+    }
+    this.vistaColumnas = vista;
+    this.aplicarVista();
+  }
+
+  private aplicarVista(): void {
+    this.displayedColumns = [
+      ...this.vistaColumnas.filter(c => c.visible).map(c => c.clave),
+      'acciones'
+    ];
+    // El cliente no se muestra a quien no puede verlo, elija lo que elija.
+    if (!this.puedeVerClientes) {
+      this.displayedColumns = this.displayedColumns.filter(c => c !== 'clienteId');
+    }
+  }
+
+  private guardarVista(): void {
+    try {
+      localStorage.setItem(OrdersTableComponent.CLAVE_VISTA, JSON.stringify(this.vistaColumnas));
+    } catch { /* sin localStorage se pierde al salir, pero la sesión funciona igual */ }
+  }
+
+  etiquetaColumna(clave: string): string {
+    return this.columnasDisponibles.find(c => c.clave === clave)?.etiqueta ?? clave;
+  }
+
+  /** Las columnas que se pueden tocar: sin la de cliente si el rol no la ve. */
+  get columnasConfigurables(): { clave: string; visible: boolean }[] {
+    return this.vistaColumnas.filter(c => this.puedeVerClientes || c.clave !== 'clienteId');
+  }
+
+  alternarColumna(clave: string): void {
+    const columna = this.vistaColumnas.find(c => c.clave === clave);
+    if (!columna) return;
+    const visibles = this.vistaColumnas.filter(c => c.visible).length;
+    if (columna.visible && visibles <= 1) {
+      this.snack.open('Dejá al menos una columna a la vista', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    columna.visible = !columna.visible;
+    this.aplicarVista();
+    this.guardarVista();
+  }
+
+  moverColumna(clave: string, haciaDonde: -1 | 1): void {
+    const i = this.vistaColumnas.findIndex(c => c.clave === clave);
+    const destino = i + haciaDonde;
+    if (i < 0 || destino < 0 || destino >= this.vistaColumnas.length) return;
+    const [columna] = this.vistaColumnas.splice(i, 1);
+    this.vistaColumnas.splice(destino, 0, columna);
+    this.aplicarVista();
+    this.guardarVista();
+  }
+
+  restaurarVista(): void {
+    this.vistaColumnas = this.columnasDisponibles.map(c => ({ clave: c.clave, visible: true }));
+    this.aplicarVista();
+    this.guardarVista();
+    this.snack.open('Columnas como vienen de fábrica', 'Cerrar', { duration: 2500 });
+  }
+
+  /** Cuántos de los filtros guardados están puestos, para avisar que hay algo filtrando. */
+  otrosFiltrosActivos(): number {
+    const valores = [
+      this.filterClienteId, this.filterProductoCodigo, this.filterProductoDescripcion,
+      this.fechaCreacionDesde, this.fechaCreacionHasta,
+      this.fechaInicioDesde, this.fechaInicioHasta,
+      this.fechaFinalizacionDesde, this.fechaFinalizacionHasta
+    ];
+    return valores.filter(v => v !== null && v !== '' && v !== undefined).length;
+  }
 
   private allOrders: OrdenResponseDTO[] = [];
 
@@ -144,6 +267,7 @@ export class OrdersTableComponent implements OnInit {
 
   ngOnInit(): void {
     this.resolveIsAdmin();
+    this.cargarVista();
     // La columna Cliente muestra la razón social, así que también ordena por ella.
     this.dataSource.sortingDataAccessor = (row: any, columna: string) =>
       columna === 'clienteId' ? this.nombreCliente(row).toLowerCase() : row[columna];
@@ -182,9 +306,6 @@ export class OrdersTableComponent implements OnInit {
       this.isAdmin = false;
       this.puedeVerClientes = false;
     }
-    if (!this.puedeVerClientes) {
-      this.displayedColumns = this.displayedColumns.filter(c => c !== 'clienteId');
-    }
   }
 
   async load(resetFilters = false) {
@@ -207,14 +328,12 @@ export class OrdersTableComponent implements OnInit {
       console.error(err);
     } finally {
       this.loading = false;
-      if (this.savedSortActive && this.savedSortDirection) {
-        await new Promise(r => setTimeout(r, 0));
-        this.dataSource.sort?.sort({
-          id: this.savedSortActive,
-          start: this.savedSortDirection as 'asc' | 'desc',
-          disableClear: false
-        });
-      }
+      // Por defecto, la más reciente primero: es la que se acaba de cargar y la
+      // que todos van a buscar. Desde ahí se ordena por cualquier columna.
+      const activa = this.savedSortActive || 'ordNroPlan';
+      const sentido = this.savedSortDirection || 'desc';
+      await new Promise(r => setTimeout(r, 0));
+      this.dataSource.sort?.sort({ id: activa, start: sentido as 'asc' | 'desc', disableClear: false });
     }
   }
 
@@ -451,8 +570,11 @@ export class OrdersTableComponent implements OnInit {
       this.loading = true;
       this.ordersSvc.createOrden(result).subscribe({
         next: (ordenCreada) => {
-          this.snack.open('Orden creada exitosamente', 'Cerrar', { duration: 3000 });
-          this.load(); // Reload the table
+          // El número de plan lo genera la app: es el dato con el que después
+          // todos van a hablar, así que se dice y la orden queda a la vista.
+          this.snack.open(`Orden ${ordenCreada?.ordNroPlan ?? ''} creada`.trim(), 'Cerrar',
+            { duration: 6000 });
+          this.load();
         },
         error: (err) => {
           console.error('Error creating order:', err);

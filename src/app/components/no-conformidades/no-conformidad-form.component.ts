@@ -12,10 +12,12 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { NoConformidadesService } from '../../services/no-conformidades.service';
 import { ClientesService } from '../../services/clientes.service';
+import { ProductosService } from '../../services/productos.service';
 import { UsuarioService } from '../../services/usuario.service';
 import {
   AdjuntoNC, NoConformidad, ORIGENES_EXTERNOS, ORIGENES_INTERNOS
 } from '../../models/no-conformidad';
+import { Producto } from '../../models/producto';
 import { OpcionBuscable, SelectBuscableComponent } from '../../shared/select-buscable.component';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
@@ -37,6 +39,7 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 export class NoConformidadFormComponent implements OnInit {
   private servicio = inject(NoConformidadesService);
   private clientesService = inject(ClientesService);
+  private productosService = inject(ProductosService);
   private usuarioService = inject(UsuarioService);
   private ruta = inject(ActivatedRoute);
   private router = inject(Router);
@@ -71,6 +74,8 @@ export class NoConformidadFormComponent implements OnInit {
     { valor: 'NO_EJECUTADA', texto: 'No ejecutada' }
   ];
   opcionesCliente: OpcionBuscable[] = [];
+  opcionesProducto: OpcionBuscable[] = [];
+  private productos: Producto[] = [];
   opcionesUsuario: OpcionBuscable[] = [];
 
   /** El origen depende de si es interna o externa. */
@@ -82,6 +87,11 @@ export class NoConformidadFormComponent implements OnInit {
   esNueva = computed(() => !this.nc().ncfId);
   cerrada = computed(() => this.nc().estado === 'CERRADA');
   soloLectura = computed(() => this.cerrada() || !this.puedeEscribir);
+  /** Si nació de un KO, el producto y el lote son la prueba del hecho: no se tocan. */
+  vieneDeUnControl = computed(() => !!(this.nc().rccId || this.nc().ccaId));
+  trazabilidadEditable = computed(() => !this.soloLectura() && !this.vieneDeUnControl());
+  hayTrazabilidad = computed(() => !!(this.nc().nroPlan || this.nc().productoCodigo
+    || this.nc().lote || this.nc().puesto || this.nc().operario));
   pideOrigenOtro = computed(() => (this.nc().origen ?? '').startsWith('OTRO'));
   primerResponsable = computed(() => (this.nc().responsables ?? [])[0] ?? '');
 
@@ -121,11 +131,20 @@ export class NoConformidadFormComponent implements OnInit {
   }
 
   private cargarListas(): void {
-    this.clientesService.getAll().subscribe({
+    this.clientesService.getNombres().subscribe({
       next: cs => this.opcionesCliente = cs
         .map(c => ({ valor: c.id, texto: c.razonSocial }))
         .sort((a, b) => a.texto.localeCompare(b.texto)),
-      error: () => { /* solo el admin ve clientes; si no, queda vacío */ }
+      error: () => { /* si no puede listar clientes, el campo queda vacío */ }
+    });
+    this.productosService.getAll().subscribe({
+      next: ps => {
+        this.productos = ps;
+        this.opcionesProducto = ps
+          .map(p => ({ valor: p.codigo, texto: `${p.codigo} — ${p.descripcion}` }))
+          .sort((a, b) => a.texto.localeCompare(b.texto));
+      },
+      error: () => { /* si no puede listar productos, el campo queda vacío */ }
     });
     this.usuarioService.getUsuariosActivos().subscribe({
       next: us => this.opcionesUsuario = us
@@ -176,6 +195,16 @@ export class NoConformidadFormComponent implements OnInit {
 
   actualizar(campo: keyof NoConformidad, valor: any): void {
     this.nc.set({ ...this.nc(), [campo]: valor });
+  }
+
+  /** Al elegir el producto se guarda el código y, de paso, su descripción. */
+  elegirProducto(codigo: any): void {
+    const producto = this.productos.find(p => p.codigo === codigo);
+    this.nc.set({
+      ...this.nc(),
+      productoCodigo: codigo || null,
+      productoDescripcion: producto?.descripcion ?? null
+    });
   }
 
   /** Al cambiar el tipo hay que reencauzar el origen, porque las listas son distintas. */

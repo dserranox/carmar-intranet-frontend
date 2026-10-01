@@ -28,7 +28,7 @@ function normalizar(texto: string): string {
 
     <mat-dialog-content class="contenido">
       <mat-form-field appearance="outline" class="buscador">
-        <mat-label>Buscar por plan, código, producto o cliente</mat-label>
+        <mat-label>{{ puedeVerClientes ? 'Buscar por plan, código, producto o cliente' : 'Buscar por plan, código o producto' }}</mat-label>
         <mat-icon matPrefix>search</mat-icon>
         <input matInput [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" autocomplete="off" />
       </mat-form-field>
@@ -47,7 +47,10 @@ function normalizar(texto: string): string {
             </div>
             <div class="centro">
               <span class="desc">{{ o.productoDescripcion ?? '—' }}</span>
-              <span class="cliente">{{ o.clienteRazonSocial ?? 'sin cliente' }} · {{ o.situacionClave }}</span>
+              <span class="cliente">
+                @if (puedeVerClientes) { {{ o.clienteRazonSocial ?? 'sin cliente' }} · }
+                {{ o.situacionClave }}
+              </span>
             </div>
             <div class="derecha">
               @if (o.yaControlada) {
@@ -114,6 +117,23 @@ export class ElegirOrdenDialogComponent {
   private datos = inject<{ ordenes: OrdenAbierta[] }>(MAT_DIALOG_DATA);
 
   busqueda = signal('');
+
+  /**
+   * En planta no se ve para quién se fabrica. Si el rol no puede verlo, no se
+   * muestra la línea ni se promete buscar por algo que nunca va a estar:
+   * «sin cliente» hace pensar que falta cargar un dato y alguien lo va a ir a
+   * «arreglar».
+   */
+  puedeVerClientes = this.tienePermiso('CLIENTES:READ');
+
+  private tienePermiso(permiso: string): boolean {
+    try {
+      const data = localStorage.getItem('user');
+      if (!data) return false;
+      const perms = JSON.parse(data)?.permissions;
+      return Array.isArray(perms) && perms.includes(permiso);
+    } catch { return false; }
+  }
 
   visibles = computed(() => {
     const q = normalizar(this.busqueda()).trim();

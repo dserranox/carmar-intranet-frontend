@@ -96,4 +96,9 @@ export class CalidadService {
   cerrarRuta(rcaId: number, observaciones?: string): Observable<RutaCalidad> {
     return this.http.post<RutaCalidad>(`${this.baseUrl}/rutas/${rcaId}/cerrar`, { observaciones });
   }
+
+  /** Dejarla sin terminar, con el motivo anotado: la salida cuando no se puede cerrar. */
+  suspenderRuta(rcaId: number, motivo: string): Observable<RutaCalidad> {
+    return this.http.post<RutaCalidad>(`${this.baseUrl}/rutas/${rcaId}/suspender`, { motivo });
+  }
 }

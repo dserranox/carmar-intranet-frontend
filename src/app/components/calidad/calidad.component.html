@@ -186,34 +186,36 @@
       <div class="panel">
 
         @if (puedeControlar) {
+          <!-- No hay un número fijo de recorridas: se hacen las que hagan falta y
+               se numeran solas. Acá se ven las de hoy, en el orden en que salieron. -->
           <div class="recorridas-hoy">
-            <h3>Recorridas de hoy</h3>
+            <div class="encabezado-hoy">
+              <h3>Recorridas de hoy</h3>
+              <button mat-flat-button color="primary" (click)="iniciarRuta()">
+                <mat-icon>play_arrow</mat-icon>
+                Iniciar recorrida
+              </button>
+            </div>
+
             <div class="dos-rutas">
-              @for (n of [1, 2]; track n) {
-                <div class="ruta-hoy" [class.hecha]="rutaDelDia(n)?.estado === 'CERRADA'"
-                                      [class.abierta]="rutaDelDia(n)?.estado === 'EN_CURSO'">
-                  <span class="nro">Recorrida {{ n }}</span>
-                  @if (rutaDelDia(n); as r) {
-                    <span class="estado">
-                      {{ r.estado === 'CERRADA' ? 'Hecha' : 'En curso' }} · {{ r.responsable }}
-                    </span>
-                    <span class="detalle">
-                      {{ r.ordenesControladas }} órdenes · {{ r.ordenesKo }} con KO · {{ r.minutos }} min
-                    </span>
-                    <button mat-flat-button [color]="r.estado === 'EN_CURSO' ? 'primary' : undefined"
-                            (click)="abrirRuta(r)">
-                      <mat-icon>{{ r.estado === 'EN_CURSO' ? 'play_arrow' : 'visibility' }}</mat-icon>
-                      {{ r.estado === 'EN_CURSO' ? 'Continuar' : 'Ver' }}
-                    </button>
-                  } @else {
-                    <span class="estado pendiente">Sin hacer</span>
-                    <span class="detalle">&nbsp;</span>
-                    <button mat-flat-button color="primary" (click)="iniciarRuta(n)">
-                      <mat-icon>play_arrow</mat-icon>
-                      Iniciar
-                    </button>
-                  }
+              @for (r of rutasDeHoy(); track r.rcaId) {
+                <div class="ruta-hoy" [class.hecha]="r.estado === 'CERRADA'"
+                                      [class.abierta]="r.estado === 'EN_CURSO'">
+                  <span class="nro">Recorrida {{ r.numero }}</span>
+                  <span class="estado">{{ etiquetaEstado(r) }} · {{ r.responsable }}</span>
+                  <span class="detalle">
+                    {{ r.ordenesControladas }} órdenes · {{ r.ordenesKo }} con KO · {{ r.minutos }} min
+                  </span>
+                  <!-- Si la está haciendo otro, acá sólo se mira: el botón lo dice. -->
+                  <button mat-flat-button [color]="puedeSeguir(r) ? 'primary' : undefined"
+                          (click)="confirmarYAbrir(r)">
+                    <mat-icon>{{ puedeSeguir(r) ? 'play_arrow' : 'visibility' }}</mat-icon>
+                    {{ puedeSeguir(r) ? 'Continuar' : 'Ver' }}
+                  </button>
                 </div>
+              }
+              @if (rutasDeHoy().length === 0) {
+                <p class="vacio">Todavía no se hizo ninguna recorrida hoy.</p>
               }
             </div>
           </div>

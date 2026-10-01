@@ -210,9 +210,13 @@ export class CalidadComponent implements OnInit {
     });
   }
 
-  /** Arranca la recorrida del día y lleva derecho a la pantalla de control. */
-  iniciarRuta(numero: number): void {
-    this.calidadService.iniciarRuta(this.aISO(new Date()), numero).subscribe({
+  /**
+   * Arranca una recorrida y lleva derecho a la pantalla de control. El número lo
+   * pone el servidor según cuántas van ese día: algunos días se hacen dos y otros
+   * tres, así que no hay una cantidad fija.
+   */
+  iniciarRuta(): void {
+    this.calidadService.iniciarRuta(this.aISO(new Date())).subscribe({
       next: ruta => this.router.navigate(['/calidad/ruta', ruta.rcaId]),
       error: err => this.snack.open(err?.error?.message || 'No se pudo iniciar la recorrida', 'OK',
         { duration: 6000 })
@@ -223,10 +227,25 @@ export class CalidadComponent implements OnInit {
     this.router.navigate(['/calidad/ruta', ruta.rcaId]);
   }
 
-  /** Para las dos recorridas del día: cuál ya se hizo y cuál falta. */
-  rutaDelDia(numero: number): RutaCalidad | undefined {
+  /** Las recorridas que se hicieron hoy, en el orden en que salieron. */
+  rutasDeHoy(): RutaCalidad[] {
     const hoy = this.aISO(new Date());
-    return this.rutas().find(r => r.fecha === hoy && r.numero === numero);
+    return this.rutas()
+      .filter(r => r.fecha === hoy)
+      .sort((a, b) => a.numero - b.numero);
+  }
+
+  /** Sólo se sigue la propia: la de otro responsable se mira y nada más. */
+  puedeSeguir(ruta: RutaCalidad): boolean {
+    return ruta.estado === 'EN_CURSO' && ruta.responsable === this.usuarioActual();
+  }
+
+  etiquetaEstado(ruta: RutaCalidad): string {
+    switch (ruta.estado) {
+      case 'CERRADA': return 'Hecha';
+      case 'SUSPENDIDA': return 'Suspendida';
+      default: return 'En curso';
+    }
   }
 
   async exportarRutas(): Promise<void> {

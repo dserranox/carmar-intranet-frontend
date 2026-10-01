@@ -1,0 +1,484 @@
+<section class="tablero">
+
+  <header class="encabezado">
+    <div class="titulo">
+      <h2>Tablero</h2>
+      <span class="sub">Lo que pasó en la planta entre el {{ desde | date:'dd/MM/yy' }}
+        y el {{ hasta | date:'dd/MM/yy' }}</span>
+    </div>
+
+    <div class="periodo">
+      <button mat-stroked-button (click)="periodo(1)">Hoy</button>
+      <button mat-stroked-button (click)="periodo(7)">7 días</button>
+      <button mat-stroked-button (click)="periodo(30)">30 días</button>
+      <button mat-stroked-button (click)="esteAnio()">Este año</button>
+
+      <mat-form-field appearance="outline" class="fecha">
+        <mat-label>Desde</mat-label>
+        <input matInput [matDatepicker]="pDesde" [(ngModel)]="desde" (dateChange)="cargar()">
+        <mat-datepicker-toggle matIconSuffix [for]="pDesde"></mat-datepicker-toggle>
+        <mat-datepicker #pDesde></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="fecha">
+        <mat-label>Hasta</mat-label>
+        <input matInput [matDatepicker]="pHasta" [(ngModel)]="hasta" [min]="desde" (dateChange)="cargar()">
+        <mat-datepicker-toggle matIconSuffix [for]="pHasta"></mat-datepicker-toggle>
+        <mat-datepicker #pHasta></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </header>
+
+  @if (cargando()) {
+    <p class="vacio">Juntando los números…</p>
+  } @else { @if (datos(); as t) {
+
+    <!-- ============================================ 1 · la planta ahora -->
+    <h3 class="bloque-titulo"><mat-icon>precision_manufacturing</mat-icon> La planta ahora mismo</h3>
+
+    <div class="tarjetas">
+      <div class="tarjeta destacada">
+        <span class="numero">{{ t.operariosTrabajando }}</span>
+        <span class="rotulo">trabajando</span>
+        <span class="pie">
+          {{ t.operariosEnPausa }} en pausa · {{ t.operariosSuspendidos }} suspendidas ·
+          {{ t.operariosSinTarea }} sin tarea
+        </span>
+      </div>
+
+      <div class="tarjeta">
+        <span class="numero">{{ t.ordenesEnProceso }}</span>
+        <span class="rotulo">órdenes en proceso</span>
+        <span class="pie">{{ t.ordenesPlanificadas }} planificadas esperando</span>
+      </div>
+
+      <div class="tarjeta" [class.alerta]="t.tareasColgadas.length > 0">
+        <span class="numero">{{ t.tareasColgadas.length }}</span>
+        <span class="rotulo">tareas colgadas</span>
+        <span class="pie">abiertas hace más de 10 horas</span>
+      </div>
+
+      <div class="tarjeta ancha">
+        <span class="rotulo">tareas abiertas por área</span>
+        @if (t.tareasPorArea.length) {
+          <div class="barras">
+            @for (a of t.tareasPorArea; track a.etiqueta) {
+              <div class="barra">
+                <span class="que">{{ a.etiqueta }}</span>
+                <span class="linea"><i [style.width.%]="proporcion(a.valor, t.tareasPorArea)"></i></span>
+                <span class="cuanto">{{ a.valor }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="sin-datos">No hay ninguna tarea abierta.</p>
+        }
+      </div>
+    </div>
+
+    @if (t.enPlanta.length) {
+      <div class="panel">
+        <h4>Quién está haciendo qué</h4>
+        <table class="tabla">
+          <thead>
+            <tr><th>Operario</th><th>Estado</th><th>Actividad</th><th>Plan</th><th>Puesto</th><th class="der">Abierta hace</th></tr>
+          </thead>
+          <tbody>
+            @for (p of t.enPlanta; track p.usuario + p.operacion) {
+              <tr>
+                <td class="fuerte">{{ p.usuario }}</td>
+                <td><span class="pastilla" [class]="p.estado">{{ etiquetaEstado(p.estado) }}</span></td>
+                <td>{{ p.operacion }}</td>
+                <td>{{ p.nroPlan ?? '—' }}</td>
+                <td>{{ p.puesto ?? '—' }}</td>
+                <td class="der" [class.rojo]="(p.minutos ?? 0) > 600">
+                  {{ (p.minutos ?? 0) < 60 ? (p.minutos + ' min') : ((p.minutos! / 60 | number:'1.0-1') + ' h') }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (t.tareasColgadas.length) {
+      <div class="panel aviso">
+        <h4><mat-icon>warning</mat-icon> Tareas que quedaron abiertas</h4>
+        <p class="nota">Nadie las cerró. Mientras tanto el reloj sigue corriendo contra esa orden.</p>
+        <ul class="lista-simple">
+          @for (c of t.tareasColgadas; track c.tareaId) {
+            <li>
+              <b>{{ c.usuario }}</b> · {{ c.operacion }}
+              @if (c.nroPlan) { · plan {{ c.nroPlan }} }
+              <span class="horas">{{ c.horas }} h</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    <!-- ============================================ 2 · producción -->
+    <h3 class="bloque-titulo"><mat-icon>trending_up</mat-icon> Producción</h3>
+
+    <div class="tarjetas">
+      <div class="tarjeta">
+        <span class="numero">{{ horas(t.segundosEfectivos) }}</span>
+        <span class="rotulo">horas de producción</span>
+        <span class="pie">tiempo efectivo cargado en el período</span>
+      </div>
+
+      <div class="tarjeta">
+        <span class="numero">{{ t.plazoOrdenes.promedioDias ?? '—' }}</span>
+        <span class="rotulo">días por orden</span>
+        <span class="pie">
+          @if (t.plazoOrdenes.terminadas) {
+            {{ t.plazoOrdenes.terminadas }} terminadas · entre
+            {{ t.plazoOrdenes.minimoDias }} y {{ t.plazoOrdenes.maximoDias }}
+          } @else { sin órdenes terminadas en el período }
+        </span>
+      </div>
+
+      <div class="tarjeta">
+        <span class="numero">{{ t.metrosCable | number:'1.0-0' }}</span>
+        <span class="rotulo">metros de cable cortados</span>
+        <span class="pie">
+          {{ t.metrosCorrugado | number:'1.0-0' }} m de corrugado ·
+          {{ t.metrosCablePendientes | number:'1.0-0' }} m pendientes
+        </span>
+      </div>
+
+      <div class="tarjeta">
+        @if (hayRepartoDeTiempo()) {
+          <span class="numero">{{ porcentajeEfectivo() }}%</span>
+          <span class="rotulo">del tiempo es producción</span>
+          <span class="pie">
+            {{ horas(t.segundosSetup) }} h de setup · {{ horas(t.segundosPausa) }} h de pausa
+          </span>
+        } @else {
+          <span class="rotulo">reparto del tiempo</span>
+          <p class="sin-datos">
+            Se empieza a llenar con las tareas nuevas: las anteriores no separaban
+            setup ni pausa.
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="panel-doble">
+      <div class="panel">
+        <h4>Rendimiento por operación</h4>
+        @if (t.rendimientoPorOperacion.length) {
+          <table class="tabla">
+            <thead>
+              <tr><th>Operación</th><th class="der">Unidades</th><th class="der">Horas</th><th class="der">Por hora</th></tr>
+            </thead>
+            <tbody>
+              @for (r of t.rendimientoPorOperacion; track r.operacion) {
+                <tr>
+                  <td>
+                    <span class="fuerte">{{ r.operacion }}</span>
+                    <span class="linea-fondo"
+                          [style.width.%]="proporcionDe(r.unidadesPorHora ?? 0, mayorUnidadesHora())"></span>
+                  </td>
+                  <td class="der">{{ r.unidades | number }}</td>
+                  <td class="der">{{ r.horas | number:'1.0-1' }}</td>
+                  <td class="der fuerte">{{ r.unidadesPorHora ?? '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="sin-datos">No se cerró ninguna tarea en el período.</p>
+        }
+      </div>
+
+      <div class="panel">
+        <h4>Carga por operario</h4>
+        @if (t.cargaPorOperario.length) {
+          <table class="tabla">
+            <thead>
+              <tr><th>Operario</th><th class="der">Horas</th><th class="der">Unidades</th><th class="der">No conf.</th></tr>
+            </thead>
+            <tbody>
+              @for (c of t.cargaPorOperario; track c.usuario) {
+                <tr>
+                  <td>
+                    <span class="fuerte">{{ c.usuario }}</span>
+                    <span class="linea-fondo" [style.width.%]="proporcionDe(c.horas, mayorHorasOperario())"></span>
+                  </td>
+                  <td class="der">{{ c.horas | number:'1.0-1' }}</td>
+                  <td class="der">{{ c.unidades | number }}</td>
+                  <td class="der" [class.rojo]="c.noConformes > 0">{{ c.noConformes }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="sin-datos">Sin tareas cerradas en el período.</p>
+        }
+      </div>
+    </div>
+
+    <div class="panel-doble">
+      <div class="panel">
+        <h4>Por qué se frena la planta</h4>
+        @if (t.motivosPausa.length) {
+          <div class="barras">
+            @for (m of t.motivosPausa; track m.etiqueta) {
+              <div class="barra">
+                <span class="que">{{ etiquetaMotivo(m.etiqueta) }}</span>
+                <span class="linea"><i [style.width.%]="proporcion(m.valor, t.motivosPausa)"></i></span>
+                <span class="cuanto">{{ m.valor }} × · {{ m.secundario | number:'1.0-0' }} min</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="sin-datos">
+            Todavía no hay pausas cargadas. Se van a ir anotando solas cada vez que
+            alguien pause una tarea.
+          </p>
+        }
+      </div>
+
+      <div class="panel">
+        <h4>Tareas que se dejaron a medias</h4>
+        @if (t.motivosSuspension.length) {
+          <div class="barras">
+            @for (m of t.motivosSuspension; track m.etiqueta) {
+              <div class="barra">
+                <span class="que">{{ etiquetaMotivo(m.etiqueta) }}</span>
+                <span class="linea"><i [style.width.%]="proporcion(m.valor, t.motivosSuspension)"></i></span>
+                <span class="cuanto">{{ m.valor }} ×</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="sin-datos">Nadie suspendió una tarea en el período.</p>
+        }
+      </div>
+    </div>
+
+    <!-- ============================================ 3 · calidad -->
+    <h3 class="bloque-titulo"><mat-icon>verified</mat-icon> Calidad</h3>
+
+    <div class="tarjetas">
+      <div class="tarjeta">
+        @if (primeraPasada() !== null) {
+          <span class="numero">{{ primeraPasada() }}%</span>
+          <span class="rotulo">órdenes sin una sola falla</span>
+          <span class="pie">{{ t.ordenesSinFalla }} de {{ t.ordenesConTrabajo }} que se trabajaron</span>
+        } @else {
+          <span class="rotulo">primera pasada</span>
+          <p class="sin-datos">No se trabajó ninguna orden en el período.</p>
+        }
+      </div>
+
+      <div class="tarjeta">
+        @if (tasaNoConformidad() !== null) {
+          <span class="numero" [class.rojo]="(tasaNoConformidad() ?? 0) > 5">{{ tasaNoConformidad() }}%</span>
+          <span class="rotulo">controles no conformes</span>
+          <span class="pie">{{ controlesNoOk() }} de {{ controlesTotal() }} controles</span>
+        } @else {
+          <span class="rotulo">controles de calidad</span>
+          <p class="sin-datos">
+            Todavía no hay controles cargados en el período. Se llenan solos a
+            medida que se hagan.
+          </p>
+        }
+      </div>
+
+      <div class="tarjeta">
+        <span class="numero">{{ t.recorridasHechas }}</span>
+        <span class="rotulo">recorridas de calidad</span>
+        <span class="pie">
+          {{ t.recorridasOrdenes }} órdenes controladas ·
+          <span [class.rojo]="t.recorridasConKo > 0">{{ t.recorridasConKo }} con KO</span>
+        </span>
+      </div>
+
+      <div class="tarjeta" [class.alerta]="t.ncAbiertas > 0">
+        <span class="numero">{{ t.ncAbiertas }}</span>
+        <span class="rotulo">no conformidades abiertas</span>
+        <span class="pie">
+          @if (t.ncAntiguedadDias) { la más vieja lleva {{ t.ncAntiguedadDias }} días de promedio · }
+          {{ t.ncCerradas }} cerradas en el período
+        </span>
+      </div>
+    </div>
+
+    <div class="panel-doble">
+      <div class="panel">
+        <h4>Dónde se descarta</h4>
+        @if (t.noConformesPorOperacion.length) {
+          <table class="tabla">
+            <thead>
+              <tr><th>Operación</th><th class="der">No conformes</th><th class="der">Sobre</th><th class="der">%</th></tr>
+            </thead>
+            <tbody>
+              @for (n of t.noConformesPorOperacion; track n.operacion) {
+                <tr>
+                  <td class="fuerte">{{ n.operacion }}</td>
+                  <td class="der">{{ n.noConformes | number }}</td>
+                  <td class="der">{{ n.unidades | number }}</td>
+                  <td class="der fuerte" [class.rojo]="(n.porcentaje ?? 0) > 2">{{ n.porcentaje }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="sin-datos">No se registró ninguna unidad no conforme.</p>
+        }
+      </div>
+
+      <div class="panel">
+        <h4>Margen de tracción</h4>
+        <p class="nota">
+          Cuánto sobra entre lo que se mide y el mínimo exigido. Un terminal que
+          pasa raspando avisa antes de arrancarse.
+        </p>
+        @if (t.margenTraccion.length) {
+          <table class="tabla">
+            <thead>
+              <tr><th>Sección</th><th>Terminal</th><th class="der">Medido</th><th class="der">Mínimo</th><th class="der">Margen</th></tr>
+            </thead>
+            <tbody>
+              @for (x of t.margenTraccion; track x.seccion + x.terminal) {
+                <tr [class.fila-roja]="x.noOk > 0">
+                  <td>{{ x.seccion }} mm²</td>
+                  <td class="fuerte">{{ x.terminal }}</td>
+                  <td class="der">{{ x.promedio }} N</td>
+                  <td class="der">{{ x.minimoExigido }} N</td>
+                  <td class="der fuerte" [class.rojo]="margenApretado(x.margen)">
+                    {{ x.margen !== null ? (x.margen + '%') : '—' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="sin-datos">
+            Todavía no hay ensayos de tracción en el período. Con unos cuantos se
+            empieza a ver qué terminal viene al límite.
+          </p>
+        }
+      </div>
+    </div>
+
+    @if (t.controles.length || t.dondeFalla.length) {
+      <div class="panel-doble">
+        <div class="panel">
+          <h4>Controles por tipo</h4>
+          <table class="tabla">
+            <thead><tr><th>Tipo</th><th>Dónde</th><th class="der">Hechos</th><th class="der">No conformes</th></tr></thead>
+            <tbody>
+              @for (c of t.controles; track c.tipo + c.origen) {
+                <tr>
+                  <td class="fuerte">{{ c.tipo }}</td>
+                  <td>{{ c.origen === 'SABANA' ? 'en la sábana' : 'durante la tarea' }}</td>
+                  <td class="der">{{ c.total }}</td>
+                  <td class="der" [class.rojo]="c.noOk > 0">{{ c.noOk }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h4>Dónde aparecieron las fallas</h4>
+          @if (t.dondeFalla.length) {
+            <div class="barras">
+              @for (d of t.dondeFalla; track d.etiqueta) {
+                <div class="barra">
+                  <span class="que">{{ d.etiqueta }}</span>
+                  <span class="linea"><i [style.width.%]="proporcion(d.valor, t.dondeFalla)"></i></span>
+                  <span class="cuanto">{{ d.valor }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="sin-datos">Ningún control dio no conforme en el período.</p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ============================================ 4 · abastecimiento -->
+    <h3 class="bloque-titulo"><mat-icon>inventory_2</mat-icon> Abastecimiento</h3>
+
+    <div class="tarjetas">
+      @for (p of t.pickingsPorEstado; track p.etiqueta) {
+        <div class="tarjeta chica">
+          <span class="numero">{{ p.valor }}</span>
+          <span class="rotulo">{{ p.etiqueta.toLowerCase().replace('_', ' ') }}</span>
+        </div>
+      }
+      <div class="tarjeta chica" [class.alerta]="t.planesTrabados > 0">
+        <span class="numero">{{ t.planesTrabados }}</span>
+        <span class="rotulo">planes con faltantes</span>
+      </div>
+      <div class="tarjeta chica">
+        <span class="numero">{{ t.minutosPreparacionPicking ?? '—' }}</span>
+        <span class="rotulo">minutos por cajón</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h4>Lo que falta en el depósito</h4>
+      @if (t.faltantes.length) {
+        <table class="tabla">
+          <thead>
+            <tr><th>Código</th><th>Descripción</th><th class="der">Líneas</th><th class="der">Cantidad</th><th>Compra</th></tr>
+          </thead>
+          <tbody>
+            @for (f of t.faltantes; track f.codigo) {
+              <tr>
+                <td class="fuerte">{{ f.codigo }}</td>
+                <td>{{ f.descripcion ?? '—' }}</td>
+                <td class="der">{{ f.lineas }}</td>
+                <td class="der">{{ f.cantidad | number:'1.0-2' }}</td>
+                <td>
+                  @if (f.pedido) { <span class="pastilla ok">pedido</span> }
+                  @else { <span class="pastilla pendiente">sin pedir</span> }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="sin-datos">No hay faltantes registrados.</p>
+      }
+    </div>
+
+    <!-- ============================================ 5 · uso del sistema -->
+    <h3 class="bloque-titulo"><mat-icon>fact_check</mat-icon> Uso del sistema</h3>
+    <p class="nota-bloque">
+      Tres números aburridos que valen oro el primer mes: dicen si la planta está
+      usando la app o la está esquivando.
+    </p>
+
+    <div class="tarjetas">
+      <div class="tarjeta" [class.alerta]="t.tareasSinCerrarUnDia > 0">
+        <span class="numero">{{ t.tareasSinCerrarUnDia }}</span>
+        <span class="rotulo">tareas sin cerrar</span>
+        <span class="pie">abiertas hace más de un día</span>
+      </div>
+
+      <div class="tarjeta" [class.alerta]="t.ordenesSinAsignar > 0">
+        <span class="numero">{{ t.ordenesSinAsignar }}</span>
+        <span class="rotulo">órdenes sin asignar</span>
+        <span class="pie">planificadas o en proceso, sin nadie puesto</span>
+      </div>
+
+      <div class="tarjeta ancha" [class.alerta]="t.operariosSinCargar.length > 0">
+        <span class="numero">{{ t.operariosSinCargar.length }}</span>
+        <span class="rotulo">no cargaron nada hoy</span>
+        <span class="pie">
+          @if (t.operariosSinCargar.length) {
+            <span>{{ t.operariosSinCargar.join(', ') }}</span>
+          } @else { todos arrancaron alguna tarea }
+        </span>
+      </div>
+    </div>
+
+  } }
+</section>

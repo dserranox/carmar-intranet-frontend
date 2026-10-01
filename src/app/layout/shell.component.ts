@@ -1,5 +1,8 @@
 
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild,
+  computed, inject, signal
+} from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -11,6 +14,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from '../services/auth.service';
 import { NotificacionesService } from '../services/notificaciones.service';
 import { rutaDeInicio } from '../shared/inicio';
+import { EntradaDeMenu, menuVisible } from '../shared/pantallas';
 import { TareaAbiertaService } from '../shared/tarea-abierta.service';
 
 @Component({
@@ -25,7 +29,7 @@ import { TareaAbiertaService } from '../shared/tarea-abierta.service';
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss']
 })
-export class ShellComponent implements OnInit, OnDestroy {
+export class ShellComponent implements OnInit, AfterViewInit, OnDestroy {
   private auth = inject(AuthService);
   private router = inject(Router);
   private notificaciones = inject(NotificacionesService);
@@ -46,6 +50,7 @@ export class ShellComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.reloj) clearInterval(this.reloj);
+    this.observador?.disconnect();
   }
 
   get username(): string {
@@ -57,38 +62,70 @@ export class ShellComponent implements OnInit, OnDestroy {
     } catch { return ''; }
   }
 
-  get isAdmin(): boolean {
-    return this.tienePermiso('ORDENES:WRITE');
+  /** El acceso a la pantalla de usuarios y roles, en el menú de la derecha. */
+  get puedeAdministrarUsuarios(): boolean {
+    return this.tienePermiso('USUARIOS:READ');
   }
 
-  /** La pestaña CORTE la ven los operarios de corte y quien administre sábanas. */
-  get puedeCortar(): boolean {
-    return this.tienePermiso('CORTE:READ');
+  /**
+   * El menú sale de los permisos del usuario, no de adivinar su rol: si no tiene
+   * la pantalla, no se la ofrecemos. Lo que se pueda ver lo decide la pantalla
+   * de roles.
+   */
+  readonly menu: EntradaDeMenu[] = menuVisible();
+
+  /**
+   * Con diez pantallas el menú no entra en una notebook y las últimas quedaban
+   * cortadas contra el borde. Se mide el ancho disponible y lo que no entra pasa
+   * al botón de los puntitos.
+   */
+  private readonly cuantasEntran = signal(this.menu.length);
+  readonly visibles = computed(() => this.menu.slice(0, this.cuantasEntran()));
+  readonly ocultas = computed(() => this.menu.slice(this.cuantasEntran()));
+
+  @ViewChild('nav') private nav?: ElementRef<HTMLElement>;
+  /** El ancho de cada entrada, medido una sola vez con todas a la vista. */
+  private anchos: number[] = [];
+  private observador?: ResizeObserver;
+
+  ngAfterViewInit(): void {
+    this.acomodarMenu();
+    const elemento = this.nav?.nativeElement;
+    if (!elemento) return;
+    this.observador = new ResizeObserver(() => this.acomodarMenu());
+    this.observador.observe(elemento);
+    // Las tipografías llegan después del primer dibujo y cambian los anchos.
+    (document as any).fonts?.ready?.then(() => { this.anchos = []; this.acomodarMenu(); });
   }
 
-  /** Alias del rol administrador, para las pestañas que son solo suyas. */
-  get esAdmin(): boolean {
-    return this.isAdmin;
-  }
+  private acomodarMenu(): void {
+    const elemento = this.nav?.nativeElement;
+    if (!elemento || this.menu.length === 0) return;
 
-  /** CALIDAD la ven el responsable de calidad y quien pueda consultar sus registros. */
-  get puedeVerCalidad(): boolean {
-    return this.tienePermiso('CALIDAD:READ');
-  }
+    // Los anchos se miden una sola vez, cuando están todas las entradas puestas.
+    if (this.anchos.length !== this.menu.length) {
+      const items = Array.from(elemento.querySelectorAll<HTMLElement>('a.item'));
+      if (items.length !== this.menu.length) return;
+      this.anchos = items.map(i => i.getBoundingClientRect().width);
+    }
 
-  /** PICKING la ve logística, más quien siga la planta. */
-  get puedeVerPicking(): boolean {
-    return this.tienePermiso('PICKING:READ');
-  }
+    // Entre dos entradas hay un gap, la rayita y otro gap. Antes de la primera,
+    // nada: por eso el separador se cuenta una vez menos que las entradas.
+    const separador = 12 + 2 + 12;
+    const anchoDelBoton = 48;
+    const disponible = elemento.clientWidth;
 
-  /** Las no conformidades las llevan calidad, el jefe de producción y el admin. */
-  get puedeVerNoConformidades(): boolean {
-    return this.tienePermiso('NOCONFORMIDADES:READ');
-  }
-
-  /** MI TRABAJO es del operario: quien administra asignaciones no la ve. */
-  get esOperario(): boolean {
-    return this.tienePermiso('ASIGNACIONES:READ') && !this.tienePermiso('ASIGNACIONES:WRITE');
+    let usado = 0;
+    let entran = 0;
+    for (let i = 0; i < this.anchos.length; i++) {
+      const conSeparador = usado + (i > 0 ? separador : 0) + this.anchos[i];
+      const quedanAfuera = i < this.anchos.length - 1;
+      if (conSeparador + (quedanAfuera ? separador + anchoDelBoton : 0) > disponible) break;
+      usado = conSeparador;
+      entran++;
+    }
+    // Con una sola que entre no vale la pena: mejor todas adentro del botón.
+    this.cuantasEntran.set(Math.max(entran, 1));
   }
 
   private tienePermiso(permiso: string): boolean {

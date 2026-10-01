@@ -66,17 +66,22 @@
 .aviso-suspendida mat-icon { font-size: 20px; width: 20px; height: 20px; color: #ef6c00; }
 
 /* ------------------------------------------------------- tarea abierta */
-.en-curso { display: flex; align-items: center; gap: 24px; }
-.datos-tarea { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+/* Envuelve en vez de encimarse: por debajo de ~1000 px el bloque de botones baja
+   a la línea siguiente en lugar de aplastar el nombre de la actividad. */
+.en-curso { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.datos-tarea { display: flex; flex-direction: column; gap: 2px; flex: 1 1 260px; min-width: 0; }
 .rotulo { font-size: .68rem; letter-spacing: 2px; color: rgba(0, 0, 0, .5); font-weight: 700; }
-.actividad { font-size: 2rem; font-weight: 700; color: #263238; line-height: 1.05; }
+.actividad {
+  font-size: 2rem; font-weight: 700; color: #263238; line-height: 1.05;
+  overflow-wrap: anywhere;
+}
 .puesto { display: flex; align-items: center; gap: 6px; font-size: 1rem; color: #00695c; font-weight: 600; }
 .puesto mat-icon { font-size: 20px; width: 20px; height: 20px; }
 
-.reloj-tarea { display: flex; flex-direction: column; align-items: flex-end; }
+.reloj-tarea { display: flex; flex-direction: column; align-items: flex-end; flex: 0 0 auto; }
 .reloj { font-variant-numeric: tabular-nums; font-size: 2.4rem; font-weight: 800; color: #00695c; line-height: 1; }
 
-.acciones-tarea { display: flex; flex-direction: column; gap: 8px; min-width: 240px; }
+.acciones-tarea { display: flex; flex-direction: column; gap: 8px; flex: 1 1 240px; min-width: 240px; }
 
 .btn-grande {
   min-height: 58px;

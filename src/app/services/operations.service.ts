@@ -13,4 +13,9 @@ export class OperationsService {
   getAll(): Observable<OperacionesDTO[]> {
     return this.http.get<OperacionesDTO[]>(`${this.baseUrl}/get-all`);
   }
+
+  /** Las que se reparten a mano: sin la ruta de control, los controles ni el picking. */
+  getAsignables(): Observable<OperacionesDTO[]> {
+    return this.http.get<OperacionesDTO[]>(`${this.baseUrl}/asignables`);
+  }
 }

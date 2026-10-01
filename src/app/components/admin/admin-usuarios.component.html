@@ -3,10 +3,16 @@
   <!-- Encabezado -->
   <header class="page-header">
     <h2>Administrar Usuarios</h2>
-    <button mat-flat-button color="primary" (click)="nuevoUsuario()">
-      <mat-icon>add</mat-icon>
-      Nuevo Usuario
-    </button>
+    <div class="botonera">
+      <button mat-stroked-button (click)="irARoles()" matTooltip="Qué pantallas ve cada rol">
+        <mat-icon>admin_panel_settings</mat-icon>
+        Roles
+      </button>
+      <button mat-flat-button color="primary" (click)="nuevoUsuario()">
+        <mat-icon>add</mat-icon>
+        Nuevo Usuario
+      </button>
+    </div>
   </header>
 
   <!-- Filtros -->

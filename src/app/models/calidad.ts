@@ -63,7 +63,7 @@ export interface RutaCalidad {
   fecha: string;
   numero: number;
   responsable: string;
-  estado: 'EN_CURSO' | 'CERRADA';
+  estado: 'EN_CURSO' | 'CERRADA' | 'SUSPENDIDA';
   fechaInicio: string;
   fechaFin: string | null;
   observaciones: string | null;

@@ -99,12 +99,37 @@
       }
     </div>
 
-    @if (nc().nroPlan || nc().productoCodigo) {
+    <!-- Sobre qué se detectó. Si la NC nació de un KO, el dato ya viene y es la
+         prueba del hecho: se muestra y no se edita. Si la abre calidad, se carga. -->
+    @if (trazabilidadEditable()) {
+      <h4 class="sub-titulo">Sobre qué se detectó</h4>
+      <div class="grilla">
+        <app-select-buscable label="Producto" placeholder="Buscar código o descripción…"
+                             [conTodos]="false" [opciones]="opcionesProducto"
+                             [ngModel]="nc().productoCodigo"
+                             (ngModelChange)="elegirProducto($event)" />
+
+        <mat-form-field appearance="outline">
+          <mat-label>Lote</mat-label>
+          <input matInput [ngModel]="nc().lote"
+                 (ngModelChange)="actualizar('lote', $event)"
+                 placeholder="Cómo lo identifica planta" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Plan</mat-label>
+          <input matInput [ngModel]="nc().nroPlan"
+                 (ngModelChange)="actualizar('nroPlan', $event)"
+                 placeholder="Si se sabe" />
+        </mat-form-field>
+      </div>
+    } @else if (hayTrazabilidad()) {
       <div class="trazabilidad">
         <mat-icon>link</mat-icon>
         <span>
           @if (nc().productoCodigo) { <b>{{ nc().productoCodigo }}</b> }
           @if (nc().productoDescripcion) { — {{ nc().productoDescripcion }} }
+          @if (nc().lote) { · lote {{ nc().lote }} }
           @if (nc().nroPlan) { · plan {{ nc().nroPlan }} }
           @if (nc().puesto) { · {{ nc().puesto }} }
           @if (nc().operario) { · operario {{ nc().operario }} }

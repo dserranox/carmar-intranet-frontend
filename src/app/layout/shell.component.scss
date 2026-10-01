@@ -30,11 +30,14 @@
   gap: 12px;
   margin-left: 8px;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar { display: none; }
+  /* Lo que no entra se va al botón de los puntitos, así que acá no hace falta
+     ni scroll ni recorte: lo que se ve, se ve entero. */
+  overflow: hidden;
+  flex-wrap: nowrap;
 }
+
+.nav .item { white-space: nowrap; flex: 0 0 auto; }
+.nav .mas { flex: 0 0 auto; }
 
 .nav a.active { font-weight: 700; text-decoration: underline; text-underline-offset: 6px; }
 
@@ -69,21 +72,24 @@
   mat-icon { color: #263238; }
   mat-icon.con-avisos { color: #c62828; }
 
+  /* El globo va sobre la campana, y cuando hay avisos la campana también es
+     roja: sin el anillo blanco el número se perdía adentro del ícono. */
   .globo {
     position: absolute;
-    top: 2px;
-    right: 2px;
-    min-width: 17px;
-    height: 17px;
-    padding: 0 4px;
+    top: 0;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
     border-radius: 999px;
     background: #c62828;
     color: #fff;
-    font-size: 0.66rem;
-    font-weight: 700;
-    line-height: 17px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 18px;
     text-align: center;
     pointer-events: none;
+    box-shadow: 0 0 0 2px #fff;
   }
 }
 

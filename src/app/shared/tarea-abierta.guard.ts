@@ -16,6 +16,22 @@ import { TareaAbiertaService } from './tarea-abierta.service';
  */
 const SIEMPRE_PERMITIDO = ['/login', '/perfil'];
 
+/**
+ * Pantallas que son parte de hacer la tarea, aunque tengan otra dirección.
+ * El KO de una recorrida se convierte en no conformidad ahí mismo: si el candado
+ * no dejara pasar, calidad tendría que cerrar la recorrida para poder anotar lo
+ * que acaba de encontrar.
+ */
+const PASOS_DE_LA_TAREA: { desde: string; hacia: string[] }[] = [
+  { desde: '/calidad/ruta', hacia: ['/no-conformidades'] }
+];
+
+function esUnPasoDeLaTarea(rutaDeLaTarea: string, destino: string): boolean {
+  return PASOS_DE_LA_TAREA.some(paso =>
+    rutaDeLaTarea.startsWith(paso.desde)
+    && paso.hacia.some(h => destino === h || destino.startsWith(h + '/')));
+}
+
 export const tareaAbiertaGuard: CanActivateChildFn = (_ruta, estado): Observable<boolean | UrlTree> => {
   const servicio = inject(TareaAbiertaService);
   const router = inject(Router);
@@ -29,6 +45,7 @@ export const tareaAbiertaGuard: CanActivateChildFn = (_ruta, estado): Observable
       // Sin tarea corriendo, o sin saber dónde se hace, no hay nada que bloquear.
       if (!tarea || !tarea.ruta) return true;
       if (destino === tarea.ruta || destino.startsWith(tarea.ruta + '/')) return true;
+      if (esUnPasoDeLaTarea(tarea.ruta, destino)) return true;
 
       const donde = tarea.nroPlan ? ` del plan ${tarea.nroPlan}` : '';
       snack.open(

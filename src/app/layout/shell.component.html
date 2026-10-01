@@ -2,32 +2,25 @@
 <mat-toolbar class="topbar" color="default">
   <img src="/car-mar-logo.png" alt="Logo" class="logo-img" />
 
-  <nav class="nav">
-    <!-- El operario no ve ORDENES: su trabajo le llega asignado a MI TRABAJO. -->
-    @if (esOperario) {
-      <a mat-button routerLink="/mi-trabajo" routerLinkActive="active">MI TRABAJO</a>
-    } @else {
-      <a mat-button routerLink="/ordenes" routerLinkActive="active">ORDENES</a>
+  <!-- El menú es el de los permisos del usuario: lo que no tiene, no se le ofrece.
+       Y lo que no entra en el ancho de la ventana pasa al botón de los puntitos,
+       en vez de quedar cortado contra el borde. -->
+  <nav class="nav" #nav>
+    @for (entrada of visibles(); track entrada.ruta; let primero = $first) {
+      @if (!primero) { <span class="divider"></span> }
+      <a mat-button class="item" [routerLink]="entrada.ruta" routerLinkActive="active">{{ entrada.etiqueta }}</a>
     }
-    @if (esAdmin) {
-      <span class="divider"></span>
-      <a mat-button routerLink="/tareas" routerLinkActive="active">TAREAS</a>
-    }
-    @if (puedeCortar) {
-      <span class="divider"></span>
-      <a mat-button routerLink="/corte" routerLinkActive="active">CORTE</a>
-    }
-    @if (puedeVerPicking) {
-      <span class="divider"></span>
-      <a mat-button routerLink="/picking" routerLinkActive="active">PICKING</a>
-    }
-    @if (puedeVerCalidad) {
-      <span class="divider"></span>
-      <a mat-button routerLink="/calidad" routerLinkActive="active">CALIDAD</a>
-    }
-    @if (isAdmin) {
-      <span class="divider"></span>
-      <a mat-button routerLink="/admin/operarios" routerLinkActive="active">OPERARIOS</a>
+
+    @if (ocultas().length) {
+      <button mat-icon-button class="mas" [matMenuTriggerFor]="menuMas"
+              aria-label="Más pantallas" matTooltip="Más pantallas">
+        <mat-icon>more_horiz</mat-icon>
+      </button>
+      <mat-menu #menuMas="matMenu">
+        @for (entrada of ocultas(); track entrada.ruta) {
+          <a mat-menu-item [routerLink]="entrada.ruta">{{ entrada.etiqueta }}</a>
+        }
+      </mat-menu>
     }
   </nav>
 
@@ -68,7 +61,7 @@
         <mat-icon>person</mat-icon>
         <span>Perfil</span>
       </button>
-      @if (isAdmin) {
+      @if (puedeAdministrarUsuarios) {
         <mat-divider></mat-divider>
         <button mat-menu-item (click)="irAdminUsuarios()">
           <mat-icon>manage_accounts</mat-icon>

@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -14,6 +14,7 @@ import { OperationsService } from '../../services/operations.service';
 import { UsuarioService, UsuarioAdminDTO } from '../../services/usuario.service';
 import { OperacionesDTO } from '../../models/operacion';
 import { Asignacion, AsignarItem } from '../../models/asignacion';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
 export interface AsignarDialogData {
   ordenId: number;
@@ -43,6 +44,7 @@ export class AsignarDialogComponent implements OnInit {
   private operacionesService = inject(OperationsService);
   private usuarioService = inject(UsuarioService);
   private ref = inject(MatDialogRef<AsignarDialogComponent, boolean>);
+  private dialog = inject(MatDialog);
 
   operaciones = signal<OperacionesDTO[]>([]);
   operarios = signal<UsuarioAdminDTO[]>([]);
@@ -56,11 +58,19 @@ export class AsignarDialogComponent implements OnInit {
   constructor(@Inject(MAT_DIALOG_DATA) public data: AsignarDialogData) {}
 
   ngOnInit(): void {
-    this.operacionesService.getAll().subscribe({
+    // Una asignación repartida entre cuatro operarios son varios minutos de
+    // trabajo: un clic al costado no se los puede llevar sin preguntar.
+    this.ref.disableClose = true;
+    this.ref.backdropClick().subscribe(() => this.intentarCerrar());
+    this.ref.keydownEvents().subscribe(e => {
+      if (e.key === 'Escape') this.intentarCerrar();
+    });
+
+    this.operacionesService.getAsignables().subscribe({
       next: ops => this.operaciones.set(ops || []),
       error: () => this.operaciones.set([])
     });
-    this.usuarioService.getUsuariosActivos().subscribe({
+    this.usuarioService.getAsignables().subscribe({
       next: us => this.operarios.set(us || []),
       error: () => this.operarios.set([])
     });
@@ -168,5 +178,32 @@ export class AsignarDialogComponent implements OnInit {
 
   cerrar(): void {
     this.ref.close(this.yaAsignadas().length > 0);
+  }
+
+  /** ¿Hay algo escrito que se perdería al cerrar? */
+  private hayCambiosSinGuardar(): boolean {
+    return this.filas.some(f =>
+      (f.operacionIds?.length ?? 0) > 0
+      || !!f.operario
+      || !!f.nroMaquina
+      || !!(f.puesto && f.puesto.trim()));
+  }
+
+  /** Cerrar desde afuera: si hay algo cargado, se pregunta antes de descartarlo. */
+  private intentarCerrar(): void {
+    if (!this.hayCambiosSinGuardar()) {
+      this.cerrar();
+      return;
+    }
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        titulo: 'Descartar la asignación',
+        mensaje: 'Tenés cargada una asignación sin guardar. Si cerrás, se pierde.',
+        botonConfirmar: 'Descartar',
+        botonCancelar: 'Seguir cargando'
+      }
+    }).afterClosed().subscribe(ok => {
+      if (ok) this.cerrar();
+    });
   }
 }

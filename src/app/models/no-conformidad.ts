@@ -51,6 +51,7 @@ export interface NoConformidad {
   nroPlan?: string | null;
   productoCodigo?: string | null;
   productoDescripcion?: string | null;
+  lote?: string | null;
   rccId?: number | null;
   ccaId?: number | null;
   operario?: string | null;

@@ -44,7 +44,11 @@ export class TraccionMinimaComponent implements OnInit {
   guardando = signal(false);
   editandoId = signal<number | null>(null);
 
-  columnas = ['seccion', 'terminal', 'fuerza', 'observaciones', 'acciones'];
+  /** Definirlos es de calidad, jefatura y administración; el resto los consulta. */
+  puedeDefinir = this.tienePermiso('CRITERIOS:WRITE');
+  columnas = this.puedeDefinir
+    ? ['seccion', 'terminal', 'fuerza', 'observaciones', 'acciones']
+    : ['seccion', 'terminal', 'fuerza', 'observaciones'];
 
   // alta / edición
   seccion: number | null = null;
@@ -128,5 +132,14 @@ export class TraccionMinimaComponent implements OnInit {
 
   volver(): void {
     this.router.navigate(['/corte']);
+  }
+
+  private tienePermiso(permiso: string): boolean {
+    try {
+      const data = localStorage.getItem('user');
+      if (!data) return false;
+      const perms = JSON.parse(data)?.permissions;
+      return Array.isArray(perms) && perms.includes(permiso);
+    } catch { return false; }
   }
 }

@@ -15,6 +15,7 @@
     terminal y esa excepción gana sobre el valor general.
   </p>
 
+  @if (puedeDefinir) {
   <section class="formulario">
     <h3>{{ editandoId() ? 'Editar valor' : 'Nuevo valor' }}</h3>
     <div class="campos">
@@ -46,6 +47,7 @@
       }
     </div>
   </section>
+  }
 
   @if (cargando()) {
     <p class="vacio">Cargando…</p>

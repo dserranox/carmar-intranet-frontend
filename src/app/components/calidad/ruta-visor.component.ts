@@ -14,6 +14,9 @@ import { CalidadService } from '../../services/calidad.service';
 import { ControlRuta, OrdenAbierta, ResultadoPunto, RutaCalidad } from '../../models/calidad';
 import { ElegirOrdenDialogComponent } from './elegir-orden-dialog.component';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+import {
+  SuspenderDialogComponent, SuspenderDialogResult
+} from '../corte/suspender-dialog.component';
 
 /**
  * La recorrida en la mano: el responsable elige una orden abierta y va marcando
@@ -261,6 +264,35 @@ export class RutaVisorComponent implements OnInit, OnDestroy {
           this.ruteador.navigate(['/calidad']);
         },
         error: err => this.snack.open(err?.error?.message || 'No se pudo cerrar', 'OK', { duration: 7000 })
+      });
+    });
+  }
+
+  /**
+   * La salida cuando la recorrida no se puede terminar: se deja anotado por qué.
+   * Hace falta porque cerrarla exige órdenes controladas, y con el candado puesto
+   * una recorrida colgada dejaría a calidad sin poder usar el resto de la app.
+   */
+  suspenderRuta(): void {
+    const r = this.ruta();
+    if (!r) return;
+    this.dialog.open(SuspenderDialogComponent, {
+      data: {
+        titulo: 'Suspender la recorrida',
+        nota: `Vas a dejar la recorrida ${r.numero} sin terminar. `
+            + 'No cuenta como hecha y queda con el motivo anotado.',
+        botonCancelar: 'Seguir controlando'
+      },
+      disableClose: true
+    }).afterClosed().subscribe((res: SuspenderDialogResult | undefined) => {
+      if (!res?.motivo) return;
+      this.calidadService.suspenderRuta(r.rcaId, res.motivo).subscribe({
+        next: () => {
+          this.snack.open('Recorrida suspendida', 'OK', { duration: 4000 });
+          this.ruteador.navigate(['/calidad']);
+        },
+        error: err => this.snack.open(err?.error?.message || 'No se pudo suspender', 'OK',
+          { duration: 7000 })
       });
     });
   }

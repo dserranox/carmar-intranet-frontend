@@ -35,6 +35,25 @@
                            [opciones]="opcionesNroPlan"
                            [(ngModel)]="filterNroPlan" (ngModelChange)="applyFilters()" />
 
+      @if (isAdmin) {
+        <app-select-buscable class="filter-field" label="Estado" placeholder="Buscar estado…"
+                             [opciones]="opcionesEstado"
+                             [(ngModel)]="filterSituacionClave" (ngModelChange)="applyFilters()" />
+      }
+
+      <button mat-stroked-button class="toggle-filtros" (click)="masFiltros.set(!masFiltros())">
+        <mat-icon>{{ masFiltros() ? 'expand_less' : 'tune' }}</mat-icon>
+        {{ masFiltros() ? 'Menos filtros' : 'Más filtros' }}
+        @if (!masFiltros() && otrosFiltrosActivos() > 0) {
+          <span class="contador-filtros">{{ otrosFiltrosActivos() }}</span>
+        }
+      </button>
+
+    </div>
+
+    @if (masFiltros()) {
+    <div class="filter-grid">
+
       <app-select-buscable class="filter-field" label="Código" placeholder="Buscar código…"
                            [opciones]="opcionesCodigo"
                            [(ngModel)]="filterProductoCodigo" (ngModelChange)="applyFilters()" />
@@ -49,15 +68,12 @@
         <app-select-buscable class="filter-field" label="Producto" placeholder="Buscar producto…"
                              [opciones]="opcionesProducto"
                              [(ngModel)]="filterProductoDescripcion" (ngModelChange)="applyFilters()" />
-
-        <app-select-buscable class="filter-field" label="Estado" placeholder="Buscar estado…"
-                             [opciones]="opcionesEstado"
-                             [(ngModel)]="filterSituacionClave" (ngModelChange)="applyFilters()" />
       }
 
     </div>
+    }
 
-    @if (isAdmin) {
+    @if (isAdmin && masFiltros()) {
       <!-- Fila 2: rangos de fechas -->
       <div class="filter-dates-grid">
 
@@ -130,6 +146,38 @@
         <mat-icon>search</mat-icon>
         Buscar
       </button>
+
+      <!-- Cada uno se arma su vista: qué columnas mira y en qué orden. -->
+      <button mat-stroked-button [matMenuTriggerFor]="menuColumnas" matTooltip="Elegir qué columnas se ven">
+        <mat-icon>view_column</mat-icon>
+        Columnas
+      </button>
+      <mat-menu #menuColumnas="matMenu" class="menu-columnas">
+        <div class="encabezado-menu" (click)="$event.stopPropagation()">
+          <span>Columnas de la tabla</span>
+          <button mat-button (click)="restaurarVista()">Restaurar</button>
+        </div>
+        @for (c of columnasConfigurables; track c.clave) {
+          <div class="fila-columna" (click)="$event.stopPropagation()">
+            <mat-checkbox [checked]="c.visible" (change)="alternarColumna(c.clave)">
+              {{ etiquetaColumna(c.clave) }}
+            </mat-checkbox>
+            <span class="mover">
+              <button mat-icon-button matTooltip="Moverla a la izquierda"
+                      (click)="moverColumna(c.clave, -1)">
+                <mat-icon>arrow_upward</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Moverla a la derecha"
+                      (click)="moverColumna(c.clave, 1)">
+                <mat-icon>arrow_downward</mat-icon>
+              </button>
+            </span>
+          </div>
+        }
+        <p class="nota-menu" (click)="$event.stopPropagation()">
+          Acciones va siempre al final, pegada al borde.
+        </p>
+      </mat-menu>
     </div>
 
   </div>
@@ -209,7 +257,9 @@
         </ng-container>
 
         <!-- Acciones -->
-        <ng-container matColumnDef="acciones">
+        <!-- La columna de acciones es la que más se usa: queda pegada al borde
+             derecho para que no haya que arrastrar la tabla. -->
+        <ng-container matColumnDef="acciones" stickyEnd>
           <th mat-header-cell *matHeaderCellDef>Acciones</th>
           <td mat-cell *matCellDef="let row">
 

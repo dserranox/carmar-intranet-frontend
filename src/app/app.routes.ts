@@ -4,6 +4,7 @@ import { rutaDeInicio } from './shared/inicio';
 import { LoginComponent } from './components/login/login.component';
 import { authGuard } from './auth/auth.guard';
 import { tareaAbiertaGuard } from './shared/tarea-abierta.guard';
+import { permisoGuard } from './shared/permiso.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -13,9 +14,11 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./layout/shell.component').then(m => m.ShellComponent),
     canActivate: [authGuard],
-    // Con una tarea corriendo no se puede navegar a otra cosa.
-    canActivateChild: [tareaAbiertaGuard],
+    // Primero se valida el permiso de la pantalla y después, si corresponde,
+    // que no haya una tarea corriendo: con el reloj abierto no se navega.
+    canActivateChild: [permisoGuard, tareaAbiertaGuard],
     children: [
+      { path: 'tablero', loadComponent: () => import('./components/tablero/tablero.component').then(m => m.TableroComponent) },
       { path: 'ordenes', loadComponent: () => import('./components/orders/orders-table.component').then(m => m.OrdersTableComponent) },
       { path: 'tareas', loadComponent: () => import('./components/tareas/tareas.component').then(m => m.TareasComponent) },
       { path: 'mi-trabajo', loadComponent: () => import('./components/mi-trabajo/mi-trabajo.component').then(m => m.MiTrabajoComponent) },
@@ -34,6 +37,7 @@ export const routes: Routes = [
       { path: 'perfil', loadComponent: () => import('./components/perfil/perfil.component').then(m => m.PerfilComponent) },
       { path: 'admin/operarios', loadComponent: () => import('./components/operarios/operarios.component').then(m => m.OperariosComponent) },
       { path: 'admin/usuarios', loadComponent: () => import('./components/admin/admin-usuarios.component').then(m => m.AdminUsuariosComponent) },
+      { path: 'admin/roles', loadComponent: () => import('./components/admin/admin-roles.component').then(m => m.AdminRolesComponent) },
       { path: 'admin/usuarios/nuevo', loadComponent: () => import('./components/admin/admin-usuario-form.component').then(m => m.AdminUsuarioFormComponent), data: { mode: 'nuevo' } },
       { path: 'admin/usuarios/:id/ver', loadComponent: () => import('./components/admin/admin-usuario-form.component').then(m => m.AdminUsuarioFormComponent), data: { mode: 'ver' } },
       { path: 'admin/usuarios/:id/editar', loadComponent: () => import('./components/admin/admin-usuario-form.component').then(m => m.AdminUsuarioFormComponent), data: { mode: 'editar' } },

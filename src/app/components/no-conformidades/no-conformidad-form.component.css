@@ -24,6 +24,12 @@
   text-transform: uppercase; letter-spacing: .03em; color: #00695c;
 }
 
+.bloque h4.sub-titulo {
+  margin: 16px 0 10px; font-size: .8rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .03em; color: rgba(0, 0, 0, .55);
+  padding-top: 12px; border-top: 1px solid rgba(0, 0, 0, .07);
+}
+
 .grilla {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px; align-items: start;
