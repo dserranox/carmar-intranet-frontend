@@ -43,12 +43,12 @@
           <input matInput formControlName="email" type="email" autocomplete="off" />
           <mat-icon matSuffix>email</mat-icon>
           @if (modoNuevo || modoEdicion) {
-            <mat-hint>Formato mail inválido.</mat-hint>
+            <mat-hint>Tiene que terminar en &#64;car-mar.com</mat-hint>
           }
           @if (form.get('email')?.touched && form.get('email')?.hasError('required')) {
             <mat-error>El email es obligatorio.</mat-error>
           } @else if (form.get('email')?.touched && (form.get('email')?.hasError('email') || form.get('email')?.hasError('carMarDomain'))) {
-            <mat-error>Dominio mail inválido.</mat-error>
+            <mat-error>El mail tiene que ser del dominio &#64;car-mar.com</mat-error>
           }
         </mat-form-field>
 

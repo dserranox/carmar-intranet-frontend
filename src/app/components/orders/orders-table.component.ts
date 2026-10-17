@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -11,6 +11,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
@@ -20,12 +22,17 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TasksService } from '../../services/tasks.service';
 import { TaskSessionDialogComponent } from './task-session-dialog.component';
+import { AsignarDialogComponent } from './asignar-dialog.component';
 import { Router } from '@angular/router';
 import { FinishOrderDialogComponent } from './finish-order-dialog.component';
 import { CreateOrderDialogComponent } from './create-order-dialog.component';
 import { OrdenCreateDTO } from '../../models/orden-create';
 import { FechaFormatoDirective } from '../../directives/fecha-formato.directive';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+import { OpcionBuscable, SelectBuscableComponent } from '../../shared/select-buscable.component';
+import { NuevoClienteDialogComponent } from './nuevo-cliente-dialog.component';
+import { NuevoProductoDialogComponent } from './nuevo-producto-dialog.component';
+import { AsignarClienteDialogComponent } from './asignar-cliente-dialog.component';
 
 @Component({
   selector: 'app-orders-table',
@@ -35,7 +42,9 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
     MatTableModule, MatPaginatorModule, MatSortModule,
     MatIconModule, MatButtonModule, MatTooltipModule,
     MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
-    MatSelectModule, MatDatepickerModule, MatNativeDateModule
+    MatSelectModule, MatDatepickerModule, MatNativeDateModule,
+    MatMenuModule, MatCheckboxModule,
+    SelectBuscableComponent
   ],
   templateUrl: './orders-table.component.html',
   styleUrls: ['./orders-table.component.scss']
@@ -43,21 +52,45 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 export class OrdersTableComponent implements OnInit {
   private ordersSvc = inject(OrdersService);
   dataSource = new MatTableDataSource<OrdenResponseDTO>([]);
-  displayedColumns = [
-    'fechaCreacion','ordNroPlan','clienteId','productoCodigo','productoDescripcion',
-    'cantidad','fechaInicio','situacionClave','fechaFinalizacion','acciones'
+
+  /**
+   * Las columnas con su nombre, en el orden de fábrica. Cada uno se arma su
+   * vista: esconde las que no mira y sube las que usa. Queda guardado en esta
+   * máquina, así la próxima vez abre como la dejó.
+   *
+   * «Acciones» no está acá: va siempre al final y pegada al borde derecho,
+   * porque es la columna que más se usa.
+   */
+  readonly columnasDisponibles: { clave: string; etiqueta: string }[] = [
+    { clave: 'fechaCreacion',       etiqueta: 'Fecha creación' },
+    { clave: 'ordNroPlan',          etiqueta: 'Nro plan' },
+    { clave: 'clienteId',           etiqueta: 'Cliente' },
+    { clave: 'productoCodigo',      etiqueta: 'Código' },
+    { clave: 'productoDescripcion', etiqueta: 'Producto' },
+    { clave: 'cantidad',            etiqueta: 'Cantidad' },
+    { clave: 'fechaInicio',         etiqueta: 'Fecha inicio' },
+    { clave: 'situacionClave',      etiqueta: 'Estado' },
+    { clave: 'fechaFinalizacion',   etiqueta: 'Fecha finalización' }
   ];
+
+  private static readonly CLAVE_VISTA = 'ordenes.columnas';
+
+  /** El orden y la visibilidad elegidos; se completa con los valores de fábrica. */
+  vistaColumnas: { clave: string; visible: boolean }[] = [];
+
+  displayedColumns: string[] = [];
   years: number[] = [];
   year = new Date().getFullYear();
   loading = false;
   filterValue = '';
 
-  // Listas de opciones para los selects (extraídas de los datos cargados)
-  nroPlanes: string[] = [];
-  clientes: number[] = [];
-  codigos: string[] = [];
-  productos: string[] = [];
-  estados: string[] = [];
+  // Opciones de los filtros buscables (extraídas de los datos cargados)
+  opcionesAnio: OpcionBuscable[] = [];
+  opcionesNroPlan: OpcionBuscable[] = [];
+  opcionesCliente: OpcionBuscable[] = [];
+  opcionesCodigo: OpcionBuscable[] = [];
+  opcionesProducto: OpcionBuscable[] = [];
+  opcionesEstado: OpcionBuscable[] = [];
 
   // Valores seleccionados en los filtros
   filterNroPlan = '';
@@ -73,9 +106,108 @@ export class OrdersTableComponent implements OnInit {
   fechaFinalizacionDesde: Date | null = null;
   fechaFinalizacionHasta: Date | null = null;
 
+  /**
+   * A la vista quedan los tres que se usan siempre — año, plan y estado — y el
+   * resto se despliega. Las tres fechas juntas ocupaban media pantalla y casi
+   * nunca se tocan.
+   */
+  masFiltros = signal(false);
+
+  // ==================== la vista de la tabla ====================
+
+  /** Carga lo que el usuario dejó elegido, o el orden de fábrica si es la primera vez. */
+  private cargarVista(): void {
+    let guardada: { clave: string; visible: boolean }[] = [];
+    try {
+      const crudo = localStorage.getItem(OrdersTableComponent.CLAVE_VISTA);
+      if (crudo) guardada = JSON.parse(crudo) ?? [];
+    } catch { /* si está rota, se arranca de cero */ }
+
+    const conocidas = new Set(this.columnasDisponibles.map(c => c.clave));
+    const vista = guardada.filter(c => conocidas.has(c.clave));
+
+    // Las columnas nuevas de una versión posterior entran visibles al final.
+    for (const columna of this.columnasDisponibles) {
+      if (!vista.some(v => v.clave === columna.clave)) {
+        vista.push({ clave: columna.clave, visible: true });
+      }
+    }
+    this.vistaColumnas = vista;
+    this.aplicarVista();
+  }
+
+  private aplicarVista(): void {
+    this.displayedColumns = [
+      ...this.vistaColumnas.filter(c => c.visible).map(c => c.clave),
+      'acciones'
+    ];
+    // El cliente no se muestra a quien no puede verlo, elija lo que elija.
+    if (!this.puedeVerClientes) {
+      this.displayedColumns = this.displayedColumns.filter(c => c !== 'clienteId');
+    }
+  }
+
+  private guardarVista(): void {
+    try {
+      localStorage.setItem(OrdersTableComponent.CLAVE_VISTA, JSON.stringify(this.vistaColumnas));
+    } catch { /* sin localStorage se pierde al salir, pero la sesión funciona igual */ }
+  }
+
+  etiquetaColumna(clave: string): string {
+    return this.columnasDisponibles.find(c => c.clave === clave)?.etiqueta ?? clave;
+  }
+
+  /** Las columnas que se pueden tocar: sin la de cliente si el rol no la ve. */
+  get columnasConfigurables(): { clave: string; visible: boolean }[] {
+    return this.vistaColumnas.filter(c => this.puedeVerClientes || c.clave !== 'clienteId');
+  }
+
+  alternarColumna(clave: string): void {
+    const columna = this.vistaColumnas.find(c => c.clave === clave);
+    if (!columna) return;
+    const visibles = this.vistaColumnas.filter(c => c.visible).length;
+    if (columna.visible && visibles <= 1) {
+      this.snack.open('Dejá al menos una columna a la vista', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    columna.visible = !columna.visible;
+    this.aplicarVista();
+    this.guardarVista();
+  }
+
+  moverColumna(clave: string, haciaDonde: -1 | 1): void {
+    const i = this.vistaColumnas.findIndex(c => c.clave === clave);
+    const destino = i + haciaDonde;
+    if (i < 0 || destino < 0 || destino >= this.vistaColumnas.length) return;
+    const [columna] = this.vistaColumnas.splice(i, 1);
+    this.vistaColumnas.splice(destino, 0, columna);
+    this.aplicarVista();
+    this.guardarVista();
+  }
+
+  restaurarVista(): void {
+    this.vistaColumnas = this.columnasDisponibles.map(c => ({ clave: c.clave, visible: true }));
+    this.aplicarVista();
+    this.guardarVista();
+    this.snack.open('Columnas como vienen de fábrica', 'Cerrar', { duration: 2500 });
+  }
+
+  /** Cuántos de los filtros guardados están puestos, para avisar que hay algo filtrando. */
+  otrosFiltrosActivos(): number {
+    const valores = [
+      this.filterClienteId, this.filterProductoCodigo, this.filterProductoDescripcion,
+      this.fechaCreacionDesde, this.fechaCreacionHasta,
+      this.fechaInicioDesde, this.fechaInicioHasta,
+      this.fechaFinalizacionDesde, this.fechaFinalizacionHasta
+    ];
+    return valores.filter(v => v !== null && v !== '' && v !== undefined).length;
+  }
+
   private allOrders: OrdenResponseDTO[] = [];
 
   isAdmin = false;
+  /** Solo quien tenga CLIENTES:READ ve la razón social. */
+  puedeVerClientes = false;
 
   private _paginatorTop?: MatPaginator;
   private _paginatorBottom?: MatPaginator;
@@ -135,8 +267,12 @@ export class OrdersTableComponent implements OnInit {
 
   ngOnInit(): void {
     this.resolveIsAdmin();
+    this.cargarVista();
+    // La columna Cliente muestra la razón social, así que también ordena por ella.
+    this.dataSource.sortingDataAccessor = (row: any, columna: string) =>
+      columna === 'clienteId' ? this.nombreCliente(row).toLowerCase() : row[columna];
     this.dataSource.filterPredicate = (row, filter) => {
-      const blob = `${row.ordNroPlan} ${row.clienteId} ${row.productoDescripcion} ${row.productoCodigo} ${row.situacionClave}`.toLowerCase();
+      const blob = `${row.ordNroPlan} ${row.clienteRazonSocial ?? ''} ${row.productoDescripcion} ${row.productoCodigo} ${row.situacionClave}`.toLowerCase();
       return blob.includes(filter.trim().toLowerCase());
     };
     this.loadYears();
@@ -146,6 +282,7 @@ export class OrdersTableComponent implements OnInit {
     this.ordersSvc.getYears().subscribe({
       next: (years) => {
         this.years = years;
+        this.opcionesAnio = years.map(y => ({ valor: y, texto: String(y) }));
         if (years.length > 0) {
           this.year = years[0];
         }
@@ -163,8 +300,11 @@ export class OrdersTableComponent implements OnInit {
       const username = (obj?.username || '').toString().toLowerCase();
       const permissions: string[] = Array.isArray(obj?.permissions) ? obj.permissions.map((r:any)=>String(r).toUpperCase()) : [];
       this.isAdmin = username === 'admin' || permissions.includes('ORDENES:WRITE');
+      // En planta no se muestra para qué cliente se fabrica.
+      this.puedeVerClientes = permissions.includes('CLIENTES:READ');
     } catch {
       this.isAdmin = false;
+      this.puedeVerClientes = false;
     }
   }
 
@@ -188,23 +328,42 @@ export class OrdersTableComponent implements OnInit {
       console.error(err);
     } finally {
       this.loading = false;
-      if (this.savedSortActive && this.savedSortDirection) {
-        await new Promise(r => setTimeout(r, 0));
-        this.dataSource.sort?.sort({
-          id: this.savedSortActive,
-          start: this.savedSortDirection as 'asc' | 'desc',
-          disableClear: false
-        });
-      }
+      // Por defecto, la más reciente primero: es la que se acaba de cargar y la
+      // que todos van a buscar. Desde ahí se ordena por cualquier columna.
+      const activa = this.savedSortActive || 'ordNroPlan';
+      const sentido = this.savedSortDirection || 'desc';
+      await new Promise(r => setTimeout(r, 0));
+      this.dataSource.sort?.sort({ id: activa, start: sentido as 'asc' | 'desc', disableClear: false });
     }
   }
 
   private buildFilterOptions(orders: OrdenResponseDTO[]): void {
-    this.nroPlanes = [...new Set(orders.map(o => o.ordNroPlan).filter((v): v is string => !!v))].sort();
-    this.clientes  = [...new Set(orders.map(o => o.clienteId).filter((v): v is number => v != null))].sort((a, b) => a - b);
-    this.codigos   = [...new Set(orders.map(o => o.productoCodigo).filter((v): v is string => !!v))].sort();
-    this.productos = [...new Set(orders.map(o => o.productoDescripcion).filter((v): v is string => !!v))].sort();
-    this.estados   = [...new Set(orders.map(o => o.situacionClave).filter((v): v is string => !!v))].sort();
+    this.opcionesNroPlan = this.opcionesDeTexto(orders.map(o => o.ordNroPlan));
+    this.opcionesCodigo  = this.opcionesDeTexto(orders.map(o => o.productoCodigo));
+    this.opcionesProducto = this.opcionesDeTexto(orders.map(o => o.productoDescripcion));
+    this.opcionesEstado  = this.opcionesDeTexto(orders.map(o => o.situacionClave));
+
+    // El cliente se busca y se muestra por razón social, no por su id interno.
+    const porId = new Map<number, string>();
+    for (const o of orders) {
+      if (o.clienteId == null) continue;
+      if (!porId.has(o.clienteId)) porId.set(o.clienteId, this.nombreCliente(o));
+    }
+    this.opcionesCliente = [...porId.entries()]
+      .map(([valor, texto]) => ({ valor, texto }))
+      .sort((a, b) => a.texto.localeCompare(b.texto));
+  }
+
+  /** Razón social del cliente; si la orden no la trae, al menos el id para no dejarlo vacío. */
+  nombreCliente(orden: OrdenResponseDTO): string {
+    if (orden.clienteRazonSocial) return orden.clienteRazonSocial;
+    return orden.clienteId != null ? `Cliente ${orden.clienteId}` : '—';
+  }
+
+  private opcionesDeTexto(valores: (string | null | undefined)[]): OpcionBuscable[] {
+    return [...new Set(valores.filter((v): v is string => !!v))]
+      .sort((a, b) => a.localeCompare(b))
+      .map(v => ({ valor: v, texto: v }));
   }
 
   private resetSelectFilters(): void {
@@ -340,6 +499,34 @@ export class OrdersTableComponent implements OnInit {
 
 
   /** DEMO del nuevo flujo unificado de tarea — sin llamadas al backend */
+  /** Permiso para repartir el trabajo de una orden entre los operarios. */
+  get puedeAsignar(): boolean {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return false;
+      const perms = JSON.parse(raw)?.permissions;
+      return Array.isArray(perms) && perms.includes('ASIGNACIONES:WRITE');
+    } catch { return false; }
+  }
+
+  openAsignarDialog(order: OrdenResponseDTO): void {
+    this.dialog.open(AsignarDialogComponent, {
+      width: '1040px',
+      maxWidth: '96vw',
+      data: {
+        ordenId: order.id,
+        nroPlan: order.ordNroPlan,
+        productoCodigo: order.productoCodigo,
+        productoDescripcion: order.productoDescripcion,
+        cantidad: order.cantidad
+      }
+    }).afterClosed().subscribe(asignado => {
+      if (asignado) {
+        this.snack.open('Trabajo asignado', 'OK', { duration: 3000 });
+      }
+    });
+  }
+
   openTaskSessionDialog(order: OrdenResponseDTO): void {
     const dialogRef = this.dialog.open(TaskSessionDialogComponent, {
       width: '660px',
@@ -383,8 +570,11 @@ export class OrdersTableComponent implements OnInit {
       this.loading = true;
       this.ordersSvc.createOrden(result).subscribe({
         next: (ordenCreada) => {
-          this.snack.open('Orden creada exitosamente', 'Cerrar', { duration: 3000 });
-          this.load(); // Reload the table
+          // El número de plan lo genera la app: es el dato con el que después
+          // todos van a hablar, así que se dice y la orden queda a la vista.
+          this.snack.open(`Orden ${ordenCreada?.ordNroPlan ?? ''} creada`.trim(), 'Cerrar',
+            { duration: 6000 });
+          this.load();
         },
         error: (err) => {
           console.error('Error creating order:', err);
@@ -394,5 +584,33 @@ export class OrdersTableComponent implements OnInit {
         }
       });
     });
+  }
+
+  /** Alta de cliente sin salir de Órdenes. */
+  abrirNuevoCliente(): void {
+    this.dialog.open(NuevoClienteDialogComponent, { width: '440px' })
+      .afterClosed().subscribe(cliente => {
+        if (!cliente) return;
+        this.snack.open(`Cliente "${cliente.razonSocial}" creado`, 'Cerrar', { duration: 3000 });
+      });
+  }
+
+  /** El administrador le pone el cliente a una orden que se cargó sin él. */
+  abrirAsignarCliente(orden: OrdenResponseDTO): void {
+    this.dialog.open(AsignarClienteDialogComponent, { data: { orden } })
+      .afterClosed().subscribe(actualizada => {
+        if (!actualizada) return;
+        this.snack.open('Cliente asignado', 'Cerrar', { duration: 3000 });
+        this.load();
+      });
+  }
+
+  /** Alta de producto sin salir de Órdenes. */
+  abrirNuevoProducto(): void {
+    this.dialog.open(NuevoProductoDialogComponent, { width: '440px' })
+      .afterClosed().subscribe(producto => {
+        if (!producto) return;
+        this.snack.open(`Producto ${producto.codigo} creado`, 'Cerrar', { duration: 3000 });
+      });
   }
 }

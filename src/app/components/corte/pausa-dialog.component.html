@@ -1,0 +1,36 @@
+<h2 mat-dialog-title class="titulo">
+  <mat-icon>pause_circle</mat-icon>
+  Pausa — ¿por qué parás?
+</h2>
+
+<mat-dialog-content class="contenido">
+  <p class="nota">El tiempo se está contando desde que apretaste Pausa y queda registrado aparte del tiempo de corte.</p>
+
+  <div class="motivos">
+    @for (m of motivos; track m.clave) {
+      <button type="button" class="motivo" [class.activo]="elegido === m.clave" (click)="elegir(m.clave)">
+        <mat-icon>{{ m.icono }}</mat-icon>
+        <span>{{ m.etiqueta }}</span>
+      </button>
+    }
+  </div>
+
+  @if (elegido === 'OTROS') {
+    <mat-form-field appearance="outline" class="campo">
+      <mat-label>Aclaración (obligatoria)</mat-label>
+      <input matInput [(ngModel)]="detalle" name="detalle" />
+    </mat-form-field>
+  } @else if (elegido) {
+    <mat-form-field appearance="outline" class="campo">
+      <mat-label>Detalle (opcional)</mat-label>
+      <input matInput [(ngModel)]="detalle" name="detalle" />
+    </mat-form-field>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Seguir trabajando</button>
+  <button mat-flat-button color="primary" [disabled]="!completo" (click)="confirmar()">
+    Pausar
+  </button>
+</mat-dialog-actions>

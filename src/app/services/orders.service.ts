@@ -22,6 +22,11 @@ export class OrdersService {
     return this.http.post<OrdenResponseDTO>(`${this.baseUrl}/avanzar-orden`, orden);
   }
 
+  /** El administrador le pone el cliente a una orden que se cargó sin él. */
+  asignarCliente(ordenId: number, clienteId: number | null): Observable<OrdenResponseDTO> {
+    return this.http.put<OrdenResponseDTO>(`${this.baseUrl}/${ordenId}/cliente`, { clienteId });
+  }
+
   createOrden(orden: OrdenCreateDTO): Observable<OrdenResponseDTO> {
     return this.http.post<OrdenResponseDTO>(this.baseUrl, orden);
   }

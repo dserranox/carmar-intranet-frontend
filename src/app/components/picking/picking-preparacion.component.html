@@ -1,0 +1,156 @@
+<div class="preparacion">
+
+  <!-- Encabezado fijo: qué plan, qué producto y cuánto se fabrica -->
+  <header class="barra">
+    <button mat-icon-button class="volver" (click)="volver()" matTooltip="Volver a los pickings">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    @if (picking(); as p) {
+      <div class="identidad">
+        <span class="plan">{{ p.nroPlan }}</span>
+        <div class="producto">
+          <span class="codigo">{{ p.codigoProducto }}</span>
+          @if (p.productoDescripcion) { <span class="desc">{{ p.productoDescripcion }}</span> }
+        </div>
+        @if (p.cantidadProducir) {
+          <div class="a-producir">
+            <span class="rotulo">A PRODUCIR</span>
+            <span class="valor">{{ p.cantidadProducir }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="centro">
+        <div class="cuenta">
+          <strong>{{ p.lineasRetiradas }}</strong> de {{ p.totalLineas }} líneas
+        </div>
+        <mat-progress-bar mode="determinate" [value]="avance()"></mat-progress-bar>
+        @if (p.lineasFaltantes || p.lineasParciales) {
+          <div class="alerta-faltan">
+            <mat-icon>error_outline</mat-icon>
+            {{ p.lineasFaltantes + p.lineasParciales }} sin resolver
+          </div>
+        }
+      </div>
+
+      <div class="acciones-cabecera">
+        @if (p.estado === 'PENDIENTE') {
+          <button mat-flat-button color="primary" class="btn-grande"
+                  [disabled]="guardando()" (click)="iniciar()">
+            <mat-icon>play_arrow</mat-icon>
+            Iniciar
+          </button>
+        } @else if (enCurso) {
+          <div class="reloj-caja">
+            <span class="rotulo-reloj">PREPARANDO</span>
+            <span class="reloj">{{ reloj }}</span>
+          </div>
+          <button mat-flat-button color="primary" class="btn-grande"
+                  [disabled]="guardando() || sinTocar() > 0" (click)="finalizar()"
+                  [matTooltip]="sinTocar() > 0 ? 'Quedan ' + sinTocar() + ' líneas sin tocar' : ''">
+            <mat-icon>check_circle</mat-icon>
+            Finalizar
+          </button>
+        } @else {
+          <span class="estado-final" [class.incompleto]="incompleto">
+            <mat-icon>{{ incompleto ? 'error_outline' : 'task_alt' }}</mat-icon>
+            {{ incompleto ? 'INCOMPLETO' : 'COMPLETO' }}
+          </span>
+        }
+      </div>
+    }
+  </header>
+
+  @if (cargando()) {
+    <p class="estado-vacio">Cargando…</p>
+  }
+
+  @if (picking(); as p) {
+
+    @if (incompleto) {
+      <section class="aviso-entrega">
+        <mat-icon>local_shipping</mat-icon>
+        <span>
+          El cajón se cerró con faltantes. Cuando llegue el material, marcá cada línea como
+          entregada y el picking se completa solo.
+        </span>
+      </section>
+    }
+
+    <!-- Las líneas, agrupadas por ubicación: un recorrido, no un ida y vuelta -->
+    <section class="lineas">
+      @for (tramo of tramos(); track tramo.ubicacion) {
+        <div class="tramo">
+          <h2 class="ubicacion">
+            <mat-icon>place</mat-icon>
+            {{ tramo.ubicacion }}
+            <span class="cuantas">{{ tramo.lineas.length }}</span>
+          </h2>
+
+          @for (l of tramo.lineas; track l.pkdId) {
+            <article class="linea" [class]="'estado-' + l.estado.toLowerCase()">
+
+              <!-- El tilde grande: se llevó todo -->
+              <button type="button" class="tilde" [disabled]="!puedeTocar || guardando()"
+                      (click)="retirarTodo(l)"
+                      [attr.aria-label]="'Retirar todo de ' + l.codigoPieza">
+                <mat-icon>{{ l.estado === 'RETIRADO' ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+              </button>
+
+              <div class="datos">
+                <span class="titulo-linea">
+                  <span class="pieza">{{ l.codigoPieza }}</span>
+                  <!-- En la bolsa muchas veces lo único impreso es el del proveedor. -->
+                  @if (l.codigoProveedor) {
+                    <span class="proveedor" matTooltip="Código del proveedor">{{ l.codigoProveedor }}</span>
+                  }
+                </span>
+                @if (l.descripcion) { <span class="desc">{{ l.descripcion }}</span> }
+                @if (l.estado === 'FALTANTE') {
+                  <span class="motivo">{{ etiquetaMotivo(l.motivoFaltante) }}</span>
+                }
+                @if (l.observaciones) { <span class="obs">{{ l.observaciones }}</span> }
+              </div>
+
+              <div class="cantidad">
+                <span class="llevado" [class.parcial]="l.estado === 'PARCIAL'">
+                  {{ l.cantRetirada }}
+                </span>
+                <span class="de">de</span>
+                <span class="pide">{{ l.cantTotal }}</span>
+                @if (l.um) { <span class="um">{{ l.um }}</span> }
+              </div>
+
+              <div class="acciones">
+                @if (puedeTocar) {
+                  <button mat-stroked-button class="btn-linea" [disabled]="guardando()"
+                          (click)="cargarParcial(l)">
+                    <mat-icon>pin</mat-icon>
+                    Parcial
+                  </button>
+                  <button mat-stroked-button class="btn-linea falta" [disabled]="guardando()"
+                          (click)="marcarFaltante(l)">
+                    <mat-icon>error_outline</mat-icon>
+                    Falta
+                  </button>
+                } @else if (incompleto && (l.estado === 'FALTANTE' || l.estado === 'PARCIAL')) {
+                  <button mat-flat-button color="primary" class="btn-linea"
+                          [disabled]="guardando()" (click)="entregar(l)">
+                    <mat-icon>local_shipping</mat-icon>
+                    Entregado
+                  </button>
+                } @else if (l.estado === 'RETIRADO' && l.fechaEntrega) {
+                  <span class="entregado">
+                    <mat-icon>done_all</mat-icon>
+                    entregado
+                  </span>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

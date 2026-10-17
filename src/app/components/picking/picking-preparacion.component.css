@@ -1,0 +1,192 @@
+/* Pensada para la tablet de 10" horizontal: el encabezado queda fijo y sólo
+   scrollea la lista de líneas. Todo lo tocable mide 48 px o más. */
+.preparacion {
+  display: flex;
+  flex-direction: column;
+  /* 64 de la barra de arriba y 24 del padding que ya pone el shell: así entra
+     justa en la tablet y lo único que scrollea es la lista de líneas. */
+  height: calc(100dvh - 64px - 24px);
+  box-sizing: border-box;
+  overflow: hidden;
+  gap: 10px;
+}
+
+/* ── Encabezado ── */
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e0e4ea;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+  flex: 0 0 auto;
+}
+
+.volver { width: 48px !important; height: 48px !important; }
+
+.identidad { display: flex; align-items: center; gap: 16px; }
+.identidad .plan { font-size: 1.7rem; font-weight: 800; color: #1a3a5c; letter-spacing: .5px; }
+.identidad .producto { display: flex; flex-direction: column; }
+.identidad .codigo { font-size: 1.05rem; font-weight: 700; color: #37474f; }
+.identidad .desc {
+  font-size: .72rem; color: rgba(0, 0, 0, .55);
+  max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.a-producir {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 4px 14px; border-radius: 10px; background: #e3f2fd;
+}
+.a-producir .rotulo { font-size: .6rem; letter-spacing: 1.5px; color: #1a3a5c; font-weight: 700; }
+.a-producir .valor { font-size: 1.5rem; font-weight: 800; color: #1a3a5c; line-height: 1; }
+
+.centro { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 180px; }
+.centro .cuenta { font-size: .88rem; color: #37474f; }
+.alerta-faltan {
+  display: flex; align-items: center; gap: 5px;
+  color: #c62828; font-size: .78rem; font-weight: 700;
+}
+.alerta-faltan mat-icon { font-size: 17px; width: 17px; height: 17px; }
+
+.acciones-cabecera { display: flex; align-items: center; gap: 12px; }
+
+.reloj-caja { display: flex; flex-direction: column; align-items: center; }
+.rotulo-reloj { font-size: .6rem; letter-spacing: 2px; color: rgba(0, 0, 0, .5); font-weight: 700; }
+.reloj {
+  font-size: 1.7rem; font-weight: 800; color: #00695c; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-grande {
+  min-height: 52px !important;
+  padding: 0 24px !important;
+  border-radius: 26px !important;
+  font-size: 1rem !important;
+  font-weight: 700;
+}
+
+.estado-final {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 24px;
+  background: #e8f5e9; color: #2e7d32; font-weight: 800; letter-spacing: 1px;
+}
+.estado-final.incompleto { background: #fff3e0; color: #ef6c00; }
+
+/* ── Aviso de entrega ── */
+.aviso-entrega {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; border-radius: 10px;
+  background: #fff3e0; color: #a35200; font-size: .88rem; font-weight: 600;
+  flex: 0 0 auto;
+}
+
+/* ── Líneas ── */
+.lineas { flex: 1; overflow-y: auto; padding-right: 4px; }
+
+.tramo { margin-bottom: 16px; }
+
+.ubicacion {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 0 8px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: #1a3a5c;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.ubicacion mat-icon { font-size: 20px; width: 20px; height: 20px; }
+.ubicacion .cuantas {
+  margin-left: auto; padding: 1px 10px; border-radius: 10px;
+  background: rgba(255, 255, 255, .22); font-size: .78rem;
+}
+
+.linea {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  padding: 8px 14px;
+  margin-bottom: 7px;
+  background: #fff;
+  border: 1px solid #e0e4ea;
+  border-left: 5px solid #cfd8dc;
+  border-radius: 10px;
+}
+.linea.estado-retirado { border-left-color: #2e7d32; background: #f5fbf6; }
+.linea.estado-parcial  { border-left-color: #ef6c00; background: #fffaf3; }
+.linea.estado-faltante { border-left-color: #c62828; background: #fff6f6; }
+
+/* El tilde: lo más grande de la pantalla, es lo que más se toca. */
+.tilde {
+  width: 56px; height: 56px; flex: 0 0 auto;
+  border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+}
+.tilde mat-icon {
+  font-size: 44px; width: 44px; height: 44px;
+  color: #b0bec5;
+}
+.linea.estado-retirado .tilde mat-icon { color: #2e7d32; }
+.tilde:disabled { cursor: default; opacity: .55; }
+
+.datos { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.datos .titulo-linea { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.datos .pieza { font-size: 1.15rem; font-weight: 800; color: #263238; letter-spacing: .3px; }
+.datos .proveedor {
+  padding: 1px 9px;
+  border-radius: 9px;
+  background: #ede7f6;
+  color: #4527a0;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+/* La descripción es lo que el operario lee para saber qué está buscando. */
+.datos .desc {
+  font-size: .92rem;
+  color: #37474f;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.datos .motivo { font-size: .76rem; color: #c62828; font-weight: 700; text-transform: uppercase; }
+.datos .obs { font-size: .76rem; color: rgba(0, 0, 0, .5); font-style: italic; }
+
+.cantidad {
+  display: flex; align-items: baseline; gap: 5px; flex: 0 0 auto;
+  min-width: 130px; justify-content: flex-end;
+}
+.cantidad .llevado { font-size: 1.8rem; font-weight: 800; color: #2e7d32; font-variant-numeric: tabular-nums; }
+.cantidad .llevado.parcial { color: #ef6c00; }
+.cantidad .de { font-size: .8rem; color: rgba(0, 0, 0, .45); }
+.cantidad .pide { font-size: 1.2rem; font-weight: 700; color: #546e7a; }
+.cantidad .um { font-size: .75rem; color: rgba(0, 0, 0, .5); }
+
+.acciones { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+
+.btn-linea {
+  min-height: 48px !important;
+  min-width: 108px;
+  border-radius: 24px !important;
+  font-weight: 600;
+}
+.btn-linea.falta { color: #c62828 !important; border-color: #ef9a9a !important; }
+
+.entregado {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: #2e7d32; font-size: .8rem; font-weight: 700;
+}
+
+.estado-vacio { padding: 40px; text-align: center; color: rgba(0, 0, 0, .5); }
+
+/* En pantallas chicas la línea se acomoda en dos filas antes que apretarse. */
+@media (max-width: 900px) {
+  .linea { flex-wrap: wrap; }
+  .acciones { width: 100%; justify-content: flex-end; }
+}

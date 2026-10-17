@@ -1,0 +1,122 @@
+.tablero { padding: 16px 20px 40px; max-width: 1500px; }
+
+/* ---------------------------------------------------- encabezado */
+.encabezado {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.encabezado h2 { margin: 0; font-size: 1.35rem; font-weight: 700; color: #1a3a5c; }
+.encabezado .sub { font-size: .86rem; color: rgba(0, 0, 0, .6); }
+
+.periodo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.periodo .fecha { width: 150px; }
+.periodo .fecha ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
+
+/* ---------------------------------------------------- títulos de bloque */
+.bloque-titulo {
+  display: flex; align-items: center; gap: 8px;
+  margin: 26px 0 12px; font-size: .9rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: #1a3a5c;
+  padding-bottom: 8px; border-bottom: 2px solid rgba(26, 58, 92, .12);
+}
+.bloque-titulo mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+.nota-bloque { margin: -4px 0 12px; font-size: .86rem; color: rgba(0, 0, 0, .6); }
+
+/* ---------------------------------------------------- tarjetas */
+.tarjetas {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px; margin-bottom: 14px;
+}
+.tarjeta {
+  display: flex; flex-direction: column; gap: 2px;
+  background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 12px;
+  padding: 14px 18px; min-height: 104px;
+}
+.tarjeta.chica { min-height: 84px; }
+.tarjeta.ancha { grid-column: span 2; }
+@media (max-width: 900px) { .tarjeta.ancha { grid-column: span 1; } }
+
+.tarjeta.destacada { background: #e8f1f8; border-color: rgba(26, 58, 92, .2); }
+.tarjeta.alerta { background: #fff4e5; border-color: #ffb74d; }
+
+.tarjeta .numero { font-size: 2.1rem; font-weight: 800; color: #1a3a5c; line-height: 1.05; }
+.tarjeta .numero.rojo { color: #c62828; }
+.tarjeta .rotulo {
+  font-size: .76rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: rgba(0, 0, 0, .55);
+}
+.tarjeta .pie { margin-top: auto; font-size: .8rem; color: rgba(0, 0, 0, .6); }
+
+/* ---------------------------------------------------- paneles */
+.panel {
+  background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 12px;
+  padding: 14px 18px; margin-bottom: 12px;
+}
+.panel h4 {
+  display: flex; align-items: center; gap: 6px;
+  margin: 0 0 10px; font-size: .8rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; color: rgba(0, 0, 0, .6);
+}
+.panel h4 mat-icon { font-size: 18px; width: 18px; height: 18px; color: #ef6c00; }
+.panel.aviso { background: #fff4e5; border-color: #ffb74d; }
+.panel .nota { margin: -4px 0 10px; font-size: .82rem; color: rgba(0, 0, 0, .6); }
+
+.panel-doble {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 12px;
+}
+@media (max-width: 900px) { .panel-doble { grid-template-columns: 1fr; } }
+
+/* ---------------------------------------------------- tablas */
+.tabla { width: 100%; border-collapse: collapse; font-size: .87rem; }
+.tabla th {
+  text-align: left; padding: 6px 8px; font-size: .7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: rgba(0, 0, 0, .5);
+  border-bottom: 1px solid rgba(0, 0, 0, .12);
+}
+.tabla td {
+  padding: 7px 8px; border-bottom: 1px solid rgba(0, 0, 0, .05);
+  color: rgba(0, 0, 0, .78); position: relative;
+}
+.tabla tr:last-child td { border-bottom: none; }
+.tabla .der { text-align: right; }
+.tabla .fuerte { font-weight: 600; color: #263238; }
+.tabla .rojo { color: #c62828; font-weight: 700; }
+.tabla .fila-roja { background: #fff5f5; }
+
+/* La barrita de fondo que compara una fila con la mayor. */
+.linea-fondo {
+  position: absolute; left: 0; bottom: 2px; height: 3px;
+  background: rgba(26, 58, 92, .25); border-radius: 2px;
+}
+
+/* ---------------------------------------------------- barras */
+.barras { display: flex; flex-direction: column; gap: 7px; }
+.barra { display: grid; grid-template-columns: minmax(90px, 1fr) 2fr auto; gap: 10px; align-items: center; }
+.barra .que { font-size: .85rem; color: rgba(0, 0, 0, .75); }
+.barra .linea { display: block; height: 10px; background: rgba(0, 0, 0, .06); border-radius: 5px; }
+.barra .linea i { display: block; height: 100%; background: #1a3a5c; border-radius: 5px; }
+.barra .cuanto { font-size: .82rem; font-weight: 600; color: #1a3a5c; white-space: nowrap; }
+
+/* ---------------------------------------------------- varios */
+.pastilla {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-size: .74rem; font-weight: 700; text-transform: lowercase;
+  background: #eceff1; color: rgba(0, 0, 0, .6);
+}
+.pastilla.EN_CURSO { background: #e8f5e9; color: #2e7d32; }
+.pastilla.PAUSADA { background: #fff3e0; color: #ef6c00; }
+.pastilla.SUSPENDIDA { background: #ffebee; color: #c62828; }
+.pastilla.ok { background: #e8f5e9; color: #2e7d32; }
+.pastilla.pendiente { background: #fff3e0; color: #ef6c00; }
+
+.lista-simple { margin: 0; padding-left: 18px; font-size: .88rem; }
+.lista-simple li { margin-bottom: 4px; }
+.lista-simple .horas { font-weight: 700; color: #c62828; margin-left: 6px; }
+
+.sin-datos {
+  margin: 6px 0 0; font-size: .83rem; color: rgba(0, 0, 0, .5);
+  font-style: italic; line-height: 1.4;
+}
+.vacio { color: rgba(0, 0, 0, .55); font-size: .95rem; padding: 30px 2px; }

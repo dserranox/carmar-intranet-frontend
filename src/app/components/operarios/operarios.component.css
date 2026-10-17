@@ -96,11 +96,6 @@ table {
   border-bottom: none !important;
 }
 
-.btn-clear {
-  color: #5c6470;
-  border-color: #d0d4da !important;
-}
-
 /* ── Estados ── */
 .status {
   display: inline-block;
@@ -117,3 +112,39 @@ table {
 
 /* ── Miscelánea ── */
 .empty { padding: 24px; color: #666; }
+
+/* Cola de trabajo asignado (vista de administrador, pantalla ancha) */
+.cola { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+.tarea-cola {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #e0f2f1; color: #00564b;
+  border-radius: 999px; padding: 3px 10px;
+  font-size: .8rem; white-space: nowrap;
+}
+.tarea-cola b {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #00695c; color: #fff; font-size: .72rem;
+}
+.sin-cola { color: rgba(0, 0, 0, .4); font-size: .82rem; }
+button.mini { width: 28px; height: 28px; line-height: 28px; }
+button.mini mat-icon { font-size: 16px; width: 16px; height: 16px; }
+.tarea-cola.suspendida { background: #fff3e0; color: #e65100; }
+
+.que-hace { font-weight: 600; }
+
+/* Está asignado a la tarea pero el reloj no corre: se ve de un vistazo. */
+.estado-reloj {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: #fff3e0;
+  color: #a35200;
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.estado-reloj.suspendida { background: #eceff1; color: #546e7a; }

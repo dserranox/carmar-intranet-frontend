@@ -1,5 +1,7 @@
 
-import { ApplicationConfig, isDevMode, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, isDevMode, provideZoneChangeDetection } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeEsAr from '@angular/common/locales/es-AR';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -37,8 +39,13 @@ const APP_DATE_FORMATS = {
   },
 };
 
+// Para que los números se escriban como acá: el punto separa los miles y la
+// coma los decimales. Sin esto, 2.455 metros se leen como "2,455".
+registerLocaleData(localeEsAr);
+
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: LOCALE_ID, useValue: 'es-AR' },
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideAnimationsAsync(),

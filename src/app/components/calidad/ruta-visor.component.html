@@ -1,0 +1,182 @@
+@if (ruta(); as r) {
+  <section class="visor">
+
+    <!-- ---------------------------------------------------- barra -->
+    <header class="barra">
+      <button mat-icon-button class="volver" (click)="volver()" matTooltip="Volver a Calidad">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+
+      <div class="identidad">
+        <span class="titulo">Recorrida {{ r.numero }}</span>
+        <span class="sub">{{ r.fecha }} · {{ r.responsable }}</span>
+      </div>
+
+      <div class="marcadores">
+        <div class="marcador">
+          <span class="num">{{ r.ordenesControladas }}</span>
+          <span class="rot">órdenes</span>
+        </div>
+        <div class="marcador ok">
+          <span class="num">{{ r.ordenesOk }}</span>
+          <span class="rot">OK</span>
+        </div>
+        <div class="marcador" [class.ko]="r.ordenesKo > 0">
+          <span class="num">{{ r.ordenesKo }}</span>
+          <span class="rot">KO</span>
+        </div>
+        <div class="marcador reloj">
+          <span class="num">{{ transcurrido() }}</span>
+          <span class="rot">en la ruta</span>
+        </div>
+      </div>
+
+      @if (!soloLectura()) {
+        <button mat-stroked-button class="suspender" (click)="suspenderRuta()"
+                matTooltip="Dejarla sin terminar, anotando por qué">
+          <mat-icon>pause_circle</mat-icon>
+          Suspender
+        </button>
+        <button mat-flat-button color="warn" class="cerrar" (click)="cerrarRuta()">
+          <mat-icon>flag</mat-icon>
+          Cerrar recorrida
+        </button>
+      } @else {
+        <span class="cerrada">
+          <mat-icon>lock</mat-icon>
+          {{ r.estado === 'CERRADA' ? 'Recorrida cerrada' : 'De otro responsable' }}
+        </span>
+      }
+    </header>
+
+    <!-- ---------------------------------------------------- cuerpo -->
+    <div class="cuerpo">
+
+      <!-- Órdenes de la recorrida -->
+      <aside class="ordenes">
+        <div class="encabezado-lista">
+          <span>Órdenes controladas</span>
+        </div>
+
+        <div class="lista">
+          @for (c of r.controles ?? []; track c.rccId) {
+            <button type="button" class="item" [class.activo]="c.rccId === control()?.rccId"
+                    (click)="elegirControl(c)">
+              <span class="plan">{{ c.nroPlan }}</span>
+              <span class="cod">{{ c.productoCodigo ?? '—' }}</span>
+              <span class="estado" [class]="claseResultado(c.resultado)">
+                {{ c.resultado === 'PENDIENTE' ? '•' : c.resultado }}
+              </span>
+            </button>
+          }
+          @if (!(r.controles ?? []).length) {
+            <p class="sin-ordenes">Todavía no elegiste ninguna orden.</p>
+          }
+        </div>
+
+        @if (!soloLectura()) {
+          <button mat-flat-button color="primary" class="agregar" (click)="agregarOrden()">
+            <mat-icon>add</mat-icon>
+            Elegir orden
+          </button>
+        }
+      </aside>
+
+      <!-- Lista de puntos de la orden elegida -->
+      <main class="checklist">
+        @if (control(); as c) {
+
+          <div class="cabecera-orden">
+            <div class="datos">
+              <span class="plan">{{ c.nroPlan }}</span>
+              <span class="codigo">{{ c.productoCodigo ?? '—' }}</span>
+              <span class="desc">{{ c.productoDescripcion ?? '' }}</span>
+            </div>
+            <div class="donde">
+              <mat-form-field appearance="outline" class="mini">
+                <mat-label>Operario</mat-label>
+                <input matInput [(ngModel)]="c.operario" [disabled]="soloLectura()" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="mini">
+                <mat-label>Puesto</mat-label>
+                <input matInput [(ngModel)]="c.puesto" [disabled]="soloLectura()" />
+              </mat-form-field>
+              @if (!soloLectura()) {
+                <button mat-icon-button color="warn" matTooltip="Sacar esta orden de la recorrida"
+                        (click)="quitar(c)">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="puntos">
+            @for (item of c.items; track item.puntoId) {
+              <div class="punto" [class.marcado-ko]="item.resultado === 'KO'">
+                <span class="nombre">{{ item.punto }}</span>
+
+                <div class="botones">
+                  <button type="button" class="btn ok" [class.activo]="item.resultado === 'OK'"
+                          [disabled]="soloLectura()" (click)="marcar(item, 'OK')">OK</button>
+                  <button type="button" class="btn ko" [class.activo]="item.resultado === 'KO'"
+                          [disabled]="soloLectura()" (click)="marcar(item, 'KO')">KO</button>
+                  <button type="button" class="btn na" [class.activo]="item.resultado === 'NA'"
+                          [disabled]="soloLectura()" (click)="marcar(item, 'NA')">N/A</button>
+                </div>
+
+                <input class="obs" type="text" [(ngModel)]="item.observaciones"
+                       [disabled]="soloLectura()"
+                       [placeholder]="item.resultado === 'KO' ? 'Qué pasó (obligatorio)' : 'Observaciones'" />
+              </div>
+            }
+          </div>
+
+          <div class="pie">
+            <input class="obs-general" type="text" [(ngModel)]="c.observaciones"
+                   [disabled]="soloLectura()" placeholder="Observación general de la orden" />
+
+            @if (faltantes() > 0) {
+              <span class="faltan">
+                <mat-icon>pending</mat-icon>
+                faltan {{ faltantes() }}
+              </span>
+            } @else {
+              <span class="completo">
+                <mat-icon>check_circle</mat-icon>
+                completo
+              </span>
+            }
+
+            @if (c.resultado === 'KO' && !soloLectura()) {
+              <button mat-stroked-button class="abrir-nc" (click)="abrirNoConformidad(c)"
+                      matTooltip="Abrir la no conformidad de este KO">
+                <mat-icon>report_problem</mat-icon>
+                No conformidad
+              </button>
+            }
+
+            @if (!soloLectura()) {
+              <button mat-flat-button color="primary" class="guardar"
+                      [disabled]="guardando()" (click)="guardar()">
+                <mat-icon>save</mat-icon>
+                {{ guardando() ? 'Guardando…' : 'Guardar' }}
+              </button>
+            }
+          </div>
+
+        } @else {
+          <div class="vacio">
+            <mat-icon>playlist_add</mat-icon>
+            <p>Elegí la primera orden que vas a controlar.</p>
+            @if (!soloLectura()) {
+              <button mat-flat-button color="primary" (click)="agregarOrden()">
+                <mat-icon>add</mat-icon>
+                Elegir orden
+              </button>
+            }
+          </div>
+        }
+      </main>
+    </div>
+  </section>
+}

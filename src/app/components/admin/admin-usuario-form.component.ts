@@ -10,6 +10,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { UsuarioService } from '../../services/usuario.service';
 
 function carMarEmailValidator(ctrl: AbstractControl): ValidationErrors | null {
@@ -36,6 +38,17 @@ export class AdminUsuarioFormComponent implements OnInit {
   private router = inject(Router);
   private snack = inject(MatSnackBar);
   private fb = inject(FormBuilder);
+  private http = inject(HttpClient);
+
+  /** Trae los roles que existen hoy; si falla, se queda con los de siempre. */
+  private cargarRoles(): void {
+    this.http.get<{ nombre: string }[]>(environment.apiUrl + '/roles').subscribe({
+      next: roles => {
+        if (roles?.length) this.rolesDisponibles = roles.map(r => r.nombre);
+      },
+      error: () => { /* se mantienen ADMIN y OPERARIO */ }
+    });
+  }
 
   modo: 'ver' | 'editar' | 'nuevo' = 'ver';
   get modoEdicion() { return this.modo === 'editar'; }
@@ -49,7 +62,8 @@ export class AdminUsuarioFormComponent implements OnInit {
   hidePassword = true;
   hideConfirmar = true;
 
-  readonly rolesDisponibles = ['ADMIN', 'OPERARIO'];
+  /** Se cargan del backend: así los roles nuevos aparecen sin tocar el código. */
+  rolesDisponibles: string[] = ['ADMIN', 'OPERARIO'];
 
   form: FormGroup = this.fb.group({
     username: [{ value: '', disabled: true }],
@@ -60,6 +74,7 @@ export class AdminUsuarioFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.cargarRoles();
     this.modo = this.route.snapshot.data['mode'] as 'ver' | 'editar' | 'nuevo';
     this.usuarioId = Number(this.route.snapshot.paramMap.get('id'));
 

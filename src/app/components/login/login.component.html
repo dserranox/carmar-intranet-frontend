@@ -1,8 +1,16 @@
 <div class="login-container">
+
+  <!-- Fondo: ramales de cable, el producto de la casa. Puramente decorativo. -->
+  <svg class="fondo" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path d="M-80 250 C 260 120, 420 380, 720 300 S 1200 180, 1540 320" />
+    <path d="M-80 430 C 300 330, 500 560, 760 470 S 1220 380, 1540 500" />
+    <path d="M-80 640 C 240 540, 480 760, 780 660 S 1240 600, 1540 700" />
+  </svg>
+
   <div class="login-card">
 
     <div class="login-header">
-      <h2 class="login-title">Car-Mar</h2>
+      <img class="logo" src="/car-mar-logo.png" alt="CAR-MAR" />
       <p class="login-subtitle">Sistema de gestión interna</p>
     </div>
 
@@ -15,8 +23,10 @@
 
       <mat-form-field appearance="outline" class="full">
         <mat-label>Contraseña</mat-label>
-        <input matInput [type]="hideActual ? 'password' : 'text'" name="password" [(ngModel)]="password" required autocomplete="current-password">
-        <button mat-icon-button matSuffix type="button" (click)="hideActual = !hideActual">
+        <input matInput [type]="hideActual ? 'password' : 'text'" name="password"
+               [(ngModel)]="password" required autocomplete="current-password">
+        <button mat-icon-button matSuffix type="button" (click)="hideActual = !hideActual"
+                [attr.aria-label]="hideActual ? 'Mostrar la contraseña' : 'Ocultar la contraseña'">
           <mat-icon>{{ hideActual ? 'visibility_off' : 'visibility' }}</mat-icon>
         </button>
       </mat-form-field>
@@ -30,7 +40,7 @@
 
       <button mat-flat-button class="full btn-login" type="submit" [disabled]="loading">
         @if (loading) {
-          Ingresando...
+          Ingresando…
         } @else {
           Ingresar
         }
@@ -38,4 +48,6 @@
     </form>
 
   </div>
+
+  <p class="pie">CAR-MAR · Uso interno</p>
 </div>

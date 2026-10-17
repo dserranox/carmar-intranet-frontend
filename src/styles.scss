@@ -20,6 +20,57 @@ body {
   @include mat.all-component-themes($theme);
 }
 
+/* ==========================================================================
+   Botoneras
+   Una sola convención para toda la app, así no queda cada pantalla con su
+   propio criterio:
+     · acción principal   -> mat-flat-button color="primary"  (sólido)
+     · acciones de apoyo  -> mat-stroked-button               (contorno gris)
+   Los botones de una misma fila se agrupan en .botonera para que compartan
+   alto, separación y alineación.
+   ========================================================================== */
+.botonera {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Ojo: se aplica solo a .botonera y a los encabezados de pantalla. Los visores
+   de tablet usan botones grandes con sus propias medidas y no se tocan. */
+.botonera .mat-mdc-button-base,
+.page-header .mat-mdc-button-base {
+  height: 40px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Que el ícono y el texto queden siempre a la misma distancia. */
+.botonera .mat-mdc-button-base .mat-icon,
+.page-header .mat-mdc-button-base .mat-icon {
+  margin-right: 6px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+/* Los de ícono solo no llevan ese margen. */
+.botonera .mat-mdc-icon-button,
+.page-header .mat-mdc-icon-button {
+  width: 40px;
+  padding: 8px;
+}
+.botonera .mat-mdc-icon-button .mat-icon,
+.page-header .mat-mdc-icon-button .mat-icon {
+  margin-right: 0;
+}
+
+/* Contorno parejo para todas las acciones de apoyo. */
+.mat-mdc-outlined-button:not(:disabled) {
+  --mdc-outlined-button-outline-color: #d0d4da;
+  --mdc-outlined-button-label-text-color: #42505f;
+}
+
 /* width */
 ::-webkit-scrollbar {
   width: 7px;

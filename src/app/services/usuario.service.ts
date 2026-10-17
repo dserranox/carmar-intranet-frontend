@@ -57,6 +57,11 @@ export class UsuarioService {
     return this.http.get<UsuarioAdminDTO[]>(`${this.base}/activos`);
   }
 
+  /** A quién se le puede asignar producción: sin administradores y con MI TRABAJO. */
+  getAsignables(): Observable<UsuarioAdminDTO[]> {
+    return this.http.get<UsuarioAdminDTO[]>(`${this.base}/asignables`);
+  }
+
   getUsuario(id: number): Observable<UsuarioAdminDTO> {
     return this.http.get<UsuarioAdminDTO>(`${this.base}/admin/${id}`);
   }

@@ -1,0 +1,122 @@
+<section class="puntos-wrapper">
+
+  @if (!embebido) {
+    <header class="page-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="titulo">
+        <h2>Puntos de control</h2>
+        <span class="sub">Lo que se chequea en cada orden durante la recorrida</span>
+      </div>
+    </header>
+  }
+
+  @if (puedeEditar) {
+    <div class="alta">
+      <mat-form-field appearance="outline" class="campo-nombre">
+        <mat-label>Nuevo punto de control</mat-label>
+        <input matInput [(ngModel)]="nuevoNombre" placeholder="CONTROL DE ..."
+               (keyup.enter)="agregar()" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="campo-desc">
+        <mat-label>Aclaración (opcional)</mat-label>
+        <input matInput [(ngModel)]="nuevaDescripcion" (keyup.enter)="agregar()" />
+      </mat-form-field>
+      <button mat-flat-button color="primary" [disabled]="!puedeAgregar || guardando()" (click)="agregar()">
+        <mat-icon>add</mat-icon>
+        Agregar
+      </button>
+    </div>
+  }
+
+  <div class="tabla-contenedor">
+    <table mat-table [dataSource]="puntos()">
+
+      <ng-container matColumnDef="orden">
+        <th mat-header-cell *matHeaderCellDef>Orden</th>
+        <td mat-cell *matCellDef="let p">
+          <div class="orden-celda">
+            <span class="numero">{{ p.orden }}</span>
+            @if (puedeEditar) {
+              <button mat-icon-button class="mini" matTooltip="Subir" (click)="mover(p, -1)">
+                <mat-icon>arrow_upward</mat-icon>
+              </button>
+              <button mat-icon-button class="mini" matTooltip="Bajar" (click)="mover(p, 1)">
+                <mat-icon>arrow_downward</mat-icon>
+              </button>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Punto de control</th>
+        <td mat-cell *matCellDef="let p">
+          @if (puedeEditar) {
+            <input class="editable nombre" [value]="p.nombre"
+                   (blur)="renombrar(p, $any($event.target).value)" />
+          } @else {
+            <span class="nombre">{{ p.nombre }}</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="descripcion">
+        <th mat-header-cell *matHeaderCellDef>Aclaración</th>
+        <td mat-cell *matCellDef="let p">
+          @if (puedeEditar) {
+            <input class="editable" [value]="p.descripcion ?? ''" placeholder="—"
+                   (blur)="cambiarDescripcion(p, $any($event.target).value)" />
+          } @else {
+            <span>{{ p.descripcion ?? '—' }}</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="usos">
+        <th mat-header-cell *matHeaderCellDef>Usado en</th>
+        <td mat-cell *matCellDef="let p">
+          <span class="usos" [class.nunca]="p.usos === 0">
+            {{ p.usos === 0 ? 'nunca' : p.usos + (p.usos === 1 ? ' control' : ' controles') }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="activo">
+        <th mat-header-cell *matHeaderCellDef>Se pide</th>
+        <td mat-cell *matCellDef="let p">
+          <mat-slide-toggle [checked]="p.activo" [disabled]="!puedeEditar"
+                            (change)="alternarActivo(p, $event.checked)">
+            {{ p.activo ? 'Sí' : 'No' }}
+          </mat-slide-toggle>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let p">
+          @if (puedeEditar) {
+            <button mat-icon-button color="warn"
+                    [matTooltip]="p.usos > 0 ? 'Ya se usó: desactivalo en vez de borrarlo' : 'Borrar'"
+                    (click)="borrar(p)">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr mat-row *matRowDef="let row; columns: columnas;" [class.inactivo]="!row.activo"></tr>
+    </table>
+
+    @if (puntos().length === 0) {
+      <p class="vacio">No hay puntos de control cargados.</p>
+    }
+  </div>
+
+  <p class="ayuda">
+    Los que estén en <b>No</b> dejan de pedirse en las próximas recorridas, pero siguen
+    figurando en las que ya se hicieron. Por eso un punto ya usado se desactiva y no se borra.
+  </p>
+</section>

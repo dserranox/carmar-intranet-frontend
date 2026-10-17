@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -14,6 +15,8 @@ import { ProductosService } from '../../services/productos.service';
 import { Cliente } from '../../models/cliente';
 import { Producto } from '../../models/producto';
 import { OrdenCreateDTO } from '../../models/orden-create';
+import { NuevoClienteDialogComponent } from './nuevo-cliente-dialog.component';
+import { NuevoProductoDialogComponent } from './nuevo-producto-dialog.component';
 
 @Component({
   selector: 'app-create-order-dialog',
@@ -28,15 +31,18 @@ import { OrdenCreateDTO } from '../../models/orden-create';
     MatButtonModule,
     MatRadioModule,
     MatProgressSpinnerModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule
   ],
   template: `
     <h2 mat-dialog-title>Nueva Orden</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="form-container">
 
-        <!-- Cliente con búsqueda -->
-        <div class="form-row">
+        <!-- Cliente: solo lo carga quien puede verlo. El jefe de producción
+             da de alta la orden sin cliente y el administrador se lo asigna. -->
+        @if (puedeVerClientes) {
+        <div class="form-row fila-cliente">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Cliente</mat-label>
             <input matInput
@@ -55,16 +61,23 @@ import { OrdenCreateDTO } from '../../models/orden-create';
                 <mat-option disabled>Sin resultados</mat-option>
               }
             </mat-autocomplete>
-            @if (clienteSearchCtrl.touched && clienteSearchCtrl.hasError('required')) {
-              <mat-error>El cliente es obligatorio</mat-error>
-            } @else if (clienteSearchCtrl.touched && clienteSearchCtrl.hasError('noSeleccionado')) {
+            @if (clienteSearchCtrl.touched && clienteSearchCtrl.hasError("noSeleccionado")) {
               <mat-error>Seleccioná un cliente de la lista</mat-error>
             }
           </mat-form-field>
+
+          @if (puedeCrearClientes) {
+            <button mat-stroked-button type="button" class="btn-nuevo-cliente"
+                    matTooltip="Dar de alta un cliente nuevo" (click)="nuevoCliente()">
+              <mat-icon>person_add</mat-icon>
+              Nuevo
+            </button>
+          }
         </div>
+        }
 
         <!-- Producto con búsqueda -->
-        <div class="form-row">
+        <div class="form-row fila-cliente">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Producto</mat-label>
             <input matInput
@@ -92,6 +105,14 @@ import { OrdenCreateDTO } from '../../models/orden-create';
               <mat-error>Seleccioná un producto de la lista</mat-error>
             }
           </mat-form-field>
+
+          @if (puedeCrearProductos) {
+            <button mat-stroked-button type="button" class="btn-nuevo-cliente"
+                    matTooltip="Dar de alta un producto nuevo" (click)="nuevoProducto()">
+              <mat-icon>inventory_2</mat-icon>
+              Nuevo
+            </button>
+          }
         </div>
 
         <!-- Cantidad -->
@@ -113,7 +134,7 @@ import { OrdenCreateDTO } from '../../models/orden-create';
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Cancelar</button>
-      <button mat-raised-button color="primary"
+      <button mat-flat-button color="primary"
               [disabled]="loading()"
               (click)="onSubmit()">
         @if (!loading()) {
@@ -136,6 +157,17 @@ import { OrdenCreateDTO } from '../../models/orden-create';
 
     .form-row {
       margin-bottom: 16px;
+    }
+
+    .fila-cliente {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .btn-nuevo-cliente {
+      margin-top: 8px;
+      white-space: nowrap;
     }
 
     .full-width {
@@ -165,6 +197,7 @@ import { OrdenCreateDTO } from '../../models/orden-create';
 export class CreateOrderDialogComponent {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<CreateOrderDialogComponent>);
+  private dialog = inject(MatDialog);
   private clientesService = inject(ClientesService);
   private productosService = inject(ProductosService);
 
@@ -179,7 +212,8 @@ export class CreateOrderDialogComponent {
   productoSearchCtrl = new FormControl<string | Producto>('');
 
   form = this.fb.group({
-    clienteId: [null as number | null, Validators.required],
+    // El cliente no es obligatorio: la orden puede nacer sin él.
+    clienteId: [null as number | null],
     productoId: [null as number | null, Validators.required],
     cantidad: [null as number | null, [Validators.required, Validators.min(1)]],
     hoja: ['NO'],
@@ -241,14 +275,69 @@ export class CreateOrderDialogComponent {
     this.clientesFiltrados.set(this.todosClientes());
   }
 
+  /** Sin CLIENTES:READ no se muestra el campo ni se exige el dato. */
+  get puedeVerClientes(): boolean {
+    try {
+      const data = localStorage.getItem("user");
+      if (!data) return false;
+      const perms = JSON.parse(data)?.permissions;
+      return Array.isArray(perms) && perms.includes("CLIENTES:READ");
+    } catch { return false; }
+  }
+
+  get puedeCrearClientes(): boolean {
+    try {
+      const data = localStorage.getItem('user');
+      if (!data) return false;
+      const perms = JSON.parse(data)?.permissions;
+      return Array.isArray(perms) && perms.includes('CLIENTES:WRITE');
+    } catch { return false; }
+  }
+
+  get puedeCrearProductos(): boolean {
+    try {
+      const data = localStorage.getItem('user');
+      if (!data) return false;
+      const perms = JSON.parse(data)?.permissions;
+      return Array.isArray(perms) && perms.includes('PRODUCTOS:WRITE');
+    } catch { return false; }
+  }
+
+  /** Da de alta un producto y lo deja seleccionado en la orden. */
+  nuevoProducto(): void {
+    const ref = this.dialog.open(NuevoProductoDialogComponent, { disableClose: true });
+    ref.afterClosed().subscribe((producto: Producto | undefined) => {
+      if (!producto) return;
+      this.todosProductos.set([...this.todosProductos(), producto]
+        .sort((a, b) => a.codigo.localeCompare(b.codigo)));
+      this.productosFiltrados.set(this.todosProductos());
+      this.productoSearchCtrl.setValue(producto);
+      this.onProductoSelected(producto);
+    });
+  }
+
+  /** Da de alta un cliente y lo deja seleccionado en la orden. */
+  nuevoCliente(): void {
+    const ref = this.dialog.open(NuevoClienteDialogComponent, { disableClose: true });
+    ref.afterClosed().subscribe((cliente: Cliente | undefined) => {
+      if (!cliente) return;
+      this.todosClientes.set([...this.todosClientes(), cliente]
+        .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)));
+      this.clientesFiltrados.set(this.todosClientes());
+      this.clienteSearchCtrl.setValue(cliente);
+      this.onClienteSelected(cliente);
+    });
+  }
+
   onClienteBlur(): void {
-    if (!this.form.get('clienteId')?.value) {
+    if (this.form.get('clienteId')?.value) return;
+    // Dejarlo vacío es válido: el administrador lo asigna después. Solo se
+    // reclama cuando escribieron algo y no eligieron de la lista.
+    if (this.clienteSearchCtrl.value) {
       this.clienteSearchCtrl.markAsTouched();
-      if (this.clienteSearchCtrl.value) {
-        this.clienteSearchCtrl.setErrors({ noSeleccionado: true });
-      } else {
-        this.clienteSearchCtrl.setErrors({ required: true });
-      }
+      this.clienteSearchCtrl.setErrors({ noSeleccionado: true });
+    } else {
+      this.clienteSearchCtrl.setErrors(null);
     }
   }
 

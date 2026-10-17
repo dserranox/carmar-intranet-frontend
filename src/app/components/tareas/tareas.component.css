@@ -101,21 +101,6 @@ table {
   white-space: nowrap;
 }
 
-.btn-clear {
-  color: #5c6470;
-  border-color: #d0d4da !important;
-}
-
-.btn-search {
-  min-width: 120px;
-}
-
-.btn-export {
-  color: #1a3a5c;
-  border-color: #1a3a5c !important;
-  min-width: 120px;
-}
-
 /* ── Estados ── */
 .status {
   display: inline-block;
@@ -170,3 +155,62 @@ table {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ── Sub-áreas de la planta ── */
+.areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e0e4ea;
+}
+
+.areas .area {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid #d0d4da;
+  border-radius: 18px;
+  background: #fff;
+  color: #4a5568;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.areas .area:hover { background: #f4f6f9; }
+
+.areas .area mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.areas .area .area-cuenta {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #eef1f5;
+  color: #5a6678;
+  font-size: .75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.areas .area.activa {
+  background: #1a3a5c;
+  border-color: #1a3a5c;
+  color: #fff;
+}
+
+.areas .area.activa .area-cuenta {
+  background: rgba(255, 255, 255, .22);
+  color: #fff;
+}
+
+.pausa-cel { color: #b26a00; }

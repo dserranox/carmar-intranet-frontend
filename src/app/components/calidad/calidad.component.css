@@ -1,0 +1,93 @@
+.calidad-wrapper { padding: 4px 0 0; }
+
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.page-header h2 { margin: 0; font-size: 1.4rem; font-weight: 600; color: #1a1a2e; }
+
+.panel { padding: 16px 4px 4px; }
+
+/* ---------------------------------------------------- tarjetas */
+.tarjetas { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.tarjeta {
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 150px; padding: 12px 18px;
+  border-radius: 12px; background: #f5f7f7;
+  border-left: 4px solid #b0bec5;
+}
+.tarjeta .valor { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; line-height: 1.1; }
+.tarjeta .rotulo { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: rgba(0,0,0,.55); }
+.tarjeta.ok { background: #e8f5e9; border-left-color: #2e7d32; }
+.tarjeta.ok .valor { color: #2e7d32; }
+.tarjeta.ko { background: #ffebee; border-left-color: #c62828; }
+.tarjeta.ko .valor { color: #c62828; }
+
+/* ---------------------------------------------------- filtros */
+.filtros {
+  display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.campo { width: 180px; }
+.campo-fecha { width: 150px; }
+.acciones { display: flex; gap: 8px; align-items: center; padding-top: 6px; flex-wrap: wrap; }
+.acciones .activo { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+
+/* ---------------------------------------------------- tablas */
+.tabla-contenedor {
+  max-height: calc(100dvh - 400px);
+  min-height: 240px;
+  overflow: auto;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 10px;
+}
+table { width: 100%; }
+th.mat-mdc-header-cell {
+  background: #fafafa; font-weight: 600; font-size: .8rem;
+  color: rgba(0,0,0,.65); white-space: nowrap;
+}
+td.mat-mdc-cell { font-size: .85rem; white-space: nowrap; }
+td.obs { white-space: normal; max-width: 320px; }
+
+.fila-ko { background: #fff5f5; }
+.fila-ko:hover { background: #ffebee; }
+
+.desvio { color: rgba(0,0,0,.5); font-size: .78rem; margin-left: 4px; }
+.numero-ko { color: #c62828; font-weight: 700; }
+
+.chip {
+  display: inline-block; border-radius: 999px; padding: 2px 10px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+  background: #eceff1; color: #455a64;
+}
+.chip.ok { background: #e8f5e9; color: #2e7d32; }
+.chip.ko { background: #ffebee; color: #c62828; }
+.chip.curso { background: #e3f2fd; color: #1565c0; }
+.chip.tipo { background: #ede7f6; color: #4527a0; }
+
+.vacio { padding: 28px; text-align: center; color: rgba(0,0,0,.55); margin: 0; }
+
+/* ---------------------------------------------------- recorridas de hoy */
+.recorridas-hoy { margin-bottom: 20px; }
+.recorridas-hoy h3 {
+  margin: 0; font-size: .9rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em; color: rgba(0,0,0,.6);
+}
+.encabezado-hoy {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.recorridas-hoy .vacio {
+  margin: 0; padding: 14px 2px; color: rgba(0,0,0,.55); font-size: .9rem;
+}
+.dos-rutas { display: flex; gap: 14px; flex-wrap: wrap; }
+.ruta-hoy {
+  display: flex; flex-direction: column; gap: 4px;
+  min-width: 260px; padding: 14px 18px;
+  border-radius: 12px; background: #f5f7f7;
+  border-left: 4px solid #b0bec5;
+}
+.ruta-hoy.hecha  { background: #e8f5e9; border-left-color: #2e7d32; }
+.ruta-hoy.abierta { background: #e3f2fd; border-left-color: #1565c0; }
+.ruta-hoy .nro { font-weight: 700; font-size: 1.05rem; color: #1a1a2e; }
+.ruta-hoy .estado { font-size: .88rem; color: rgba(0,0,0,.7); }
+.ruta-hoy .estado.pendiente { color: #e65100; font-weight: 600; }
+.ruta-hoy .detalle { font-size: .78rem; color: rgba(0,0,0,.5); margin-bottom: 6px; }
+.ruta-hoy button { align-self: flex-start; }

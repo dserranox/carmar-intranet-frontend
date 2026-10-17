@@ -6,6 +6,9 @@
   padding: 4px 12px;
   background: #fff;
   border-bottom: 1px solid rgba(0,0,0,0.08);
+  /* Sin esto, un hijo largo estira la grilla y toda la página se corre al costado. */
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .logo-btn {
@@ -26,7 +29,15 @@
   align-items: center;
   gap: 12px;
   margin-left: 8px;
+  min-width: 0;
+  /* Lo que no entra se va al botón de los puntitos, así que acá no hace falta
+     ni scroll ni recorte: lo que se ve, se ve entero. */
+  overflow: hidden;
+  flex-wrap: nowrap;
 }
+
+.nav .item { white-space: nowrap; flex: 0 0 auto; }
+.nav .mas { flex: 0 0 auto; }
 
 .nav a.active { font-weight: 700; text-decoration: underline; text-underline-offset: 6px; }
 
@@ -44,9 +55,80 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  /* Que la barra se apriete antes de empujar la página fuera de la pantalla. */
+  min-width: 0;
+  justify-self: end;
 }
 
 .username { font-size: 0.9rem; color: #333; font-weight: 600; }
 .avatar { color: #263238; font-size: 28px; width: 28px; height: 28px; }
 
 .content { padding: 12px; }
+
+/* Campanita de notificaciones: el globo rojo se ve desde lejos. */
+.campanita {
+  position: relative;
+
+  mat-icon { color: #263238; }
+  mat-icon.con-avisos { color: #c62828; }
+
+  /* El globo va sobre la campana, y cuando hay avisos la campana también es
+     roja: sin el anillo blanco el número se perdía adentro del ícono. */
+  .globo {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #c62828;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+    pointer-events: none;
+    box-shadow: 0 0 0 2px #fff;
+  }
+}
+
+/* La tarea que está corriendo: con el reloj andando la app se queda ahí. */
+.tarea-abierta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+  padding: 5px 14px;
+  border-radius: 18px;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  color: #1b5e20;
+  text-decoration: none;
+  white-space: nowrap;
+  /* Va dentro del bloque de usuario: si no entra, se achica en vez de empujar
+     la barra y sacar la página de la pantalla. */
+  min-width: 0;
+  max-width: 260px;
+  overflow: hidden;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    animation: latido 2s ease-in-out infinite;
+  }
+
+  .que {
+    font-size: .82rem; font-weight: 700;
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .donde { font-size: .74rem; opacity: .75; flex-shrink: 0; }
+
+  &:hover { background: #c8e6c9; }
+}
+
+@keyframes latido {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .45; }
+}

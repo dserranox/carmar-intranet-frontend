@@ -4,6 +4,7 @@ export interface OrdenResponseDTO {
   anio: number;
   observacion: string | null;
   clienteId: number;
+  clienteRazonSocial: string | null;
   productoCodigo: string;
   productoDescripcion: string;
   situacionClave: string;

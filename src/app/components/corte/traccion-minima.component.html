@@ -1,0 +1,99 @@
+<div class="pagina">
+
+  @if (!embebido) {
+    <header class="encabezado">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1><mat-icon>speed</mat-icon> Fuerza mínima de tracción</h1>
+    </header>
+  }
+
+  <p class="ayuda">
+    Es la fuerza que tiene que aguantar el terminal agrafado antes de arrancarse del cable, en Newtons.
+    Se define un valor general por sección; si un terminal puntual exige otro, cargá una fila con ese
+    terminal y esa excepción gana sobre el valor general.
+  </p>
+
+  @if (puedeDefinir) {
+  <section class="formulario">
+    <h3>{{ editandoId() ? 'Editar valor' : 'Nuevo valor' }}</h3>
+    <div class="campos">
+      <mat-form-field appearance="outline" class="corto">
+        <mat-label>Sección (mm2)</mat-label>
+        <input matInput type="number" step="0.05" [(ngModel)]="seccion" name="seccion" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Terminal (vacío = todas)</mat-label>
+        <input matInput [(ngModel)]="terminal" name="terminal" placeholder="ej. 282110-1" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="corto">
+        <mat-label>Fuerza mínima (N)</mat-label>
+        <input matInput type="number" step="1" [(ngModel)]="fuerza" name="fuerza" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="largo">
+        <mat-label>Observaciones</mat-label>
+        <input matInput [(ngModel)]="observaciones" name="observaciones" />
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()">
+        {{ editandoId() ? 'Guardar cambios' : 'Agregar' }}
+      </button>
+      @if (editandoId()) {
+        <button mat-button (click)="cancelarEdicion()">Cancelar</button>
+      }
+    </div>
+  </section>
+  }
+
+  @if (cargando()) {
+    <p class="vacio">Cargando…</p>
+  } @else {
+    <table mat-table [dataSource]="valores()" class="tabla">
+
+      <ng-container matColumnDef="seccion">
+        <th mat-header-cell *matHeaderCellDef>Sección</th>
+        <td mat-cell *matCellDef="let v">{{ v.trmSeccion }} mm2</td>
+      </ng-container>
+
+      <ng-container matColumnDef="terminal">
+        <th mat-header-cell *matHeaderCellDef>Terminal</th>
+        <td mat-cell *matCellDef="let v">
+          @if (v.trmTerminal) {
+            <span class="excepcion">{{ v.trmTerminal }}</span>
+          } @else {
+            <span class="general">todos</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="fuerza">
+        <th mat-header-cell *matHeaderCellDef>Fuerza mínima</th>
+        <td mat-cell *matCellDef="let v"><strong>{{ v.trmFuerzaMin }} N</strong></td>
+      </ng-container>
+
+      <ng-container matColumnDef="observaciones">
+        <th mat-header-cell *matHeaderCellDef>Observaciones</th>
+        <td mat-cell *matCellDef="let v" class="obs">{{ v.trmObservaciones || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let v">
+          <button mat-icon-button matTooltip="Editar" (click)="editar(v)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="eliminar(v)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr mat-row *matRowDef="let row; columns: columnas;"></tr>
+    </table>
+  }
+</div>

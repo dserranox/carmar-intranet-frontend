@@ -10,6 +10,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 
   h2 {
     margin: 0;
@@ -31,23 +33,46 @@
   gap: 12px;
 }
 
-/* Fila 1: selectores simples */
+/* Los filtros se acomodan solos al ancho que haya. */
 .filter-grid {
   display: grid;
-  grid-template-columns: 0.5fr 0.7fr 0.7fr 1fr 2fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 12px;
+  align-items: start;
+}
 
-  @media (max-width: 1400px) {
-    grid-template-columns: 0.5fr 0.7fr 0.9fr 1fr 2fr 1fr;
+/* ── El menú para armarse la vista de la tabla ── */
+::ng-deep .menu-columnas {
+  .encabezado-menu {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 8px 12px 4px;
+    font-size: .74rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: rgba(0, 0, 0, .55);
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
   }
+  .fila-columna {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 2px 12px;
+  }
+  .fila-columna .mover { display: flex; }
+  .nota-menu {
+    margin: 4px 0 0; padding: 6px 12px 8px;
+    font-size: .76rem; color: rgba(0, 0, 0, .5);
+    border-top: 1px solid rgba(0, 0, 0, .08);
+  }
+}
 
-  @media (max-width: 1200px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.toggle-filtros {
+  align-self: center;
+  justify-self: start;
+  height: 44px;
+}
 
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.contador-filtros {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; margin-left: 6px; padding: 0 5px;
+  border-radius: 10px; background: #00695c; color: #fff;
+  font-size: .72rem; font-weight: 700;
 }
 
 .filter-field {
@@ -97,15 +122,6 @@
   margin-top: 4px;
 }
 
-.btn-clear {
-  color: #5c6470;
-  border-color: #d0d4da !important;
-}
-
-.btn-search {
-  min-width: 120px;
-}
-
 /* ── Tabla ── */
 .table-container {
   overflow: auto;
@@ -153,10 +169,21 @@
       border-bottom: none !important;
     }
 
-    // Columna acciones: centrada
+    // Columna acciones: centrada y pegada al borde derecho, con una sombrita
+    // que deja ver que atrás sigue habiendo tabla.
     .mat-column-acciones {
       text-align: center;
       white-space: nowrap;
+    }
+
+    td.mat-column-acciones {
+      background: #ffffff;
+      box-shadow: -6px 0 6px -6px rgba(0, 0, 0, .25);
+    }
+    .mat-mdc-row:hover td.mat-column-acciones { background: #f8f9fa; }
+    th.mat-column-acciones {
+      background: #1a3a5c;
+      box-shadow: -6px 0 6px -6px rgba(0, 0, 0, .35);
     }
 
     // Sort header: quitar el subrayado punteado de Material
@@ -225,3 +252,9 @@
 .status.falta-material { color: #b85200; background: #fde8d4; }
 .status.cancelado      { color: #555555; background: #ebebeb; }
 .status.otro           { color: #555555; background: #ebebeb; }
+
+/* Cliente sin asignar: la orden la carga producción y el admin lo completa. */
+.celda-cliente { white-space: nowrap; }
+.celda-cliente .sin-cliente { color: rgba(0, 0, 0, .4); font-style: italic; }
+.celda-cliente .mini { width: 30px; height: 30px; line-height: 30px; }
+.celda-cliente .mini mat-icon { font-size: 17px; width: 17px; height: 17px; }

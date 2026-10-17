@@ -1,0 +1,57 @@
+.notificaciones-wrapper { padding: 4px 0; }
+
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.page-header h2 { margin: 0; font-size: 1.4rem; font-weight: 600; color: #1a1a2e; }
+.acciones { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.acciones .activo { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+.globo {
+  display: inline-block; margin-left: 6px; padding: 0 7px;
+  border-radius: 999px; background: #c62828; color: #fff;
+  font-size: .72rem; font-weight: 700;
+}
+
+.lista { display: flex; flex-direction: column; gap: 8px; }
+
+.aviso {
+  display: grid; grid-template-columns: 46px 1fr auto;
+  align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 12px;
+  background: #fff; border: 1px solid rgba(0,0,0,.08);
+  border-left: 4px solid #b0bec5;
+}
+.aviso.sin-leer { background: #f8fbff; }
+.aviso.alerta { border-left-color: #ef6c00; }
+.aviso.critica { border-left-color: #c62828; }
+
+.icono {
+  display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: #eceff1; color: #546e7a;
+}
+.aviso.alerta .icono { background: #fff3e0; color: #ef6c00; }
+.aviso.critica .icono { background: #ffebee; color: #c62828; }
+
+.texto { min-width: 0; }
+.linea-titulo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.titulo { font-weight: 700; font-size: .98rem; color: #1a1a2e; }
+.etiqueta {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  background: #eceff1; color: #546e7a; border-radius: 999px; padding: 2px 8px;
+}
+.punto-nuevo {
+  width: 8px; height: 8px; border-radius: 50%; background: #1565c0;
+}
+.mensaje { margin: 4px 0 4px; font-size: .88rem; color: rgba(0,0,0,.75); line-height: 1.35; }
+.pie { display: flex; gap: 6px; font-size: .75rem; color: rgba(0,0,0,.5); flex-wrap: wrap; }
+
+.botones { display: flex; align-items: center; gap: 4px; }
+
+.vacio {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 60px 20px; color: rgba(0,0,0,.45);
+}
+.vacio mat-icon { font-size: 52px; width: 52px; height: 52px; }
+.vacio p { margin: 0; }

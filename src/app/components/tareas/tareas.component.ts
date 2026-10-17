@@ -21,6 +21,7 @@ import { FinishTaskDialogComponent, FinishTaskDialogResult } from './finish-task
 import { TiempoProcesoDirective } from '../../directives/tiempo-proceso.directive';
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver';
+import { OpcionBuscable, SelectBuscableComponent } from '../../shared/select-buscable.component';
 
 @Component({
   selector: 'app-tareas',
@@ -29,7 +30,8 @@ import { saveAs } from 'file-saver';
     CommonModule, FormsModule, DatePipe,
     MatTableModule, MatPaginatorModule, MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatSnackBarModule, MatTooltipModule, TiempoProcesoDirective
+    MatSnackBarModule, MatTooltipModule, TiempoProcesoDirective,
+    SelectBuscableComponent
   ],
   templateUrl: './tareas.component.html',
   styleUrls: ['./tareas.component.css']
@@ -84,6 +86,36 @@ export class TareasComponent implements OnInit {
   productos: string[] = [];
   nroMaquinas: number[] = [];
 
+  // Opciones para los desplegables con búsqueda
+  opcionesNroPlan: OpcionBuscable[] = [];
+  opcionesOperacion: OpcionBuscable[] = [];
+  opcionesCodigo: OpcionBuscable[] = [];
+  opcionesProducto: OpcionBuscable[] = [];
+  opcionesNroMaquina: OpcionBuscable[] = [];
+  opcionesUsuario: OpcionBuscable[] = [];
+
+  /**
+   * Sub-áreas de la pantalla, en el orden en que el material recorre la planta.
+   * El área la trae cada tarea desde su operación (OPERACIONES.OPE_AREA), así que
+   * para mover una operación de pestaña alcanza con cambiar ese dato.
+   */
+  readonly areas = [
+    { clave: '',                titulo: 'Todas',              icono: 'list_alt' },
+    { clave: 'RECEPCION',       titulo: 'Recepción',          icono: 'local_shipping' },
+    { clave: 'PICKING',         titulo: 'Picking',            icono: 'inventory_2' },
+    { clave: 'CORTE_CABLE',     titulo: 'Corte de cable',     icono: 'content_cut' },
+    { clave: 'CORTE_CORRUGADO', titulo: 'Corte de corrugado', icono: 'cable' },
+    { clave: 'ARMADO',          titulo: 'Armado',             icono: 'handyman' },
+    { clave: 'CALIDAD',         titulo: 'Calidad',            icono: 'verified' },
+    { clave: 'DESPACHO',        titulo: 'Despacho',           icono: 'outbox' },
+    { clave: 'SIN_AREA',        titulo: 'Sin área',           icono: 'help_outline' }
+  ];
+
+  areaActiva = signal<string>('');
+
+  /** Cuántas tareas tiene cada pestaña, contando el resto de los filtros. */
+  private conteoPorArea = new Map<string, number>();
+
   // filters
   filtroOperacion = signal<string>('');
   filtroNroPlan = signal<string>('');
@@ -112,7 +144,7 @@ export class TareasComponent implements OnInit {
 
   displayedColumns = [
     'acciones','fecha','nroPlan','codigoProducto','producto','operacion','nroMaquina','operario',
-    'horaInicio','horaFin','cantidad','noConforme','tiempo','tiempodemora','estado','observaciones','documentos'
+    'horaInicio','horaFin','cantidad','noConforme','tiempo','pausa','tiempodemora','estado','observaciones','documentos'
   ];
 
   ngOnInit(): void {
@@ -121,7 +153,7 @@ export class TareasComponent implements OnInit {
     if (!this.canReadAll) {
       this.displayedColumns = [
         'acciones','fecha','nroPlan','codigoProducto','operacion',
-        'horaInicio','horaFin','cantidad','noConforme','tiempo','tiempodemora','estado'
+        'horaInicio','horaFin','cantidad','noConforme','tiempo','pausa','tiempodemora','estado'
       ];
     }
     this.route.queryParamMap.subscribe(qp => {
@@ -164,6 +196,23 @@ export class TareasComponent implements OnInit {
     this.codigos   = [...new Set(tasks.map(t => t.productoCodigo).filter((v): v is string => !!v))].sort();
     this.productos = [...new Set(tasks.map(t => t.productoDescripcion).filter((v): v is string => !!v))].sort();
     this.nroMaquinas = [...new Set(tasks.map(t => t.nroMaquina).filter((v): v is number => v != null))].sort((a, b) => a - b);
+
+    this.armarOpcionesBuscables();
+  }
+
+  /** Arma las listas que consumen los desplegables con búsqueda. */
+  private armarOpcionesBuscables(): void {
+    this.opcionesNroPlan = this.nroPlanes.map(p => ({ valor: p, texto: p }));
+    this.opcionesCodigo = this.codigos.map(c => ({ valor: c, texto: c }));
+    this.opcionesProducto = this.productos.map(p => ({ valor: p, texto: p }));
+    this.opcionesNroMaquina = this.nroMaquinas.map(m => ({ valor: m, texto: String(m) }));
+    this.opcionesUsuario = this.usuariosUnicos.map(u => ({ valor: u, texto: u }));
+    // La operación se busca tanto por la sigla (CAC) como por el nombre completo.
+    this.opcionesOperacion = this.operaciones.map(op => ({
+      valor: op.nombreCorto,
+      texto: `${op.nombreCorto} — ${op.nombre}`,
+      extra: op.nombre
+    }));
   }
 
   private resolvePermissions() {
@@ -186,6 +235,24 @@ export class TareasComponent implements OnInit {
   onNroMaquinaChange(val: number | '') { this.filtroNroMaquina.set(val); this.applyFilters(); }
   onDesdeChange(val: string) { this.filtroFechaDesde.set(val || ''); this.applyFilters(); }
   onHastaChange(val: string) { this.filtroFechaHasta.set(val || ''); this.applyFilters(); }
+
+  elegirArea(clave: string) {
+    this.areaActiva.set(clave);
+    this.applyFilters();
+  }
+
+  cantidadDeArea(clave: string): number {
+    return this.conteoPorArea.get(clave) ?? 0;
+  }
+
+  /** "Sin área" solo molesta si está vacía: aparece únicamente cuando hace falta. */
+  areaVisible(clave: string): boolean {
+    return clave !== 'SIN_AREA' || this.cantidadDeArea('SIN_AREA') > 0;
+  }
+
+  get tituloAreaActiva(): string {
+    return this.areas.find(a => a.clave === this.areaActiva())?.titulo ?? 'Todas';
+  }
 
   limpiarFiltros() {
     this.filtroOperacion.set('');
@@ -212,7 +279,8 @@ export class TareasComponent implements OnInit {
     const dFrom = d ? new Date(d + 'T00:00:00') : null;
     const dTo = h ? new Date(h + 'T23:59:59') : null;
 
-    const data = this.allTasks.filter(t => {
+    // Primero todo menos el área: ese subconjunto es el que cuentan las pestañas.
+    const sinArea = this.allTasks.filter(t => {
       if (op && t.operacionNombreCorto !== op) return false;
       if (nroP && t.nroPlan !== nroP) return false;
 
@@ -231,6 +299,17 @@ export class TareasComponent implements OnInit {
       }
       return true;
     });
+
+    this.conteoPorArea = new Map();
+    for (const t of sinArea) {
+      const clave = t.area || 'SIN_AREA';
+      this.conteoPorArea.set(clave, (this.conteoPorArea.get(clave) ?? 0) + 1);
+    }
+    this.conteoPorArea.set('', sinArea.length);
+
+    const area = this.areaActiva();
+    const data = !area ? sinArea : sinArea.filter(t => (t.area || 'SIN_AREA') === area);
+
     this.dataSource.data = data;
     if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
     if (this._paginatorTop) {
@@ -298,6 +377,28 @@ export class TareasComponent implements OnInit {
     return row.fechaFinalizacion == null ? 'status en-proceso' : 'status terminado';
   }
 
+  /** mm:ss hasta la hora, después h:mm:ss. */
+  hhmmss(segundos: number): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const h = Math.floor(segundos / 3600);
+    const m = Math.floor((segundos % 3600) / 60);
+    const s = segundos % 60;
+    return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  }
+
+  /**
+   * El tiempo de proceso es el efectivo que midió el reloj de la tarea: la pausa
+   * no cuenta como producción. Las tareas viejas, anteriores al reloj, siguen
+   * mostrando el reloj de pared.
+   */
+  tiempoProcesoTooltip(row: TareasDTO): string {
+    if (row.segundosEfectivos == null) return 'Tiempo de pared: esta tarea es anterior al reloj de tarea';
+    const pausa = row.segundosPausa ?? 0;
+    return pausa
+      ? `Tiempo efectivo, sin contar ${this.hhmmss(pausa)} de pausas`
+      : 'Tiempo efectivo, sin pausas';
+  }
+
   tiempoDemoraTooltip(row: TareasDTO): string {
     const r = row.perdidaRendimiento ?? 0;
     const m = row.perdidaMantenimiento ?? 0;
@@ -313,7 +414,7 @@ export class TareasComponent implements OnInit {
     }
 
     const wb = new Workbook();
-    const ws = wb.addWorksheet('Tareas');
+    const ws = wb.addWorksheet(this.tituloAreaActiva.slice(0, 31));
 
     const columnas = this.displayedColumns.filter(c => c !== 'acciones');
 
@@ -330,6 +431,7 @@ export class TareasComponent implements OnInit {
       cantidad: 'Cantidad',
       noConforme: 'Piezas NC',
       tiempo: 'Tiempo Proceso',
+      pausa: 'En Pausa',
       tiempodemora: 'Tiempo Demora',
       estado: 'Estado',
       observaciones: 'Observaciones',
@@ -365,7 +467,8 @@ export class TareasComponent implements OnInit {
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const fecha = new Date();
     const pad = (n: number) => n.toString().padStart(2, '0');
-    const nombre = `tareas_${fecha.getFullYear()}${pad(fecha.getMonth() + 1)}${pad(fecha.getDate())}_${pad(fecha.getHours())}${pad(fecha.getMinutes())}.xlsx`;
+    const area = this.areaActiva() ? this.areaActiva().toLowerCase() + '_' : '';
+    const nombre = `tareas_${area}${fecha.getFullYear()}${pad(fecha.getMonth() + 1)}${pad(fecha.getDate())}_${pad(fecha.getHours())}${pad(fecha.getMinutes())}.xlsx`;
     saveAs(blob, nombre);
   }
 
@@ -397,7 +500,10 @@ export class TareasComponent implements OnInit {
       }
       case 'cantidad': return row.cantidad ?? '-';
       case 'noConforme': return row.noConforme ?? '-';
-      case 'tiempo': return this.tiempoProceso(row);
+      case 'tiempo': return row.segundosEfectivos != null
+        ? this.hhmmss(row.segundosEfectivos)
+        : this.tiempoProceso(row);
+      case 'pausa': return row.segundosPausa ? this.hhmmss(row.segundosPausa) : '-';
       case 'tiempodemora': return this.tiempoDemora(row);
       case 'estado': return row.fechaFinalizacion == null ? 'EN PROCESO' : 'TERMINADO';
       case 'observaciones': return row.observaciones ?? '-';

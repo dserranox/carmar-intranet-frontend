@@ -1,0 +1,96 @@
+<h2 mat-dialog-title class="titulo">
+  <mat-icon>fact_check</mat-icon>
+  Control de calidad — corte {{ corte.nroCorte }}
+</h2>
+
+<mat-dialog-content class="contenido">
+
+  @if (pideLongitud) {
+    <section class="bloque">
+      <header>
+        <span class="etiqueta">
+          {{ esCorrugado ? 'Control longitudinal — largo total' : 'Longitud de corte' }}
+        </span>
+        <span class="rango">Admitido: {{ corte.longitudMin }} – {{ corte.longitudMax }} mm (nominal {{ corte.longitud }} mm)</span>
+        @if (esCorrugado) {
+          <span class="rango">
+            Ø {{ corte.diametroTxt ?? corte.diametro }}@if (corte.programa) { · programa {{ corte.programa }} }
+          </span>
+        }
+      </header>
+      <mat-form-field appearance="outline" class="campo">
+        <mat-label>Medida obtenida de la máquina (mm)</mat-label>
+        <input matInput type="number" step="0.1" [(ngModel)]="longitudMedida" name="longitudMedida" />
+      </mat-form-field>
+      @if (longitudOk === true) {
+        <p class="veredicto ok"><mat-icon>check_circle</mat-icon> Dentro de tolerancia</p>
+      }
+      @if (longitudOk === false) {
+        <p class="veredicto mal"><mat-icon>error</mat-icon> Fuera de tolerancia</p>
+      }
+    </section>
+  }
+
+  @if (pideTraccionA) {
+    <section class="bloque">
+      <header>
+        <span class="etiqueta">Tracción extremo A — {{ corte.terminalA }}</span>
+        <span class="rango">
+          Sección {{ corte.seccion }} mm2
+          @if (corte.fuerzaMinimaA) { · mínimo {{ corte.fuerzaMinimaA }} N } @else { · sin referencia cargada }
+        </span>
+      </header>
+      <mat-form-field appearance="outline" class="campo">
+        <mat-label>Fuerza obtenida (N)</mat-label>
+        <input matInput type="number" step="1" [(ngModel)]="traccionA" name="traccionA" />
+      </mat-form-field>
+      @if (traccionOk(traccionA, corte.fuerzaMinimaA) === true) {
+        <p class="veredicto ok"><mat-icon>check_circle</mat-icon> Cumple</p>
+      }
+      @if (traccionOk(traccionA, corte.fuerzaMinimaA) === false) {
+        <p class="veredicto mal"><mat-icon>error</mat-icon> No llega al mínimo exigido</p>
+      }
+    </section>
+  }
+
+  @if (pideTraccionB) {
+    <section class="bloque">
+      <header>
+        <span class="etiqueta">Tracción extremo B — {{ corte.terminalB }}</span>
+        <span class="rango">
+          Sección {{ corte.seccion }} mm2
+          @if (corte.fuerzaMinimaB) { · mínimo {{ corte.fuerzaMinimaB }} N } @else { · sin referencia cargada }
+        </span>
+      </header>
+      <mat-form-field appearance="outline" class="campo">
+        <mat-label>Fuerza obtenida (N)</mat-label>
+        <input matInput type="number" step="1" [(ngModel)]="traccionB" name="traccionB" />
+      </mat-form-field>
+      @if (traccionOk(traccionB, corte.fuerzaMinimaB) === true) {
+        <p class="veredicto ok"><mat-icon>check_circle</mat-icon> Cumple</p>
+      }
+      @if (traccionOk(traccionB, corte.fuerzaMinimaB) === false) {
+        <p class="veredicto mal"><mat-icon>error</mat-icon> No llega al mínimo exigido</p>
+      }
+    </section>
+  }
+
+  <mat-form-field appearance="outline" class="campo">
+    <mat-label>{{ hayRechazo ? 'Qué se hizo con el rechazo (obligatorio)' : 'Observaciones' }}</mat-label>
+    <textarea matInput rows="2" [(ngModel)]="observaciones" name="observaciones"></textarea>
+  </mat-form-field>
+
+  @if (hayRechazo) {
+    <p class="aviso-rechazo">
+      <mat-icon>warning</mat-icon>
+      <span>El control queda registrado como NO CONFORME. Corregí la máquina y volvé a medir antes de seguir produciendo.</span>
+    </p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-flat-button color="primary" [disabled]="!completo" (click)="confirmar()">
+    Guardar control y continuar
+  </button>
+</mat-dialog-actions>

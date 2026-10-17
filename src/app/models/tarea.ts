@@ -25,4 +25,10 @@ export interface TareasDTO {
   perdidaMantenimiento: number | null;
   perdidaCalidad: number | null;
   documentos: ProductoDocumentosDTO[] | null;
+  /** Sub-área de la operación: CORTE_CABLE, CORTE_CORRUGADO, PICKING, … */
+  area: string | null;
+  estado: string | null;
+  puesto: string | null;
+  segundosEfectivos: number | null;
+  segundosPausa: number | null;
 }

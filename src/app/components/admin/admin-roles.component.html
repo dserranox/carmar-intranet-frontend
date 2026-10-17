@@ -1,0 +1,117 @@
+<section class="roles-wrapper">
+
+  <header class="page-header">
+    <div class="titulo">
+      <h2>Roles</h2>
+      <span class="sub">Qué pantallas ve cada rol. Después se los asignás a cada persona desde Usuarios.</span>
+    </div>
+    @if (puedeEditar && !editando()) {
+      <button mat-flat-button color="primary" (click)="nuevo()">
+        <mat-icon>add</mat-icon>
+        Nuevo rol
+      </button>
+    }
+  </header>
+
+  <!-- ------------------------------------------------ alta y edición -->
+  @if (editando(); as rol) {
+    <div class="bloque editor">
+      <h3>{{ esNuevo() ? 'Nuevo rol' : 'Editando ' + rol.nombre }}</h3>
+
+      <div class="datos">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre</mat-label>
+          <input matInput [ngModel]="rol.nombre"
+                 (ngModelChange)="cambiarNombre($event)"
+                 placeholder="ej. SUPERVISOR" />
+          <mat-hint>Se guarda en mayúsculas</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="ancho">
+          <mat-label>Para qué es</mat-label>
+          <input matInput [ngModel]="rol.descripcion"
+                 (ngModelChange)="cambiarDescripcion($event)"
+                 placeholder="Una línea que explique qué hace esta persona" />
+        </mat-form-field>
+      </div>
+
+      <table class="pantallas">
+        <thead>
+          <tr>
+            <th class="que">Pantalla</th>
+            <th class="tilde">Ve</th>
+            <th class="tilde">Edita</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of pantallas(); track p.clave) {
+            <tr>
+              <td class="que">
+                <span class="nombre">{{ p.etiqueta }}</span>
+                <span class="detalle">{{ p.descripcion }}</span>
+              </td>
+              <td class="tilde">
+                <mat-checkbox [checked]="estado(p.clave).ver"
+                              (change)="marcar(p.clave, 'ver', $event.checked)"></mat-checkbox>
+              </td>
+              <td class="tilde">
+                @if (p.tieneEdicion) {
+                  <mat-checkbox [checked]="estado(p.clave).editar"
+                                (change)="marcar(p.clave, 'editar', $event.checked)"></mat-checkbox>
+                } @else {
+                  <span class="sin-edicion" matTooltip="Esta pantalla sólo se mira">—</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="botonera">
+        <button mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()">
+          <mat-icon>save</mat-icon>
+          {{ guardando() ? 'Guardando…' : 'Guardar' }}
+        </button>
+        <button mat-stroked-button (click)="cancelar()">Cancelar</button>
+      </div>
+    </div>
+  }
+
+  <!-- ------------------------------------------------ listado -->
+  @if (cargando()) {
+    <p class="vacio">Cargando…</p>
+  } @else {
+    <div class="lista">
+      @for (rol of roles(); track rol.id) {
+        <div class="rol" [class.protegido]="rol.protegido">
+          <div class="cabecera">
+            <span class="nombre">{{ rol.nombre }}</span>
+            @if (rol.protegido) {
+              <span class="sello" matTooltip="Lo maneja la app: no se puede modificar ni eliminar">
+                <mat-icon>lock</mat-icon> fijo
+              </span>
+            }
+            <span class="cuantos">
+              {{ rol.usuarios }} {{ rol.usuarios === 1 ? 'persona' : 'personas' }}
+            </span>
+            @if (puedeEditar && !rol.protegido) {
+              <span class="acciones">
+                <button mat-icon-button matTooltip="Editar" (click)="editar(rol)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="eliminar(rol)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </span>
+            }
+          </div>
+          @if (rol.descripcion) { <p class="detalle">{{ rol.descripcion }}</p> }
+          <p class="pantallas-resumen">{{ resumen(rol) }}</p>
+        </div>
+      }
+      @if (roles().length === 0) {
+        <p class="vacio">Todavía no hay roles cargados.</p>
+      }
+    </div>
+  }
+</section>

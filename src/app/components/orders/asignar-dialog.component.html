@@ -1,0 +1,141 @@
+<h2 mat-dialog-title class="titulo">
+  <mat-icon>assignment_turned_in</mat-icon>
+  Asignar trabajo — Plan {{ data.nroPlan }}
+</h2>
+
+<mat-dialog-content class="contenido">
+
+  <div class="cabecera-orden">
+    <span class="chip codigo">{{ data.productoCodigo || '—' }}</span>
+    <span class="descripcion">{{ data.productoDescripcion || 'Sin descripción' }}</span>
+    @if (data.cantidad) { <span class="chip cant">{{ data.cantidad }} unidades</span> }
+  </div>
+
+  @if (yaAsignadas().length) {
+    <section class="ya-asignado">
+      <h4>Ya asignado en esta orden</h4>
+      <table class="tabla-asignadas">
+        <thead>
+          <tr><th>Actividad</th><th>Operario</th><th>Cantidad</th><th>Puesto</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          @for (a of yaAsignadas(); track a.asgId) {
+            <tr>
+              <td>
+                @for (act of a.actividades; track act.aacId) {
+                  <span class="mini-act">{{ act.operacionNombre }}</span>
+                }
+              </td>
+              <td>{{ a.operario }}</td>
+              <td class="num">{{ a.cantidad ?? "—" }}</td>
+              <td>
+                {{ a.puesto || '—' }}
+                @if (a.nroMaquina != null) { <span class="maq">máq. {{ a.nroMaquina }}</span> }
+              </td>
+              <td><span class="estado" [class]="a.estado.toLowerCase()">{{ a.estado }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+
+  <section class="nuevas">
+    <div class="encabezado-nuevas">
+      <h4>Nuevas asignaciones</h4>
+      <div class="acciones-nuevas">
+        @if (data.cantidad) {
+          <button mat-stroked-button (click)="repartirParejo()"
+                  matTooltip="Divide las {{ data.cantidad }} unidades en partes iguales entre las filas">
+            <mat-icon>call_split</mat-icon>
+            Repartir parejo
+          </button>
+        }
+        <button mat-stroked-button (click)="agregarFila()">
+          <mat-icon>add</mat-icon>
+          Agregar fila
+        </button>
+      </div>
+    </div>
+
+    <table class="tabla-filas">
+      <thead>
+        <tr>
+          <th class="col-actividad">Actividad</th>
+          <th class="col-operario">Operario</th>
+          <th class="col-cant">Cantidad</th>
+          <th class="col-puesto">Puesto</th>
+          <th class="col-maq">Máquina</th>
+          <th class="col-borrar"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of filas; track $index) {
+          <tr>
+            <td>
+              <mat-form-field appearance="outline" class="campo">
+                <mat-select multiple [(ngModel)]="f.operacionIds" name="op{{$index}}" placeholder="Elegir una o varias">
+                  @for (o of operaciones(); track o.opeId) {
+                    <mat-option [value]="o.opeId">{{ o.opeNombre }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (avisoCantidad(f); as aviso) {
+                <span class="nota-asignado">{{ aviso }}</span>
+              }
+            </td>
+            <td>
+              <mat-form-field appearance="outline" class="campo">
+                <mat-select [(ngModel)]="f.operario" name="us{{$index}}" placeholder="Elegir">
+                  @for (u of operarios(); track u.id) {
+                    <mat-option [value]="u.username">{{ u.username }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field appearance="outline" class="campo corto">
+                <input matInput type="number" min="1" [(ngModel)]="f.cantidad" name="ca{{$index}}" />
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field appearance="outline" class="campo">
+                <input matInput [(ngModel)]="f.puesto" name="pu{{$index}}" placeholder="ej. Banco 3" />
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field appearance="outline" class="campo corto">
+                <input matInput type="number" [(ngModel)]="f.nroMaquina" name="ma{{$index}}" />
+              </mat-form-field>
+            </td>
+            <td>
+              <button mat-icon-button color="warn" (click)="quitarFila($index)" matTooltip="Quitar fila">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <p class="ayuda">
+      Cada fila es un operario y puede llevar varias actividades: el operario después elige con cuál
+      arranca y puede repetirlas dentro del código. Para repartir una actividad entre varios, agregá
+      una fila por cada uno con la cantidad que le toca.
+    </p>
+  </section>
+
+  @if (error()) {
+    <p class="error"><mat-icon>error</mat-icon> {{ error() }}</p>
+  }
+  @for (a of advertencias(); track a) {
+    <p class="advertencia"><mat-icon>warning</mat-icon> {{ a }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cerrar()">Cerrar</button>
+  <button mat-flat-button color="primary" [disabled]="guardando() || !filasValidas" (click)="guardar()">
+    {{ guardando() ? 'Guardando…' : 'Asignar' }}
+  </button>
+</mat-dialog-actions>

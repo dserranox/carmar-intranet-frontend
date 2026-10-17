@@ -1,0 +1,155 @@
+<div class="pagina">
+
+  <header class="encabezado">
+    <h1><mat-icon>content_cut</mat-icon> Corte</h1>
+    @if (esAdmin) {
+      <div class="acciones-admin">
+        <button mat-flat-button color="primary" (click)="panelImportar.set(!panelImportar())">
+          <mat-icon>upload_file</mat-icon>
+          {{ panelImportar() ? 'Cerrar' : 'Importar sábana' }}
+        </button>
+      </div>
+    }
+  </header>
+
+  @if (panelImportar()) {
+    <section class="importar">
+      <h3>Importar sábana de corte optimizada</h3>
+
+      <!-- Qué se corta: cambia las columnas que se esperan del Excel -->
+      <div class="fila selector-tipo">
+        @for (t of tipos; track t.clave) {
+          <button type="button" class="opcion-tipo" [class.activa]="tipo === t.clave"
+                  (click)="elegirTipo(t.clave)">
+            <mat-icon>{{ t.icono }}</mat-icon>
+            <span>{{ t.titulo }}</span>
+          </button>
+        }
+      </div>
+
+      <div class="fila">
+        <button mat-stroked-button (click)="fileInput.click()">
+          <mat-icon>attach_file</mat-icon> Elegir Excel
+        </button>
+        <input #fileInput type="file" accept=".xlsx" hidden (change)="archivoElegido($event)" />
+        <span class="archivo">{{ archivo?.name || 'Ningún archivo elegido' }}</span>
+      </div>
+
+      <div class="fila campos">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre de la sábana</mat-label>
+          <input matInput [(ngModel)]="nombre" name="nombre" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Operario asignado</mat-label>
+          <mat-select [(ngModel)]="operario" name="operario">
+            <mat-option value="">— sin asignar —</mat-option>
+            @for (op of operarios(); track op) {
+              <mat-option [value]="op">{{ op }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="corto">
+          <mat-label>Máquina</mat-label>
+          <input matInput type="number" [(ngModel)]="nroMaquina" name="nroMaquina" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="corto">
+          <mat-label>Tol. inferior %</mat-label>
+          <input matInput type="number" step="0.1" [(ngModel)]="toleranciaInf" name="toleranciaInf" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="corto">
+          <mat-label>Tol. superior %</mat-label>
+          <input matInput type="number" step="0.1" [(ngModel)]="toleranciaSup" name="toleranciaSup" />
+        </mat-form-field>
+      </div>
+
+      <div class="fila">
+        <span class="nota-import">
+          {{ columnasEsperadas }}<br />
+          Si algún plan de la sábana todavía no está cargado como orden, se crea solo
+          con el número de plan, el producto y la cantidad del archivo.
+        </span>
+        <button mat-flat-button color="primary" [disabled]="importando()" (click)="importar()">
+          {{ importando() ? 'Importando…' : 'Importar' }}
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (cargando()) {
+    <p class="vacio">Cargando…</p>
+  } @else if (!sabanas().length) {
+    <p class="vacio">
+      <mat-icon>inbox</mat-icon>
+      No tenés sábanas de corte asignadas.
+    </p>
+  }
+
+  <section class="grilla">
+    @for (s of sabanas(); track s.sabId) {
+      <article class="tarjeta" [class.finalizada]="s.estado === 'FINALIZADA'">
+        <header>
+          <span class="nombre">{{ s.nombre }}</span>
+          <span class="tipo-sabana" [class.corrugado]="s.tipo === 'CORRUGADO'">
+            {{ s.tipo === 'CORRUGADO' ? 'CORRUGADO' : 'CABLE' }}
+          </span>
+          <span class="estado" [class]="s.estado.toLowerCase()">{{ s.estado }}</span>
+        </header>
+
+        <div class="datos">
+          <span><mat-icon>person</mat-icon> {{ s.operario || 'sin asignar' }}</span>
+          @if (s.nroMaquina) { <span><mat-icon>precision_manufacturing</mat-icon> Máquina {{ s.nroMaquina }}</span> }
+          <span><mat-icon>timer</mat-icon> {{ duracion(s.segundosAcumulados) }}</span>
+        </div>
+
+        @if (s.estado === 'SUSPENDIDA') {
+          <div class="suspendida-info">
+            <mat-icon>pause_presentation</mat-icon>
+            <span>
+              Suspendida {{ s.fechaSuspension | date:'dd/MM HH:mm' }}
+              — {{ etiquetaSuspension(s.subtipoSuspension) }}
+              @if (s.motivoSuspension) { · {{ s.motivoSuspension }} }
+            </span>
+          </div>
+        }
+
+        <div class="planes">
+          @for (p of s.planes; track p) { <span class="plan">{{ p }}</span> }
+        </div>
+
+        <div class="progreso">
+          <mat-progress-bar mode="determinate" [value]="progreso(s)"></mat-progress-bar>
+          <span>{{ s.cortesHechos }} / {{ s.totalCortes }} cortes</span>
+        </div>
+
+        <footer>
+          <button mat-flat-button color="primary" (click)="abrir(s)"
+                  [disabled]="s.estado === 'FINALIZADA'">
+            <mat-icon>play_arrow</mat-icon>
+            {{ textoBoton(s) }}
+          </button>
+
+          @if (esAdmin) {
+            <mat-form-field appearance="outline" class="asignar">
+              <mat-label>Asignar a</mat-label>
+              <mat-select [value]="s.operario || ''" (valueChange)="asignar(s, $event)">
+                <mat-option value="">— sin asignar —</mat-option>
+                @for (op of operarios(); track op) {
+                  <mat-option [value]="op">{{ op }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-icon-button color="warn" matTooltip="Eliminar sábana" (click)="eliminar(s)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          }
+        </footer>
+      </article>
+    }
+  </section>
+</div>

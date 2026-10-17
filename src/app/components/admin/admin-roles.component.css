@@ -1,0 +1,67 @@
+.roles-wrapper { padding: 16px 20px 28px; max-width: 1100px; }
+
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; margin-bottom: 14px;
+}
+.page-header h2 { margin: 0; font-size: 1.3rem; font-weight: 700; color: #1a3a5c; }
+.page-header .sub { font-size: .86rem; color: rgba(0, 0, 0, .6); }
+
+.bloque {
+  background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 12px;
+  padding: 16px 18px; margin-bottom: 16px;
+}
+.bloque h3 {
+  margin: 0 0 12px; font-size: .88rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .03em; color: #1a3a5c;
+}
+
+.editor { border-color: #1a3a5c33; box-shadow: 0 2px 10px rgba(26, 58, 92, .08); }
+
+.datos {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px; margin-bottom: 10px;
+}
+.datos .ancho { grid-column: span 2; }
+@media (max-width: 700px) { .datos .ancho { grid-column: span 1; } }
+
+/* ---------------------------------------------------- grilla de pantallas */
+.pantallas { width: 100%; border-collapse: collapse; }
+.pantallas th {
+  text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em;
+  color: rgba(0, 0, 0, .5); padding: 6px 8px; border-bottom: 1px solid rgba(0, 0, 0, .1);
+}
+.pantallas th.tilde, .pantallas td.tilde { width: 72px; text-align: center; }
+.pantallas td { padding: 8px; border-bottom: 1px solid rgba(0, 0, 0, .05); vertical-align: top; }
+.pantallas td.que { display: flex; flex-direction: column; gap: 2px; }
+.pantallas .nombre { font-weight: 600; color: #263238; }
+.pantallas .detalle { font-size: .8rem; color: rgba(0, 0, 0, .55); }
+.sin-edicion { color: rgba(0, 0, 0, .3); }
+
+.botonera { display: flex; gap: 10px; margin-top: 14px; }
+
+/* ---------------------------------------------------- listado */
+.lista { display: flex; flex-direction: column; gap: 10px; }
+
+.rol {
+  background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 12px;
+  padding: 12px 16px;
+}
+.rol.protegido { background: #f7f9fb; }
+
+.cabecera { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cabecera .nombre { font-weight: 700; color: #1a3a5c; letter-spacing: .02em; }
+.cabecera .cuantos { font-size: .82rem; color: rgba(0, 0, 0, .55); }
+.cabecera .acciones { margin-left: auto; display: flex; }
+
+.sello {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #eceff1; color: rgba(0, 0, 0, .6);
+  border-radius: 999px; padding: 2px 10px; font-size: .74rem; font-weight: 600;
+}
+.sello mat-icon { font-size: 15px; width: 15px; height: 15px; }
+
+.rol .detalle { margin: 6px 0 0; font-size: .86rem; color: rgba(0, 0, 0, .65); }
+.pantallas-resumen { margin: 6px 0 0; font-size: .84rem; color: #00695c; }
+
+.vacio { color: rgba(0, 0, 0, .55); font-size: .9rem; padding: 12px 2px; }

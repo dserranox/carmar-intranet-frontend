@@ -4,10 +4,20 @@
   <header class="page-header">
     <h2>Órdenes</h2>
     @if (isAdmin) {
-      <button mat-raised-button color="primary" (click)="openCreateOrderDialog()" class="btn-create">
-        <mat-icon>add</mat-icon>
-        Nueva Orden
-      </button>
+      <div class="botonera">
+        <button mat-flat-button color="primary" (click)="openCreateOrderDialog()">
+          <mat-icon>add</mat-icon>
+          Nueva Orden
+        </button>
+        <button mat-stroked-button (click)="abrirNuevoProducto()">
+          <mat-icon>inventory_2</mat-icon>
+          Nuevo Producto
+        </button>
+        <button mat-stroked-button (click)="abrirNuevoCliente()">
+          <mat-icon>person_add</mat-icon>
+          Nuevo Cliente
+        </button>
+      </div>
     }
   </header>
 
@@ -17,70 +27,53 @@
     <!-- Fila 1: selectores simples -->
     <div class="filter-grid">
 
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Año</mat-label>
-        <mat-select [(ngModel)]="year" (ngModelChange)="load(true)">
-          @for (y of years; track y) {
-            <mat-option [value]="y">{{ y }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <app-select-buscable class="filter-field" label="Año" placeholder="Buscar año…"
+                           [conTodos]="false" [opciones]="opcionesAnio"
+                           [(ngModel)]="year" (ngModelChange)="load(true)" />
 
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Nro. Plan</mat-label>
-        <mat-select [(ngModel)]="filterNroPlan" (ngModelChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          @for (p of nroPlanes; track p) {
-            <mat-option [value]="p">{{ p }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Código</mat-label>
-        <mat-select [(ngModel)]="filterProductoCodigo" (ngModelChange)="applyFilters()">
-          <mat-option value="">Todos</mat-option>
-          @for (cod of codigos; track cod) {
-          <mat-option [value]="cod">{{ cod }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <app-select-buscable class="filter-field" label="Nro. Plan" placeholder="Buscar plan…"
+                           [opciones]="opcionesNroPlan"
+                           [(ngModel)]="filterNroPlan" (ngModelChange)="applyFilters()" />
 
       @if (isAdmin) {
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Cliente</mat-label>
-          <mat-select [(ngModel)]="filterClienteId" (ngModelChange)="applyFilters()">
-            <mat-option value="">Todos</mat-option>
-            @for (c of clientes; track c) {
-              <mat-option [value]="c">{{ c }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Producto</mat-label>
-          <mat-select [(ngModel)]="filterProductoDescripcion" (ngModelChange)="applyFilters()">
-            <mat-option value="">Todos</mat-option>
-            @for (prod of productos; track prod) {
-              <mat-option [value]="prod">{{ prod }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Estado</mat-label>
-          <mat-select [(ngModel)]="filterSituacionClave" (ngModelChange)="applyFilters()">
-            <mat-option value="">Todos</mat-option>
-            @for (e of estados; track e) {
-              <mat-option [value]="e">{{ e }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <app-select-buscable class="filter-field" label="Estado" placeholder="Buscar estado…"
+                             [opciones]="opcionesEstado"
+                             [(ngModel)]="filterSituacionClave" (ngModelChange)="applyFilters()" />
       }
+
+      <button mat-stroked-button class="toggle-filtros" (click)="masFiltros.set(!masFiltros())">
+        <mat-icon>{{ masFiltros() ? 'expand_less' : 'tune' }}</mat-icon>
+        {{ masFiltros() ? 'Menos filtros' : 'Más filtros' }}
+        @if (!masFiltros() && otrosFiltrosActivos() > 0) {
+          <span class="contador-filtros">{{ otrosFiltrosActivos() }}</span>
+        }
+      </button>
 
     </div>
 
-    @if (isAdmin) {
+    @if (masFiltros()) {
+    <div class="filter-grid">
+
+      <app-select-buscable class="filter-field" label="Código" placeholder="Buscar código…"
+                           [opciones]="opcionesCodigo"
+                           [(ngModel)]="filterProductoCodigo" (ngModelChange)="applyFilters()" />
+
+      @if (puedeVerClientes) {
+        <app-select-buscable class="filter-field" label="Cliente" placeholder="Buscar cliente…"
+                             [opciones]="opcionesCliente"
+                             [(ngModel)]="filterClienteId" (ngModelChange)="applyFilters()" />
+      }
+
+      @if (isAdmin) {
+        <app-select-buscable class="filter-field" label="Producto" placeholder="Buscar producto…"
+                             [opciones]="opcionesProducto"
+                             [(ngModel)]="filterProductoDescripcion" (ngModelChange)="applyFilters()" />
+      }
+
+    </div>
+    }
+
+    @if (isAdmin && masFiltros()) {
       <!-- Fila 2: rangos de fechas -->
       <div class="filter-dates-grid">
 
@@ -144,15 +137,47 @@
       </div>
     }
     <!-- Fila 3: acciones -->
-    <div class="filter-actions">
-      <button mat-stroked-button class="btn-clear" (click)="clearFilter()">
+    <div class="filter-actions botonera">
+      <button mat-stroked-button (click)="clearFilter()">
         <mat-icon>filter_alt_off</mat-icon>
         Limpiar filtros
       </button>
-      <button mat-raised-button color="primary" class="btn-search" (click)="load()">
+      <button mat-flat-button color="primary" (click)="load()">
         <mat-icon>search</mat-icon>
         Buscar
       </button>
+
+      <!-- Cada uno se arma su vista: qué columnas mira y en qué orden. -->
+      <button mat-stroked-button [matMenuTriggerFor]="menuColumnas" matTooltip="Elegir qué columnas se ven">
+        <mat-icon>view_column</mat-icon>
+        Columnas
+      </button>
+      <mat-menu #menuColumnas="matMenu" class="menu-columnas">
+        <div class="encabezado-menu" (click)="$event.stopPropagation()">
+          <span>Columnas de la tabla</span>
+          <button mat-button (click)="restaurarVista()">Restaurar</button>
+        </div>
+        @for (c of columnasConfigurables; track c.clave) {
+          <div class="fila-columna" (click)="$event.stopPropagation()">
+            <mat-checkbox [checked]="c.visible" (change)="alternarColumna(c.clave)">
+              {{ etiquetaColumna(c.clave) }}
+            </mat-checkbox>
+            <span class="mover">
+              <button mat-icon-button matTooltip="Moverla a la izquierda"
+                      (click)="moverColumna(c.clave, -1)">
+                <mat-icon>arrow_upward</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Moverla a la derecha"
+                      (click)="moverColumna(c.clave, 1)">
+                <mat-icon>arrow_downward</mat-icon>
+              </button>
+            </span>
+          </div>
+        }
+        <p class="nota-menu" (click)="$event.stopPropagation()">
+          Acciones va siempre al final, pegada al borde.
+        </p>
+      </mat-menu>
     </div>
 
   </div>
@@ -178,7 +203,19 @@
         <!-- Cliente -->
         <ng-container matColumnDef="clienteId">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Cliente</th>
-          <td mat-cell *matCellDef="let row">{{ row.clienteId }}</td>
+          <td mat-cell *matCellDef="let row" class="celda-cliente">
+            @if (row.clienteId) {
+              {{ nombreCliente(row) }}
+            } @else {
+              <span class="sin-cliente">sin asignar</span>
+            }
+            @if (isAdmin) {
+              <button mat-icon-button class="mini" (click)="abrirAsignarCliente(row)"
+                      [matTooltip]="row.clienteId ? 'Cambiar el cliente' : 'Asignar el cliente'">
+                <mat-icon>{{ row.clienteId ? 'edit' : 'add_business' }}</mat-icon>
+              </button>
+            }
+          </td>
         </ng-container>
 
         <!-- Código -->
@@ -220,7 +257,9 @@
         </ng-container>
 
         <!-- Acciones -->
-        <ng-container matColumnDef="acciones">
+        <!-- La columna de acciones es la que más se usa: queda pegada al borde
+             derecho para que no haya que arrastrar la tabla. -->
+        <ng-container matColumnDef="acciones" stickyEnd>
           <th mat-header-cell *matHeaderCellDef>Acciones</th>
           <td mat-cell *matCellDef="let row">
 
@@ -228,6 +267,12 @@
               <button mat-icon-button color="primary" (click)="startProcess(row)" matTooltip="Iniciar proceso">
                 <mat-icon>play_arrow</mat-icon>
               </button>
+              @if (puedeAsignar) {
+                <button mat-icon-button color="primary" (click)="openAsignarDialog(row)"
+                        matTooltip="Asignar trabajo a operarios">
+                  <mat-icon>assignment_ind</mat-icon>
+                </button>
+              }
               <button mat-icon-button class="btn-cancelar" (click)="cambiarEstado(row, 'CANCELADO', true)" matTooltip="Cancelar orden">
                 <mat-icon>cancel</mat-icon>
               </button>
@@ -237,6 +282,12 @@
               <button mat-icon-button class="btn-primary-green" (click)="openTaskSessionDialog(row)" matTooltip="Iniciar tarea">
                 <mat-icon>play_circle</mat-icon>
               </button>
+              @if (puedeAsignar) {
+                <button mat-icon-button color="primary" (click)="openAsignarDialog(row)"
+                        matTooltip="Asignar trabajo a operarios">
+                  <mat-icon>assignment_ind</mat-icon>
+                </button>
+              }
               @if (isAdmin) {
                 <button mat-icon-button color="primary" (click)="cambiarEstado(row, 'PLANIFICADO')" matTooltip="Volver a planificado">
                   <mat-icon>undo</mat-icon>

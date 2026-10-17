@@ -1,0 +1,51 @@
+.nc-wrapper { padding: 4px 0; }
+
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.page-header h2 { margin: 0; font-size: 1.4rem; font-weight: 600; color: #1a1a2e; }
+
+.tarjetas { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.tarjeta {
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 150px; padding: 12px 18px;
+  border-radius: 12px; background: #f5f7f7; border-left: 4px solid #b0bec5;
+}
+.tarjeta .valor { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; line-height: 1.1; }
+.tarjeta .rotulo { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: rgba(0,0,0,.55); }
+.tarjeta.ok { background: #e8f5e9; border-left-color: #2e7d32; }
+.tarjeta.ok .valor { color: #2e7d32; }
+.tarjeta.ko { background: #ffebee; border-left-color: #c62828; }
+.tarjeta.ko .valor { color: #c62828; }
+.tarjeta.alerta { background: #fff3e0; border-left-color: #ef6c00; }
+.tarjeta.alerta .valor { color: #ef6c00; }
+
+.filtros { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.campo { width: 190px; }
+.campo.ancho { width: 250px; }
+.acciones { padding-top: 6px; }
+
+.tabla-contenedor {
+  max-height: calc(100dvh - 420px); min-height: 240px; overflow: auto;
+  border: 1px solid rgba(0,0,0,.08); border-radius: 10px;
+}
+table { width: 100%; }
+th.mat-mdc-header-cell {
+  background: #fafafa; font-weight: 600; font-size: .8rem;
+  color: rgba(0,0,0,.65); white-space: nowrap;
+}
+td.mat-mdc-cell { font-size: .85rem; }
+td.desvio { max-width: 420px; }
+
+.fila-abierta { background: #fffdf7; }
+
+.chip {
+  display: inline-block; border-radius: 999px; padding: 2px 10px;
+  font-size: .72rem; font-weight: 700; background: #eceff1; color: #455a64;
+}
+.chip.ok { background: #e8f5e9; color: #2e7d32; }
+.chip.abierta { background: #fff3e0; color: #ef6c00; }
+.chip.externa { background: #ede7f6; color: #4527a0; }
+
+.vacio { padding: 28px; text-align: center; color: rgba(0,0,0,.55); margin: 0; }

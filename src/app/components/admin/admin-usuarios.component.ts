@@ -78,6 +78,11 @@ export class AdminUsuariosComponent implements OnInit {
     this.router.navigate(['/admin/usuarios/nuevo']);
   }
 
+  /** Los roles se arman aparte: acá sólo se le ponen a cada persona. */
+  irARoles(): void {
+    this.router.navigate(['/admin/roles']);
+  }
+
   verUsuario(u: UsuarioAdminDTO): void {
     this.router.navigate(['/admin/usuarios', u.id, 'ver']);
   }
