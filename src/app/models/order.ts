@@ -16,3 +16,10 @@ export interface OrdenResponseDTO {
   fechaCreacion: string | null;      // ISO strings from backend
   ordenInterna: string | null;
 }
+
+/** Lo que devuelve el cambio de estado de varias órdenes juntas. */
+export interface CambioMasivoResultado {
+  situacionClave: string;
+  cambiadas: { id: number; nroPlan: string }[];
+  rechazadas: { id: number; nroPlan: string; motivo: string }[];
+}

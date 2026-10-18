@@ -33,6 +33,7 @@ import { OpcionBuscable, SelectBuscableComponent } from '../../shared/select-bus
 import { NuevoClienteDialogComponent } from './nuevo-cliente-dialog.component';
 import { NuevoProductoDialogComponent } from './nuevo-producto-dialog.component';
 import { AsignarClienteDialogComponent } from './asignar-cliente-dialog.component';
+import { ResultadoMasivoDialogComponent } from './resultado-masivo-dialog.component';
 
 @Component({
   selector: 'app-orders-table',
@@ -113,6 +114,144 @@ export class OrdersTableComponent implements OnInit {
    */
   masFiltros = signal(false);
 
+  // ==================== acciones sobre varias órdenes ====================
+
+  /**
+   * Lo que se puede hacer con un grupo de órdenes, y desde qué estado.
+   *
+   * Es el mismo repertorio que los botones de cada fila: nada nuevo se puede
+   * hacer en lote, solo se hace junto. Una acción se ofrece cuando **todas** las
+   * seleccionadas la admiten — si en el grupo hay una planificada y una en
+   * proceso, «Terminar» no aparece, en lugar de aplicarse a medias.
+   */
+  readonly accionesMasivas: {
+    clave: string; etiqueta: string; icono: string; desde: string[]; peligrosa?: boolean;
+  }[] = [
+    { clave: 'EN PROCESO',     etiqueta: 'Poner en proceso',     icono: 'play_arrow',
+      desde: ['PLANIFICADO', 'REVISAR PLANO', 'FALTA MATERIAL'] },
+    { clave: 'TERMINADO',      etiqueta: 'Terminar',             icono: 'stop_circle',
+      desde: ['EN PROCESO'] },
+    { clave: 'FALTA MATERIAL', etiqueta: 'Falta material',       icono: 'production_quantity_limits',
+      desde: ['EN PROCESO'] },
+    { clave: 'REVISAR PLANO',  etiqueta: 'Revisar plano',        icono: 'rate_review',
+      desde: ['EN PROCESO'] },
+    { clave: 'PLANIFICADO',    etiqueta: 'Volver a planificado', icono: 'undo',
+      desde: ['EN PROCESO'] },
+    { clave: 'CANCELADO',      etiqueta: 'Cancelar órdenes',     icono: 'cancel',
+      desde: ['PLANIFICADO', 'EN PROCESO', 'REVISAR PLANO', 'FALTA MATERIAL'], peligrosa: true }
+  ];
+
+  /** Los ids tildados. Se guarda el id y no la fila, que se reemplaza en cada carga. */
+  private seleccionados = new Set<number>();
+
+  /** Mover órdenes en lote es lo mismo que moverlas de a una: pide ORDENES:WRITE. */
+  get puedeAccionesMasivas(): boolean { return this.isAdmin; }
+
+  estaSeleccionada(orden: OrdenResponseDTO): boolean {
+    return this.seleccionados.has(orden.id);
+  }
+
+  alternarSeleccion(orden: OrdenResponseDTO): void {
+    if (this.seleccionados.has(orden.id)) this.seleccionados.delete(orden.id);
+    else this.seleccionados.add(orden.id);
+  }
+
+  /**
+   * Las órdenes tildadas que siguen a la vista. Si se cambió un filtro o el año,
+   * lo que ya no está en el listado no cuenta: se actúa sobre lo que se ve.
+   */
+  get seleccion(): OrdenResponseDTO[] {
+    return this.dataSource.filteredData.filter(o => this.seleccionados.has(o.id));
+  }
+
+  /** Cuántas hay en el listado filtrado, para decir «5 de 23». */
+  get totalListado(): number { return this.dataSource.filteredData.length; }
+
+  get todasSeleccionadas(): boolean {
+    return this.totalListado > 0 && this.seleccion.length === this.totalListado;
+  }
+
+  get algunaSeleccionada(): boolean {
+    return this.seleccion.length > 0 && !this.todasSeleccionadas;
+  }
+
+  /** La casilla del encabezado toma todo el listado filtrado, no solo la página. */
+  alternarTodas(): void {
+    if (this.todasSeleccionadas) this.limpiarSeleccion();
+    else for (const o of this.dataSource.filteredData) this.seleccionados.add(o.id);
+  }
+
+  limpiarSeleccion(): void {
+    this.seleccionados.clear();
+  }
+
+  /** De todo el repertorio, lo que se puede aplicar a las tildadas sin excepción. */
+  get accionesDisponibles(): { clave: string; etiqueta: string; icono: string; peligrosa?: boolean }[] {
+    const elegidas = this.seleccion;
+    if (elegidas.length === 0) return [];
+    return this.accionesMasivas.filter(a =>
+      elegidas.every(o => a.desde.includes((o.situacionClave || '').toUpperCase())));
+  }
+
+  /** Los estados distintos que hay en la selección, para explicar por qué no hay acciones. */
+  get estadosSeleccionados(): string[] {
+    return [...new Set(this.seleccion.map(o => o.situacionClave || '—'))].sort();
+  }
+
+  ejecutarAccionMasiva(accion: { clave: string; etiqueta: string; peligrosa?: boolean }): void {
+    const elegidas = this.seleccion;
+    if (elegidas.length === 0) return;
+
+    const planes = elegidas.map(o => o.ordNroPlan);
+    const listado = planes.length <= 12
+      ? planes.join(', ')
+      : `${planes.slice(0, 12).join(', ')} y ${planes.length - 12} más`;
+
+    const mensaje = `${accion.etiqueta}: ${planes.length === 1 ? '1 orden' : planes.length + ' órdenes'}`
+      + ` (${listado}).`
+      + (accion.peligrosa ? ' Cancelar una orden no se puede deshacer.' : '')
+      + ' ¿Confirma?';
+
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '480px',
+      data: {
+        titulo: accion.etiqueta,
+        mensaje,
+        botonConfirmar: accion.etiqueta,
+        botonCancelar: 'Volver',
+        peligroso: accion.peligrosa === true
+      }
+    }).afterClosed().subscribe(confirmado => {
+      if (confirmado) this.aplicarAccionMasiva(accion, elegidas.map(o => o.id));
+    });
+  }
+
+  private aplicarAccionMasiva(accion: { clave: string; etiqueta: string }, ids: number[]): void {
+    this.loading = true;
+    this.ordersSvc.avanzarMasivo(ids, accion.clave).subscribe({
+      next: (resultado) => {
+        this.limpiarSeleccion();
+        const hechas = resultado.cambiadas.length;
+
+        if (resultado.rechazadas.length > 0) {
+          // Hay algo que explicar: va en un cartel que no se cierra solo.
+          this.dialog.open(ResultadoMasivoDialogComponent, { width: '560px', data: resultado });
+        } else {
+          this.snack.open(
+            `${hechas === 1 ? '1 orden' : hechas + ' órdenes'} a ${resultado.situacionClave.toLowerCase()}`,
+            'Cerrar', { duration: 4000 });
+        }
+        this.load();
+      },
+      error: (err) => {
+        console.error('Error en el cambio masivo:', err);
+        this.snack.open(err.error?.message || 'No se pudieron cambiar las órdenes',
+          'Cerrar', { duration: 5000 });
+        this.loading = false;
+      }
+    });
+  }
+
   // ==================== la vista de la tabla ====================
 
   /** Carga lo que el usuario dejó elegido, o el orden de fábrica si es la primera vez. */
@@ -138,6 +277,8 @@ export class OrdersTableComponent implements OnInit {
 
   private aplicarVista(): void {
     this.displayedColumns = [
+      // La casilla va primera y solo para quien puede mover órdenes.
+      ...(this.puedeAccionesMasivas ? ['seleccion'] : []),
       ...this.vistaColumnas.filter(c => c.visible).map(c => c.clave),
       'acciones'
     ];
@@ -310,6 +451,8 @@ export class OrdersTableComponent implements OnInit {
 
   async load(resetFilters = false) {
     this.loading = true;
+    // Los datos se reemplazan: lo tildado antes ya no es lo que está a la vista.
+    this.limpiarSeleccion();
     if (resetFilters) {
       this.resetSelectFilters();
       this.savedSortActive = '';

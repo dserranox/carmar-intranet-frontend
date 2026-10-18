@@ -182,11 +182,62 @@
 
   </div>
 
+  <!-- Lo que se puede hacer con varias a la vez. Aparece recién cuando hay algo
+       tildado, para no ocupar lugar el resto del tiempo. -->
+  @if (puedeAccionesMasivas && seleccion.length > 0) {
+    <div class="barra-masiva">
+      <span class="cuantas">
+        <mat-icon>checklist</mat-icon>
+        {{ seleccion.length }} de {{ totalListado }} elegidas
+      </span>
+
+      <span class="acciones-masivas">
+        @for (a of accionesDisponibles; track a.clave) {
+          <button mat-flat-button [class.peligrosa]="a.peligrosa"
+                  (click)="ejecutarAccionMasiva(a)">
+            <mat-icon>{{ a.icono }}</mat-icon>
+            {{ a.etiqueta }}
+          </button>
+        }
+        @if (accionesDisponibles.length === 0) {
+          <span class="sin-acciones">
+            <mat-icon>info_outline</mat-icon>
+            <span>
+              Hay órdenes en estados distintos ({{ estadosSeleccionados.join(', ') | lowercase }}).
+              Elegí órdenes del mismo estado para moverlas juntas.
+            </span>
+          </span>
+        }
+      </span>
+
+      <button mat-button class="limpiar-seleccion" (click)="limpiarSeleccion()">
+        Limpiar selección
+      </button>
+    </div>
+  }
+
   <!-- Tabla -->
   @if (!loading) {
     <div class="table-container">
       <mat-paginator #paginatorTop [pageSize]="50" [pageSizeOptions]="[10,25,50,100]"></mat-paginator>
       <table mat-table [dataSource]="dataSource" matSort>
+
+        <!-- Casilla para elegir varias órdenes y moverlas juntas. Pegada al borde
+             izquierdo: con la tabla corrida hacia la derecha hay que seguir
+             viendo qué está tildado. -->
+        <ng-container matColumnDef="seleccion" sticky>
+          <th mat-header-cell *matHeaderCellDef class="celda-check">
+            <mat-checkbox [checked]="todasSeleccionadas"
+                          [indeterminate]="algunaSeleccionada"
+                          (change)="alternarTodas()"
+                          [matTooltip]="'Elegir las ' + totalListado + ' órdenes del listado'">
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let row" class="celda-check">
+            <mat-checkbox [checked]="estaSeleccionada(row)"
+                          (change)="alternarSeleccion(row)"></mat-checkbox>
+          </td>
+        </ng-container>
 
         <!-- Fecha Creación -->
         <ng-container matColumnDef="fechaCreacion">

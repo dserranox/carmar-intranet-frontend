@@ -258,3 +258,87 @@
 .celda-cliente .sin-cliente { color: rgba(0, 0, 0, .4); font-style: italic; }
 .celda-cliente .mini { width: 30px; height: 30px; line-height: 30px; }
 .celda-cliente .mini mat-icon { font-size: 17px; width: 17px; height: 17px; }
+
+/* ── Acciones sobre varias órdenes ──
+   La barra aparece sola cuando hay algo tildado y queda pegada arriba mientras
+   se baja por el listado: se eligen órdenes de varias páginas y los botones
+   tienen que seguir al alcance. */
+.barra-masiva {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: #e8f1f8;
+  border: 1px solid #b9d4e8;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  .cuantas {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #1a3a5c;
+    white-space: nowrap;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .acciones-masivas {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+
+    button {
+      font-size: 0.86rem;
+    }
+
+    /* Cancelar órdenes no se deshace: no tiene que parecerse al resto. */
+    button.peligrosa {
+      background: #b71c1c;
+      color: #ffffff;
+    }
+  }
+
+  /* Cuando la selección mezcla estados no hay nada que ofrecer: se dice por qué
+     en lugar de dejar la barra vacía. */
+  .sin-acciones {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #6b5b2a;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      color: #b8860b;
+    }
+  }
+
+  .limpiar-seleccion {
+    margin-left: auto;
+    font-size: 0.85rem;
+  }
+}
+
+/* La casilla no necesita más ancho que la casilla. */
+.celda-check {
+  width: 44px;
+  padding-right: 0 !important;
+  background: inherit;
+}
