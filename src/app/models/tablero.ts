@@ -103,6 +103,7 @@ export interface Tablero {
   metrosCorrugado: number;
   metrosCablePendientes: number;
   cargaPorOperario: Carga[];
+  tareasExcluidas: number;
 
   controles: Control[];
   noConformesPorOperacion: NoConforme[];

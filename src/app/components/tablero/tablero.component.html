@@ -120,6 +120,18 @@
     <!-- ============================================ 2 · producción -->
     <h3 class="bloque-titulo"><mat-icon>trending_up</mat-icon> Producción</h3>
 
+    @if (t.tareasExcluidas > 0) {
+      <p class="nota-excluidas">
+        <mat-icon>info</mat-icon>
+        <span>
+          {{ t.tareasExcluidas }}
+          {{ t.tareasExcluidas === 1 ? 'tarea quedó afuera' : 'tareas quedaron afuera' }}
+          de estos números: se cerraron días después de arrancar, así que el tiempo
+          registrado no es el que se trabajó. Las unidades sí se produjeron.
+        </span>
+      </p>
+    }
+
     <div class="tarjetas">
       <div class="tarjeta">
         <span class="numero">{{ horas(t.segundosEfectivos) }}</span>

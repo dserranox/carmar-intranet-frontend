@@ -23,6 +23,17 @@
 
 .nota-bloque { margin: -4px 0 12px; font-size: .86rem; color: rgba(0, 0, 0, .6); }
 
+/* Lo que se dejó afuera de los números, dicho a la vista. */
+.nota-excluidas {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin: -4px 0 12px; padding: 9px 13px;
+  background: #fff8e1; border: 1px solid #f0d99a; border-radius: 8px;
+  font-size: .85rem; color: #7c5400; line-height: 1.45;
+}
+.nota-excluidas mat-icon {
+  font-size: 19px; width: 19px; height: 19px; color: #b8860b; flex: 0 0 auto;
+}
+
 /* ---------------------------------------------------- tarjetas */
 .tarjetas {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
