@@ -45,7 +45,7 @@
     }
 
     <!-- Datos del extremo A -->
-    <text [attr.x]="margen" y="30" class="rotulo-extremo">EXTREMO A · {{ c.origenA || '—' }}</text>
+    <text [attr.x]="margen" y="30" class="rotulo-extremo">EXTREMO A · {{ rotuloA }}</text>
     <text [attr.x]="margen" [attr.y]="alto - 34" class="medida" [class.alerta]="extremoA.alerta">
       {{ extremoA.etiqueta }}
     </text>
@@ -58,7 +58,7 @@
 
     <!-- Datos del extremo B -->
     <text [attr.x]="ancho - margen" y="30" text-anchor="end" class="rotulo-extremo">
-      {{ c.destinoB || '—' }} · EXTREMO B
+      {{ rotuloB }} · EXTREMO B
     </text>
     <text [attr.x]="ancho - margen" [attr.y]="alto - 34" text-anchor="end" class="medida"
           [class.alerta]="extremoB.alerta">

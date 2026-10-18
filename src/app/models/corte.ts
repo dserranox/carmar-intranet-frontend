@@ -54,6 +54,8 @@ export interface Corte {
   seccion?: number;
 
   origenA?: string;
+  /** Dónde entra en el origen: la cavidad del conector, o IZQ/DER si es soldadura. */
+  posicionA?: string;
   terminalA?: string;
   peladoA?: number;
   gapA?: number;
@@ -64,6 +66,7 @@ export interface Corte {
   peladoB?: number;
   terminalB?: string;
   destinoB?: string;
+  posicionB?: string;
 
   impresion?: string;
 

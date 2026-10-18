@@ -50,6 +50,25 @@ export class CableDibujoComponent {
   }
   get corte(): Corte | null { return this._corte(); }
 
+  /**
+   * A dónde va la punta: el conector o la soldadura, y en qué lugar de eso.
+   *
+   * Si la posición es un número es una cavidad del conector y se lee mejor con
+   * la palabra delante —«C3 · pos 3»—; si dice IZQ o DER es una soldadura y la
+   * palabra sobra —«S2 · IZQ». Las sábanas viejas no traen posición y entonces
+   * queda solo el conector, como antes.
+   */
+  get rotuloA(): string { return this.rotuloDePunta(this.corte?.origenA, this.corte?.posicionA); }
+  get rotuloB(): string { return this.rotuloDePunta(this.corte?.destinoB, this.corte?.posicionB); }
+
+  private rotuloDePunta(donde?: string, posicion?: string): string {
+    const lugar = (donde ?? '').trim();
+    const pos = (posicion ?? '').trim();
+    if (!lugar) return '—';
+    if (!pos) return lugar;
+    return /^\d+$/.test(pos) ? `${lugar} · pos ${pos}` : `${lugar} · ${pos}`;
+  }
+
   // Geometría del dibujo, en unidades del viewBox.
   readonly ancho = 1200;
   readonly alto = 200;
