@@ -54,6 +54,16 @@ export interface ControlRuta {
   operario: string | null;
   resultado: 'PENDIENTE' | 'OK' | 'KO';
   observaciones: string | null;
+
+  /** Cuánto se miró en esta orden: es el denominador de los indicadores. */
+  cantidadControlada?: number | null;
+  cantidadNc?: number | null;
+
+  /** Se piden solo cuando el control da KO. */
+  causa?: string | null;
+  accionInmediata?: string | null;
+  accionPor?: string | null;
+
   fecha: string;
   items: ItemControl[];
 }
@@ -63,7 +73,8 @@ export interface RutaCalidad {
   fecha: string;
   numero: number;
   responsable: string;
-  estado: 'EN_CURSO' | 'CERRADA' | 'SUSPENDIDA';
+  /** PAUSADA: parada con el reloj detenido; se retoma y sigue. */
+  estado: 'EN_CURSO' | 'PAUSADA' | 'CERRADA' | 'SUSPENDIDA';
   fechaInicio: string;
   fechaFin: string | null;
   observaciones: string | null;
@@ -104,4 +115,6 @@ export interface PuntoControlAbm {
   orden?: number;
   activo: boolean;
   usos?: number;
+  /** CONTROL: se verifica. PUESTA_A_PUNTO: se hace sobre la máquina o el puesto. */
+  tipo?: 'CONTROL' | 'PUESTA_A_PUNTO';
 }

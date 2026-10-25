@@ -56,6 +56,15 @@ export interface Corte {
   origenA?: string;
   /** Dónde entra en el origen: la cavidad del conector, o IZQ/DER si es soldadura. */
   posicionA?: string;
+
+  /** Cuando quedó salteado: por qué, cuándo, quién y de qué sábana venía. */
+  subtipoSalteo?: string;
+  motivoSalteo?: string;
+  fechaSalteo?: string | null;
+  salteadoPor?: string;
+  sabanaNombre?: string;
+  sabanaOrigenNombre?: string;
+  tipoSabana?: string;
   terminalA?: string;
   peladoA?: number;
   gapA?: number;
@@ -130,6 +139,8 @@ export interface RegistrarCorteResponse {
   sabana: SabanaResumen;
   tareasGeneradas: string[];
   sabanaFinalizada: boolean;
+  /** Cuántos cortes quedaron salteados: mientras haya, la sábana no se cierra sola. */
+  salteadosPendientes?: number;
 }
 
 export interface SabanaImportResult {

@@ -28,6 +28,36 @@ export class CorteService {
     return this.http.get<Corte[]>(`${this.baseUrl}/sabanas/${sabId}/cortes`);
   }
 
+  /** Deja el corte para después, con el motivo, y pasa al que sigue. */
+  saltearCorte(scdId: number, datos: { subtipo: string; motivo: string }): Observable<RegistrarCorteResponse> {
+    return this.http.post<RegistrarCorteResponse>(`${this.baseUrl}/cortes/${scdId}/saltear`, datos);
+  }
+
+  /** Vuelve sobre el último corte hecho, para rehacerlo. */
+  volverAlAnterior(sabId: number): Observable<RegistrarCorteResponse> {
+    return this.http.post<RegistrarCorteResponse>(`${this.baseUrl}/sabanas/${sabId}/volver`, {});
+  }
+
+  /** Los salteados vuelven a la cola: llegó el material. */
+  retomarSalteados(sabId: number): Observable<RegistrarCorteResponse> {
+    return this.http.post<RegistrarCorteResponse>(`${this.baseUrl}/sabanas/${sabId}/retomar-salteados`, {});
+  }
+
+  /** Cierra la sábana mandando lo que faltó a la sábana de pendientes. */
+  cerrarConPendientes(sabId: number): Observable<SabanaResumen> {
+    return this.http.post<SabanaResumen>(`${this.baseUrl}/sabanas/${sabId}/cerrar-con-pendientes`, {});
+  }
+
+  /** Todo lo que quedó salteado, de todas las sábanas. */
+  pendientes(): Observable<Corte[]> {
+    return this.http.get<Corte[]>(`${this.baseUrl}/pendientes`);
+  }
+
+  /** El corte se hizo por fuera o ya no hace falta. */
+  darPorCumplido(scdId: number, motivo: string): Observable<Corte> {
+    return this.http.post<Corte>(`${this.baseUrl}/pendientes/${scdId}/cumplido`, { motivo });
+  }
+
   /** 204 sin cuerpo cuando la sábana ya no tiene cortes pendientes. */
   corteActual(sabId: number): Observable<Corte | null> {
     return this.http.get<Corte | null>(`${this.baseUrl}/sabanas/${sabId}/actual`);

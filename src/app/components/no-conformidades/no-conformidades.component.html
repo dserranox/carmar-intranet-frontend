@@ -17,6 +17,12 @@
       <span class="valor">{{ todas().length }}</span>
       <span class="rotulo">en el listado</span>
     </div>
+    @if (puedeValidar) {
+      <div class="tarjeta" [class.alerta]="pendientes() > 0">
+        <span class="valor">{{ pendientes() }}</span>
+        <span class="rotulo">esperando validación</span>
+      </div>
+    }
     <div class="tarjeta" [class.ko]="abiertas() > 0">
       <span class="valor">{{ abiertas() }}</span>
       <span class="rotulo">abiertas</span>
@@ -92,8 +98,11 @@
       <ng-container matColumnDef="estado">
         <th mat-header-cell *matHeaderCellDef>Estado</th>
         <td mat-cell *matCellDef="let n">
-          <span class="chip" [class.ok]="n.estado === 'CERRADA'" [class.abierta]="n.estado === 'ABIERTA'">
-            {{ n.estado }}
+          <span class="chip" [class]="'chip ' + (n.estado || '').toLowerCase()"
+                [matTooltip]="n.motivoRechazo || n.motivoAnulacion || ''">
+            {{ n.estado === 'PENDIENTE' ? 'PENDIENTE DE VALIDACIÓN'
+             : n.estado === 'NO_PROCEDENTE' ? 'NO PROCEDE'
+             : n.estado }}
           </span>
         </td>
       </ng-container>
@@ -104,6 +113,25 @@
           <button mat-icon-button matTooltip="Abrir" (click)="abrir(n)">
             <mat-icon>open_in_new</mat-icon>
           </button>
+
+          @if (puedeValidar && n.estado === 'PENDIENTE') {
+            <button mat-icon-button class="btn-validar" (click)="validar(n)"
+                    matTooltip="Validar: sí es una no conformidad">
+              <mat-icon>check_circle</mat-icon>
+            </button>
+            <button mat-icon-button class="btn-rechazar" (click)="rechazar(n)"
+                    matTooltip="No procede: no era una no conformidad">
+              <mat-icon>do_not_disturb_on</mat-icon>
+            </button>
+          }
+
+          @if (puedeValidar && (n.estado === 'ABIERTA' || n.estado === 'CERRADA')) {
+            <button mat-icon-button class="btn-anular" (click)="anular(n)"
+                    matTooltip="Anular: estaba mal cargada o repetida">
+              <mat-icon>block</mat-icon>
+            </button>
+          }
+
           @if (n.estado === 'CERRADA') {
             <button mat-icon-button matTooltip="Bajar el formulario FQ-02" (click)="descargar(n)">
               <mat-icon>download</mat-icon>

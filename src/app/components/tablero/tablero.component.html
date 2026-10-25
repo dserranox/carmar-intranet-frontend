@@ -77,23 +77,56 @@
     </div>
 
     @if (t.enPlanta.length) {
+      <!-- Todos los que pueden recibir trabajo, tengan tarea o no: el que está
+           libre es justamente el dato que se busca. A la derecha, lo que cada
+           uno tiene esperando, para repartir con criterio. -->
       <div class="panel">
         <h4>Quién está haciendo qué</h4>
-        <table class="tabla">
+        <table class="tabla tabla-planta">
           <thead>
-            <tr><th>Operario</th><th>Estado</th><th>Actividad</th><th>Plan</th><th>Puesto</th><th class="der">Abierta hace</th></tr>
+            <tr>
+              <th>Operario</th><th>Estado</th><th>Actividad</th>
+              <th>Código</th><th>Plan</th><th>Puesto</th>
+              <th class="der">Hace</th><th>En cola</th>
+              @if (puedeAsignar) { <th></th> }
+            </tr>
           </thead>
           <tbody>
-            @for (p of t.enPlanta; track p.usuario + p.operacion) {
-              <tr>
+            @for (p of t.enPlanta; track p.usuario + (p.operacion ?? '')) {
+              <tr [class.libre]="p.estado === 'SIN_TAREA'">
                 <td class="fuerte">{{ p.usuario }}</td>
                 <td><span class="pastilla" [class]="p.estado">{{ etiquetaEstado(p.estado) }}</span></td>
-                <td>{{ p.operacion }}</td>
+                <td>{{ p.operacion ?? '—' }}</td>
+                <td class="fuerte">{{ p.codigoProducto ?? '—' }}</td>
                 <td>{{ p.nroPlan ?? '—' }}</td>
                 <td>{{ p.puesto ?? '—' }}</td>
-                <td class="der" [class.rojo]="(p.minutos ?? 0) > 600">
-                  {{ (p.minutos ?? 0) < 60 ? (p.minutos + ' min') : ((p.minutos! / 60 | number:'1.0-1') + ' h') }}
+                <td class="der" [class.rojo]="p.estado !== 'SIN_TAREA' && (p.minutos ?? 0) > 600">
+                  @if (p.estado === 'SIN_TAREA') { — }
+                  @else {
+                    {{ (p.minutos ?? 0) < 60 ? ((p.minutos ?? 0) + ' min')
+                                             : (((p.minutos ?? 0) / 60 | number:'1.0-1') + ' h') }}
+                  }
                 </td>
+                <td class="cola">
+                  @if (p.cola.length) {
+                    @for (c of p.cola; track c.ordenId) {
+                      <span class="chip-cola" [class.empezado]="c.estado === 'EN_CURSO'"
+                            [matTooltip]="'Plan ' + c.nroPlan + (c.cantidad ? ' · ' + c.cantidad + ' u.' : '')">
+                        {{ c.codigoProducto ?? c.nroPlan }}
+                      </span>
+                    }
+                  } @else {
+                    <span class="sin-cola">nada esperando</span>
+                  }
+                </td>
+                @if (puedeAsignar) {
+                  <td>
+                    <button mat-icon-button class="btn-asignar" (click)="asignarA(p.usuario)"
+                            matTooltip="Asignarle un código sin salir del tablero">
+                      <mat-icon>add</mat-icon>
+                    </button>
+                  </td>
+                }
               </tr>
             }
           </tbody>

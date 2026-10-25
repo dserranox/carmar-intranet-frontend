@@ -209,6 +209,16 @@ export class MiTrabajoComponent implements OnInit, OnDestroy {
     this.seleccionadaId.set(asignacion.asgId);
   }
 
+  /**
+   * Volver a la lista sin tocar nada. Solo tiene sentido con la tarea frenada:
+   * con el reloj corriendo no se sale, que es la regla de toda la app.
+   */
+  volverAlListado(): void {
+    if (this.tareaCorriendo) return;
+    this.seleccionadaId.set(null);
+    this.cargar();
+  }
+
   // ------------------------------------------------- pausa y suspensión
 
   /** El estado del reloj lo manda el servidor; acá solo se dibuja. */
@@ -263,7 +273,13 @@ export class MiTrabajoComponent implements OnInit, OnDestroy {
       }).afterClosed().subscribe(res => {
       if (!res) return;
       this.asignacionesService.suspenderTarea(asignacion.asgId, res.motivo).subscribe({
-        next: () => { this.snack.open('Tarea suspendida', 'OK', { duration: 3000 }); this.cargar(); },
+        next: () => {
+          // Suspender la tarea casi siempre es para arrancar otra cosa: lo
+          // devolvemos a su lista en vez de dejarlo adentro del código parado.
+          this.seleccionadaId.set(null);
+          this.snack.open('Tarea suspendida. Elegí con qué seguís.', 'OK', { duration: 5000 });
+          this.cargar();
+        },
         error: err => this.snack.open(
           err?.error?.message || 'No se pudo suspender la tarea', 'OK', { duration: 6000 })
       });

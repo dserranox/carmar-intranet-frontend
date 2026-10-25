@@ -23,6 +23,14 @@ export class TasksService {
     return this.http.post(`${this.baseUrl}/finalizar-tarea`, payload);
   }
 
+  /**
+   * Suspende la tarea de otro, para destrabar al que se fue sin cerrarla.
+   * No la finaliza: la cantidad la carga el operario cuando la retoma.
+   */
+  suspenderTareaDeOtro(tarId: number, motivo: string): Observable<TareasDTO> {
+    return this.http.post<TareasDTO>(`${this.baseUrl}/${tarId}/suspender`, { motivo });
+  }
+
   getOperariosActivos(): Observable<OperarioEstadoDTO[]> {
     return this.http.get<OperarioEstadoDTO[]>(`${this.baseUrl}/operarios-activos`);
   }

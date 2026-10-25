@@ -54,10 +54,32 @@
 
   @if (terminada()) {
     <section class="final">
-      <mat-icon class="tilde">task_alt</mat-icon>
-      <h2>Sábana terminada</h2>
-      <p>Se registraron los {{ sabana()?.totalCortes }} cortes y se cargaron las tareas por código y plan.</p>
-      <button mat-flat-button color="primary" (click)="volver()">Volver a mis sábanas</button>
+      @if (salteados() > 0) {
+        <!-- Llegó al final pero dejó cortes sin hacer. La sábana no se cierra
+             sola: o los hace ahora, o los manda a pendientes diciéndolo. -->
+        <mat-icon class="aviso-final">pending_actions</mat-icon>
+        <h2>Quedaron {{ salteados() }} cortes sin hacer</h2>
+        <p>
+          Los salteaste durante la sábana. Si ya podés hacerlos, volvé sobre ellos ahora.
+          Si no, la sábana se cierra igual y esos cortes pasan a <strong>pendientes</strong>,
+          donde se pueden reasignar cuando llegue el material.
+        </p>
+        <div class="botones-final">
+          <button mat-flat-button color="primary" [disabled]="guardando()" (click)="retomarSalteados()">
+            <mat-icon>replay</mat-icon>
+            Hacerlos ahora
+          </button>
+          <button mat-stroked-button [disabled]="guardando()" (click)="cerrarDejandoPendientes()">
+            <mat-icon>inventory_2</mat-icon>
+            Cerrar y mandar a pendientes
+          </button>
+        </div>
+      } @else {
+        <mat-icon class="tilde">task_alt</mat-icon>
+        <h2>Sábana terminada</h2>
+        <p>Se registraron los {{ sabana()?.totalCortes }} cortes y se cargaron las tareas por código y plan.</p>
+        <button mat-flat-button color="primary" (click)="volver()">Volver a mis sábanas</button>
+      }
     </section>
   }
 
@@ -188,6 +210,22 @@
               [disabled]="avisoPendiente() || guardando()" (click)="siguiente()">
         <mat-icon>skip_next</mat-icon>
         {{ esCorrugado ? 'Siguiente' : 'Siguiente corte' }}
+      </button>
+
+      <!-- No se puede hacer este corte ahora: se deja para después diciendo por
+           qué, en vez de abandonar la sábana entera. -->
+      <button mat-stroked-button class="btn-saltear"
+              [disabled]="avisoPendiente() || guardando()" (click)="saltear()"
+              matTooltip="Dejarlo para después: faltante de material, máquina, otra máquina">
+        <mat-icon>redo</mat-icon>
+        Saltear
+      </button>
+
+      <button mat-stroked-button class="btn-volver"
+              [disabled]="guardando() || !hayHechos()" (click)="volverAlAnterior()"
+              matTooltip="Volver sobre el último corte hecho para rehacerlo">
+        <mat-icon>undo</mat-icon>
+        Volver
       </button>
 
       <div class="proximos">

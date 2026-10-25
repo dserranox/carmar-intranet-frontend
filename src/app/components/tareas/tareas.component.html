@@ -92,6 +92,12 @@
             <button mat-icon-button color="warn" (click)="finalizarTarea(row)" matTooltip="Finalizar tarea">
               <mat-icon>stop_circle</mat-icon>
             </button>
+            @if (row.estado !== 'SUSPENDIDA') {
+              <button mat-icon-button class="btn-suspender" (click)="suspenderTarea(row)"
+                      matTooltip="Suspender la tarea: la frena sin cerrarla, para que el operario la retome">
+                <mat-icon>bedtime</mat-icon>
+              </button>
+            }
           }
         </td>
       </ng-container>

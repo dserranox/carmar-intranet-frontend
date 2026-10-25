@@ -93,11 +93,15 @@ export class OrdersTableComponent implements OnInit {
   opcionesProducto: OpcionBuscable[] = [];
   opcionesEstado: OpcionBuscable[] = [];
 
-  // Valores seleccionados en los filtros
-  filterNroPlan = '';
+  // Valores seleccionados en los filtros.
+  //
+  // Plan, código y producto aceptan varios a la vez: el caso de todos los días
+  // es repartir trabajo de tres o cuatro códigos juntos, y antes había que
+  // filtrar de a uno, asignar, volver y cambiar el filtro.
+  filterNroPlan: string[] = [];
   filterClienteId: number | '' = '';
-  filterProductoCodigo = '';
-  filterProductoDescripcion = '';
+  filterProductoCodigo: string[] = [];
+  filterProductoDescripcion: string[] = [];
   filterSituacionClave = '';
 
   fechaCreacionDesde: Date | null = null;
@@ -336,12 +340,17 @@ export class OrdersTableComponent implements OnInit {
   /** Cuántos de los filtros guardados están puestos, para avisar que hay algo filtrando. */
   otrosFiltrosActivos(): number {
     const valores = [
-      this.filterClienteId, this.filterProductoCodigo, this.filterProductoDescripcion,
+      this.filterClienteId,
       this.fechaCreacionDesde, this.fechaCreacionHasta,
       this.fechaInicioDesde, this.fechaInicioHasta,
       this.fechaFinalizacionDesde, this.fechaFinalizacionHasta
     ];
-    return valores.filter(v => v !== null && v !== '' && v !== undefined).length;
+    let cuantos = valores.filter(v => v !== null && v !== '' && v !== undefined).length;
+    // Los de varios valores cuentan uno por filtro puesto, no uno por valor:
+    // elegir seis códigos sigue siendo «un filtro».
+    if (this.filterProductoCodigo?.length) cuantos++;
+    if (this.filterProductoDescripcion?.length) cuantos++;
+    return cuantos;
   }
 
   private allOrders: OrdenResponseDTO[] = [];
@@ -412,9 +421,17 @@ export class OrdersTableComponent implements OnInit {
     // La columna Cliente muestra la razón social, así que también ordena por ella.
     this.dataSource.sortingDataAccessor = (row: any, columna: string) =>
       columna === 'clienteId' ? this.nombreCliente(row).toLowerCase() : row[columna];
+    // El buscador libre mira todo lo que se lee en la fila. Busca por palabras
+    // sueltas y en cualquier orden: escribir «akron ramal» encuentra la orden
+    // aunque en la fila esas dos palabras estén separadas y al revés.
     this.dataSource.filterPredicate = (row, filter) => {
-      const blob = `${row.ordNroPlan} ${row.clienteRazonSocial ?? ''} ${row.productoDescripcion} ${row.productoCodigo} ${row.situacionClave}`.toLowerCase();
-      return blob.includes(filter.trim().toLowerCase());
+      const blob = [
+        row.ordNroPlan, row.clienteRazonSocial, row.productoCodigo,
+        row.productoDescripcion, row.situacionClave, row.cantidad,
+        row.hoja, row.etiqueta, row.ordenInterna, row.observacion
+      ].filter(v => v !== null && v !== undefined).join(' ').toLowerCase();
+
+      return filter.split(/\s+/).filter(p => p).every(parte => blob.includes(parte));
     };
     this.loadYears();
   }
@@ -510,19 +527,21 @@ export class OrdersTableComponent implements OnInit {
   }
 
   private resetSelectFilters(): void {
-    this.filterNroPlan = '';
+    this.filterNroPlan = [];
     this.filterClienteId = '';
-    this.filterProductoCodigo = '';
-    this.filterProductoDescripcion = '';
+    this.filterProductoCodigo = [];
+    this.filterProductoDescripcion = [];
     this.filterSituacionClave = '';
   }
 
   applyFilters(): void {
     let data = this.allOrders;
-    if (this.filterNroPlan)             data = data.filter(o => o.ordNroPlan === this.filterNroPlan);
+    if (this.filterNroPlan?.length)     data = data.filter(o => this.filterNroPlan.includes(o.ordNroPlan));
     if (this.filterClienteId)           data = data.filter(o => o.clienteId === this.filterClienteId);
-    if (this.filterProductoCodigo)      data = data.filter(o => o.productoCodigo === this.filterProductoCodigo);
-    if (this.filterProductoDescripcion) data = data.filter(o => o.productoDescripcion === this.filterProductoDescripcion);
+    if (this.filterProductoCodigo?.length)
+      data = data.filter(o => this.filterProductoCodigo.includes(o.productoCodigo));
+    if (this.filterProductoDescripcion?.length)
+      data = data.filter(o => this.filterProductoDescripcion.includes(o.productoDescripcion));
     if (this.filterSituacionClave)      data = data.filter(o => o.situacionClave === this.filterSituacionClave);
 
     if (this.fechaCreacionDesde)  data = data.filter(o => this.dateOf(o.fechaCreacion)   >= this.startOf(this.fechaCreacionDesde!));
@@ -533,9 +552,33 @@ export class OrdersTableComponent implements OnInit {
     if (this.fechaFinalizacionHasta) data = data.filter(o => this.dateOf(o.fechaFinalizacion) <= this.endOf(this.fechaFinalizacionHasta!));
 
     this.dataSource.data = data;
+    this.sincronizarPaginadores();
+  }
+
+  /**
+   * El buscador libre: filtra lo que ya está en pantalla, sin ir al servidor.
+   *
+   * Busca en todo lo que se lee en la fila —plan, cliente, código, producto,
+   * estado— y acepta varias palabras: «akron ramal» trae las de ese cliente que
+   * además digan ramal, estén donde estén.
+   */
+  buscar(texto: string): void {
+    this.filterValue = texto;
+    this.dataSource.filter = texto.trim().toLowerCase();
+    this.limpiarSeleccion();
+    this.sincronizarPaginadores();
+  }
+
+  limpiarBusqueda(): void {
+    this.buscar('');
+  }
+
+  /** Los dos paginadores tienen que contar lo que quedó después de filtrar. */
+  private sincronizarPaginadores(): void {
+    const cuantas = this.dataSource.filteredData.length;
     if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
     if (this._paginatorTop) {
-      this._paginatorTop.length = data.length;
+      this._paginatorTop.length = cuantas;
       this._paginatorTop.pageIndex = 0;
     }
   }
@@ -562,7 +605,9 @@ export class OrdersTableComponent implements OnInit {
     this.savedSortDirection = '';
     this.dataSource.sort?.sort({ id: '', start: 'asc', disableClear: false });
     this.filterValue = '';
+    this.dataSource.filter = '';
     this.resetSelectFilters();
+    this.limpiarSeleccion();
     this.fechaCreacionDesde = null;
     this.fechaCreacionHasta = null;
     this.fechaInicioDesde = null;
@@ -570,11 +615,7 @@ export class OrdersTableComponent implements OnInit {
     this.fechaFinalizacionDesde = null;
     this.fechaFinalizacionHasta = null;
     this.dataSource.data = this.allOrders;
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
-    if (this._paginatorTop) {
-      this._paginatorTop.length = this.allOrders.length;
-      this._paginatorTop.pageIndex = 0;
-    }
+    this.sincronizarPaginadores();
   }
 
   // openDocs(row: OrdenResponseDTO) {

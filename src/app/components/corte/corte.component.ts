@@ -14,8 +14,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { CorteService } from '../../services/corte.service';
 import { TasksService } from '../../services/tasks.service';
-import { SabanaResumen } from '../../models/corte';
+import { Corte, SabanaResumen } from '../../models/corte';
+import { MotivoDialogComponent, MotivoDialogData } from '../../shared/motivo-dialog.component';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+import { DetalleSabanaDialogComponent } from './detalle-sabana-dialog.component';
 
 @Component({
   selector: 'app-corte',
@@ -40,6 +42,132 @@ export class CorteComponent implements OnInit {
   cargando = signal(true);
   importando = signal(false);
   panelImportar = signal(false);
+
+  // ==================== el tablero de sábanas ====================
+  //
+  // Dos zonas, corrugado arriba y cable abajo, con las mismas columnas de
+  // estado. Son dos máquinas y dos personas distintas: mezclarlas en una sola
+  // grilla obligaba a leer la etiqueta de cada tarjeta para saber cuál era cuál.
+
+  /** Las columnas, en el orden en que se mira una sábana a lo largo del día. */
+  readonly estados: Array<{ clave: SabanaResumen['estado']; titulo: string }> = [
+    { clave: 'PENDIENTE',  titulo: 'Pendientes' },
+    { clave: 'EN_PROCESO', titulo: 'En proceso' },
+    { clave: 'SUSPENDIDA', titulo: 'Suspendidas' },
+    { clave: 'FINALIZADA', titulo: 'Finalizadas' }
+  ];
+
+  readonly zonas: Array<{ clave: 'CORRUGADO' | 'CABLE'; titulo: string }> = [
+    { clave: 'CORRUGADO', titulo: 'Corrugado' },
+    { clave: 'CABLE', titulo: 'Cable' }
+  ];
+
+  busqueda = signal('');
+
+  /** Las finalizadas se acumulan: se muestran las últimas y el resto se despliega. */
+  verAnteriores = signal(false);
+  private static readonly FINALIZADAS_A_LA_VISTA = 3;
+
+  private coincide(s: SabanaResumen): boolean {
+    const texto = this.busqueda().trim().toLowerCase();
+    if (!texto) return true;
+    const blob = `${s.nombre} ${s.operario ?? ''} ${(s.planes ?? []).join(' ')}`.toLowerCase();
+    return blob.includes(texto);
+  }
+
+  /** Las sábanas de una zona y un estado, ya filtradas por el buscador. */
+  enCelda(zona: 'CORRUGADO' | 'CABLE', estado: string): SabanaResumen[] {
+    const tipoDe = (s: SabanaResumen) => s.tipo === 'CORRUGADO' ? 'CORRUGADO' : 'CABLE';
+    const lista = this.sabanas()
+      .filter(s => tipoDe(s) === zona && s.estado === estado && this.coincide(s));
+
+    if (estado !== 'FINALIZADA') return lista;
+
+    // Las más nuevas primero, y solo las últimas salvo que se pidan todas.
+    const ordenadas = [...lista].sort((a, b) =>
+      (b.fechaFin ?? '').localeCompare(a.fechaFin ?? ''));
+    return this.verAnteriores() ? ordenadas : ordenadas.slice(0, CorteComponent.FINALIZADAS_A_LA_VISTA);
+  }
+
+  /** Cuántas finalizadas quedaron escondidas, para el «ver anteriores». */
+  finalizadasEscondidas(): number {
+    if (this.verAnteriores()) return 0;
+    const total = this.sabanas().filter(s => s.estado === 'FINALIZADA' && this.coincide(s)).length;
+    return Math.max(0, total - CorteComponent.FINALIZADAS_A_LA_VISTA * this.zonas.length);
+  }
+
+  /** El contador de cada columna, sumando las dos zonas. */
+  cuentaEstado(estado: string): number {
+    return this.sabanas().filter(s => s.estado === estado && this.coincide(s)).length;
+  }
+
+  /** El resumen que va al costado de cada zona. */
+  resumenZona(zona: 'CORRUGADO' | 'CABLE'): string {
+    const tipoDe = (s: SabanaResumen) => s.tipo === 'CORRUGADO' ? 'CORRUGADO' : 'CABLE';
+    const propias = this.sabanas().filter(s => tipoDe(s) === zona);
+    if (!propias.length) return 'sin sábanas';
+    const activas = propias.filter(s => s.estado === 'EN_PROCESO').length;
+    const maquinas = [...new Set(propias.map(s => s.nroMaquina).filter(m => m != null))];
+    const partes = [`${propias.length} ${propias.length === 1 ? 'sábana' : 'sábanas'}`];
+    if (activas) partes.push(`${activas} activa${activas === 1 ? '' : 's'}`);
+    else if (maquinas.length === 1) partes.push(`Máq. ${maquinas[0]}`);
+    return partes.join(' · ');
+  }
+
+  hayAlgoQueMostrar(): boolean {
+    return this.sabanas().some(s => this.coincide(s));
+  }
+
+  // ==================== cortes pendientes ====================
+  //
+  // Lo que se salteó en alguna sábana y todavía no se hizo. Viven en la sábana
+  // de pendientes de su tipo, que se asigna como cualquier otra; el tiempo de
+  // cortarlos se sigue imputando al plan original.
+
+  pendientes = signal<Corte[]>([]);
+  verPendientes = signal(false);
+
+  private cargarPendientes(): void {
+    this.corteService.pendientes().subscribe({
+      next: p => this.pendientes.set(p ?? []),
+      error: () => this.pendientes.set([])
+    });
+  }
+
+  etiquetaSalteo(subtipo?: string): string {
+    switch (subtipo) {
+      case 'FALTA_MATERIAL': return 'Faltante de material';
+      case 'MAQUINA':        return 'Problema de máquina';
+      case 'OTRA_MAQUINA':   return 'Se hace en otra máquina';
+      case 'OTRO':           return 'Otro';
+      default:               return subtipo ?? '—';
+    }
+  }
+
+  /** El corte se hizo por fuera, o la orden ya no lo necesita. */
+  darPorCumplido(corte: Corte): void {
+    this.dialog.open<MotivoDialogComponent, MotivoDialogData, string>(MotivoDialogComponent, {
+      data: {
+        titulo: `Dar por cumplido el corte ${corte.nroCorte}`,
+        nota: `Plan ${corte.nroPlan} · ${corte.longitud} mm. Queda como hecho sin pasar por el `
+            + 'visor, con tu motivo anotado. Se usa cuando se cortó a mano, en otra máquina, '
+            + 'o cuando la orden ya no lo necesita.',
+        etiqueta: 'Por qué se da por cumplido',
+        botonConfirmar: 'Dar por cumplido',
+        botonCancelar: 'Volver'
+      }
+    }).afterClosed().subscribe(motivo => {
+      if (!motivo) return;
+      this.corteService.darPorCumplido(corte.scdId, motivo).subscribe({
+        next: () => {
+          this.snack.open('Corte dado por cumplido', 'OK', { duration: 3000 });
+          this.cargar();
+        },
+        error: err => this.snack.open(
+          err?.error?.message || 'No se pudo dar por cumplido', 'OK', { duration: 5000 })
+      });
+    });
+  }
 
   /** Las dos sábanas que se importan. Cambia el Excel que se espera, no el circuito. */
   readonly tipos: Array<{ clave: 'CABLE' | 'CORRUGADO'; titulo: string; icono: string }> = [
@@ -91,7 +219,11 @@ export class CorteComponent implements OnInit {
   cargar(): void {
     this.cargando.set(true);
     this.corteService.misSabanas().subscribe({
-      next: s => { this.sabanas.set(s || []); this.cargando.set(false); },
+      next: s => {
+        this.sabanas.set(s || []);
+        this.cargando.set(false);
+        this.cargarPendientes();
+      },
       error: () => {
         this.sabanas.set([]);
         this.cargando.set(false);
@@ -200,6 +332,15 @@ export class CorteComponent implements OnInit {
     this.corteService.asignar(sabana.sabId, username || null, sabana.nroMaquina).subscribe({
       next: () => { this.snack.open('Sábana asignada', 'OK', { duration: 3000 }); this.cargar(); },
       error: err => this.snack.open(err?.error?.message || 'No se pudo asignar', 'OK', { duration: 5000 })
+    });
+  }
+
+  /** La sábana completa, de solo lectura: ver qué trae sin abrir una tarea. */
+  verDetalle(sabana: SabanaResumen): void {
+    this.dialog.open(DetalleSabanaDialogComponent, {
+      data: sabana,
+      width: '1200px',
+      maxWidth: '96vw'
     });
   }
 

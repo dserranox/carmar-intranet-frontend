@@ -40,6 +40,17 @@
       <mat-icon>refresh</mat-icon>
     </button>
 
+    <!-- Para calidad, el jefe y el administrador: las NC que esperan validación
+         se atienden en una ventana, sin salir de la pantalla ni suspender la
+         tarea que esté corriendo. -->
+    @if (puedeValidarNc && ncPendientes() > 0) {
+      <button mat-stroked-button class="nc-pendientes" (click)="abrirNcPendientes()"
+              matTooltip="Validar sin salir de lo que estás haciendo">
+        <mat-icon>report_problem</mat-icon>
+        {{ ncPendientes() }} NC por validar
+      </button>
+    }
+
     <button mat-icon-button class="campanita" routerLink="/notificaciones"
             aria-label="Notificaciones" matTooltip="Notificaciones">
       <mat-icon [class.con-avisos]="sinLeer() > 0">

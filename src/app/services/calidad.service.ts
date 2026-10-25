@@ -81,6 +81,11 @@ export class CalidadService {
       puesto: control.puesto,
       operario: control.operario,
       observaciones: control.observaciones,
+      cantidadControlada: control.cantidadControlada,
+      cantidadNc: control.cantidadNc,
+      causa: control.causa,
+      accionInmediata: control.accionInmediata,
+      accionPor: control.accionPor,
       items: control.items.map(i => ({
         puntoId: i.puntoId,
         resultado: i.resultado,
@@ -98,6 +103,15 @@ export class CalidadService {
   }
 
   /** Dejarla sin terminar, con el motivo anotado: la salida cuando no se puede cerrar. */
+  /** Para el reloj y cierra la tarea: calidad queda libre y la retoma después. */
+  pausarRuta(rcaId: number, motivo?: string): Observable<RutaCalidad> {
+    return this.http.post<RutaCalidad>(`${this.baseUrl}/rutas/${rcaId}/pausar`, { motivo });
+  }
+
+  retomarRuta(rcaId: number): Observable<RutaCalidad> {
+    return this.http.post<RutaCalidad>(`${this.baseUrl}/rutas/${rcaId}/retomar`, {});
+  }
+
   suspenderRuta(rcaId: number, motivo: string): Observable<RutaCalidad> {
     return this.http.post<RutaCalidad>(`${this.baseUrl}/rutas/${rcaId}/suspender`, { motivo });
   }

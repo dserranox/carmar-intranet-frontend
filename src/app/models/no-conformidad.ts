@@ -1,5 +1,12 @@
 export type TipoNC = 'INTERNA' | 'EXTERNA';
-export type EstadoNC = 'ABIERTA' | 'CERRADA';
+/**
+ * PENDIENTE: reportada, esperando que calidad confirme que lo es.
+ * NO_PROCEDENTE: la validación dijo que no era una no conformidad.
+ * ANULADA: ya estaba validada y resultó mal cargada o repetida.
+ *
+ * Solo ABIERTA y CERRADA cuentan en los indicadores.
+ */
+export type EstadoNC = 'PENDIENTE' | 'ABIERTA' | 'CERRADA' | 'NO_PROCEDENTE' | 'ANULADA';
 export type EjecucionNC = 'PENDIENTE' | 'EJECUTADA' | 'NO_EJECUTADA';
 
 export type OrigenNC =
@@ -46,6 +53,16 @@ export interface NoConformidad {
   estado?: EstadoNC;
   fechaCierre?: string | null;
   cerradaPor?: string | null;
+
+  /** Quién decidió que esto es (o no es) una no conformidad. */
+  fechaValidacion?: string | null;
+  validadaPor?: string | null;
+  motivoRechazo?: string | null;
+
+  /** Una NC ya validada que estaba mal cargada o repetida. */
+  fechaAnulacion?: string | null;
+  anuladaPor?: string | null;
+  motivoAnulacion?: string | null;
 
   ordenId?: number | null;
   nroPlan?: string | null;

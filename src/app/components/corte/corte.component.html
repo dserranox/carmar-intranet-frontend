@@ -80,6 +80,94 @@
     </section>
   }
 
+  <!-- Lo que quedó sin cortar en otras sábanas. Aparece recién cuando hay algo:
+       si está en cero, no hay nada que mirar. -->
+  @if (pendientes().length > 0) {
+    <div class="aviso-pendientes" [class.abierto]="verPendientes()">
+      <button class="cabecera-pendientes" (click)="verPendientes.set(!verPendientes())">
+        <mat-icon>pending_actions</mat-icon>
+        <span class="texto">
+          <strong>{{ pendientes().length }}</strong>
+          {{ pendientes().length === 1 ? 'corte pendiente' : 'cortes pendientes' }}
+          de otras sábanas
+        </span>
+        <mat-icon class="chevron">{{ verPendientes() ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+
+      @if (verPendientes()) {
+        <div class="cuerpo-pendientes">
+          <p class="nota">
+            Se saltearon por falta de material o de máquina. Están en la sábana de pendientes
+            de su tipo, que se asigna como cualquier otra. <strong>El tiempo de cortarlos se
+            imputa al plan original</strong>, no a la sábana de pendientes.
+          </p>
+
+          <table class="tabla-pendientes">
+            <thead>
+              <tr>
+                <th class="der">N°</th>
+                <th>Plan</th>
+                <th>Código</th>
+                <th>Qué es</th>
+                <th>Por qué quedó</th>
+                <th>Venía de</th>
+                <th>Está en</th>
+                @if (esAdmin) { <th></th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of pendientes(); track p.scdId) {
+                <tr>
+                  <td class="der fuerte">{{ p.nroCorte }}</td>
+                  <td>{{ p.nroPlan }}</td>
+                  <td>{{ p.codigo }}</td>
+                  <td>
+                    @if (p.tipoSabana === 'CORRUGADO') {
+                      Ø{{ p.diametroTxt || p.diametro }} · {{ p.longitud }} mm
+                    } @else {
+                      {{ p.color }} {{ p.seccion }} · {{ p.longitud }} mm
+                    }
+                  </td>
+                  <td>
+                    <span class="motivo">{{ etiquetaSalteo(p.subtipoSalteo) }}</span>
+                    @if (p.motivoSalteo && p.motivoSalteo !== etiquetaSalteo(p.subtipoSalteo)) {
+                      <span class="detalle-motivo">{{ p.motivoSalteo }}</span>
+                    }
+                  </td>
+                  <td class="apagado">{{ p.sabanaOrigenNombre || '—' }}</td>
+                  <td>{{ p.sabanaNombre }}</td>
+                  @if (esAdmin) {
+                    <td>
+                      <button mat-stroked-button class="btn-cumplido" (click)="darPorCumplido(p)"
+                              matTooltip="Se hizo por fuera o la orden ya no lo necesita">
+                        <mat-icon>done_all</mat-icon>
+                        Dar por cumplido
+                      </button>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Buscador: con varias sábanas abiertas, encontrar un plan a ojo cuesta. -->
+  <div class="buscador-sabanas">
+    <mat-form-field appearance="outline">
+      <mat-label>Buscar</mat-label>
+      <input matInput [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
+             placeholder="código, plan u operario">
+      @if (busqueda()) {
+        <button matSuffix mat-icon-button (click)="busqueda.set('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+  </div>
+
   @if (cargando()) {
     <p class="vacio">Cargando…</p>
   } @else if (!sabanas().length) {
@@ -87,69 +175,127 @@
       <mat-icon>inbox</mat-icon>
       No tenés sábanas de corte asignadas.
     </p>
-  }
+  } @else if (!hayAlgoQueMostrar()) {
+    <p class="vacio">
+      <mat-icon>search_off</mat-icon>
+      Ninguna sábana coincide con «{{ busqueda() }}».
+    </p>
+  } @else {
 
-  <section class="grilla">
-    @for (s of sabanas(); track s.sabId) {
-      <article class="tarjeta" [class.finalizada]="s.estado === 'FINALIZADA'">
-        <header>
-          <span class="nombre">{{ s.nombre }}</span>
-          <span class="tipo-sabana" [class.corrugado]="s.tipo === 'CORRUGADO'">
-            {{ s.tipo === 'CORRUGADO' ? 'CORRUGADO' : 'CABLE' }}
-          </span>
-          <span class="estado" [class]="s.estado.toLowerCase()">{{ s.estado }}</span>
-        </header>
+    <!-- Dos zonas con las mismas columnas de estado: arriba corrugado, abajo
+         cable. Son dos máquinas distintas y conviene leerlas por separado. -->
+    <div class="tablero-corte">
 
-        <div class="datos">
-          <span><mat-icon>person</mat-icon> {{ s.operario || 'sin asignar' }}</span>
-          @if (s.nroMaquina) { <span><mat-icon>precision_manufacturing</mat-icon> Máquina {{ s.nroMaquina }}</span> }
-          <span><mat-icon>timer</mat-icon> {{ duracion(s.segundosAcumulados) }}</span>
+      <div class="celda-vacia"></div>
+      @for (e of estados; track e.clave) {
+        <div class="cabecera-estado" [class]="'cabecera-estado ' + e.clave.toLowerCase()">
+          <span class="punto"></span>
+          {{ e.titulo }}
+          <span class="cuenta">{{ cuentaEstado(e.clave) }}</span>
+        </div>
+      }
+
+      @for (z of zonas; track z.clave) {
+        <div class="etiqueta-zona" [class.corrugado]="z.clave === 'CORRUGADO'">
+          <span class="nombre-zona">{{ z.titulo }}</span>
+          <span class="resumen-zona">{{ resumenZona(z.clave) }}</span>
         </div>
 
-        @if (s.estado === 'SUSPENDIDA') {
-          <div class="suspendida-info">
-            <mat-icon>pause_presentation</mat-icon>
-            <span>
-              Suspendida {{ s.fechaSuspension | date:'dd/MM HH:mm' }}
-              — {{ etiquetaSuspension(s.subtipoSuspension) }}
-              @if (s.motivoSuspension) { · {{ s.motivoSuspension }} }
-            </span>
+        @for (e of estados; track e.clave) {
+          <div class="celda" [class.vacia]="enCelda(z.clave, e.clave).length === 0"
+               [attr.data-estado]="z.titulo + ' · ' + e.titulo">
+            @for (s of enCelda(z.clave, e.clave); track s.sabId) {
+              @if (e.clave === 'FINALIZADA') {
+                <ng-container *ngTemplateOutlet="finalizada; context: { $implicit: s }"></ng-container>
+              } @else {
+                <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: s }"></ng-container>
+              }
+            }
+            @if (enCelda(z.clave, e.clave).length === 0) {
+              <span class="nada">—</span>
+            }
           </div>
         }
+      }
+    </div>
 
-        <div class="planes">
-          @for (p of s.planes; track p) { <span class="plan">{{ p }}</span> }
-        </div>
-
-        <div class="progreso">
-          <mat-progress-bar mode="determinate" [value]="progreso(s)"></mat-progress-bar>
-          <span>{{ s.cortesHechos }} / {{ s.totalCortes }} cortes</span>
-        </div>
-
-        <footer>
-          <button mat-flat-button color="primary" (click)="abrir(s)"
-                  [disabled]="s.estado === 'FINALIZADA'">
-            <mat-icon>play_arrow</mat-icon>
-            {{ textoBoton(s) }}
-          </button>
-
-          @if (esAdmin) {
-            <mat-form-field appearance="outline" class="asignar">
-              <mat-label>Asignar a</mat-label>
-              <mat-select [value]="s.operario || ''" (valueChange)="asignar(s, $event)">
-                <mat-option value="">— sin asignar —</mat-option>
-                @for (op of operarios(); track op) {
-                  <mat-option [value]="op">{{ op }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-
-            <button mat-icon-button color="warn" matTooltip="Eliminar sábana" (click)="eliminar(s)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          }
-        </footer>
-      </article>
+    @if (finalizadasEscondidas() > 0) {
+      <button mat-button class="ver-anteriores" (click)="verAnteriores.set(true)">
+        Ver anteriores ({{ finalizadasEscondidas() }})
+      </button>
+    } @else if (verAnteriores()) {
+      <button mat-button class="ver-anteriores" (click)="verAnteriores.set(false)">
+        Ver solo las últimas
+      </button>
     }
-  </section>
+  }
 </div>
+
+<!-- ===================== la tarjeta de una sábana ===================== -->
+<ng-template #tarjeta let-s>
+  <article class="tarjeta" [class.suspendida]="s.estado === 'SUSPENDIDA'">
+    <header>
+      <span class="nombre">{{ s.nombre }}</span>
+      <span class="avance">{{ s.cortesHechos }} / {{ s.totalCortes }}</span>
+    </header>
+
+    <div class="datos">
+      <span><mat-icon>person</mat-icon> {{ s.operario || 'sin asignar' }}</span>
+      @if (s.nroMaquina) { <span><mat-icon>precision_manufacturing</mat-icon> Máq. {{ s.nroMaquina }}</span> }
+      <span><mat-icon>timer</mat-icon> {{ duracion(s.segundosAcumulados) }}</span>
+    </div>
+
+    @if (s.estado === 'SUSPENDIDA') {
+      <div class="suspendida-info">
+        {{ s.fechaSuspension | date:'dd/MM HH:mm' }} ·
+        {{ s.motivoSuspension || etiquetaSuspension(s.subtipoSuspension) }}
+      </div>
+    }
+
+    <div class="planes">
+      @for (p of s.planes; track p) { <span class="plan">{{ p }}</span> }
+    </div>
+
+    <mat-progress-bar mode="determinate" [value]="progreso(s)"></mat-progress-bar>
+
+    <footer>
+      <button mat-flat-button color="primary" (click)="abrir(s)">
+        <mat-icon>play_arrow</mat-icon>
+        {{ textoBoton(s) }}
+      </button>
+
+      <button mat-icon-button (click)="verDetalle(s)" matTooltip="Ver los cortes sin empezar la sábana">
+        <mat-icon>list_alt</mat-icon>
+      </button>
+
+      @if (esAdmin) {
+        <mat-form-field appearance="outline" class="asignar">
+          <mat-label>Asignar a</mat-label>
+          <mat-select [value]="s.operario || ''" (valueChange)="asignar(s, $event)">
+            <mat-option value="">— sin asignar —</mat-option>
+            @for (op of operarios(); track op) {
+              <mat-option [value]="op">{{ op }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-icon-button color="warn" matTooltip="Eliminar sábana" (click)="eliminar(s)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      }
+    </footer>
+  </article>
+</ng-template>
+
+<!-- ============ una sábana terminada: una línea y nada más ============ -->
+<ng-template #finalizada let-s>
+  <article class="tarjeta-finalizada" (click)="verDetalle(s)"
+           matTooltip="Ver el detalle de la sábana">
+    <span class="nombre">{{ s.nombre }}</span>
+    <span class="meta">
+      @if (s.planes?.length) { {{ s.planes[0] }}@if (s.planes.length > 1) { +{{ s.planes.length - 1 }} } · }
+      {{ duracion(s.segundosAcumulados) }}
+    </span>
+    <span class="avance">{{ s.cortesHechos }}/{{ s.totalCortes }} <mat-icon>check</mat-icon></span>
+  </article>
+</ng-template>

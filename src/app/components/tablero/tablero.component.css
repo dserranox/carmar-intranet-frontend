@@ -131,3 +131,21 @@
   font-style: italic; line-height: 1.4;
 }
 .vacio { color: rgba(0, 0, 0, .55); font-size: .95rem; padding: 30px 2px; }
+
+/* ── Quién está haciendo qué ──
+   Ahora están todos, trabajen o no. El que está libre se ve de lejos. */
+.tabla-planta tr.libre td { background: #f6f8fa; color: rgba(0, 0, 0, .6); }
+.tabla-planta .pastilla.SIN_TAREA { background: #eceff1; color: #607d8b; }
+/* El contador de «sin tarea» del encabezado ya los cuenta; acá se ven quiénes son. */
+
+.tabla-planta .cola { max-width: 280px; }
+.chip-cola {
+  display: inline-block; margin: 1px 3px 1px 0; padding: 1px 8px;
+  border-radius: 999px; font-size: .74rem; font-weight: 600;
+  background: #e8f1f8; color: #1a3a5c; white-space: nowrap;
+}
+/* El que ya arrancó y dejó a medias se distingue del que ni empezó. */
+.chip-cola.empezado { background: #fff3e0; color: #ef6c00; }
+.sin-cola { font-size: .78rem; color: rgba(0, 0, 0, .35); font-style: italic; }
+
+.btn-asignar { color: #1a3a5c; }

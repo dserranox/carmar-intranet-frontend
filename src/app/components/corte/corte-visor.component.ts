@@ -9,7 +9,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { CorteService } from '../../services/corte.service';
-import { Corte, RegistrarCorteRequest, SabanaResumen } from '../../models/corte';
+import { Corte, RegistrarCorteRequest, RegistrarCorteResponse, SabanaResumen } from '../../models/corte';
 import {
   ControlCalidadDialogComponent, ControlDialogData, ControlDialogResult
 } from './control-calidad-dialog.component';
@@ -17,6 +17,7 @@ import { PausaDialogComponent, PausaDialogResult } from './pausa-dialog.componen
 import { CableDibujoComponent } from './cable-dibujo.component';
 import { CorrugadoDibujoComponent } from './corrugado-dibujo.component';
 import { SuspenderDialogComponent, SuspenderDialogResult } from './suspender-dialog.component';
+import { SaltearDialogComponent, SaltearDialogResult } from './saltear-dialog.component';
 
 /** Etiquetas de los motivos de pausa, para mostrarlos mientras está parada la máquina. */
 const ETIQUETA_PAUSA: Record<string, string> = {
@@ -63,6 +64,8 @@ export class CorteVisorComponent implements OnInit, OnDestroy {
   avisoPendiente = signal(false);
   guardando = signal(false);
   terminada = signal(false);
+  /** Cortes que se dejaron para después en esta sábana. */
+  salteados = signal(0);
   cargando = signal(true);
   noConforme = signal(0);
 
@@ -270,6 +273,7 @@ export class CorteVisorComponent implements OnInit, OnDestroy {
         this.todosLosCortes = this.todosLosCortes.map(
           c => c.scdId === corte.scdId ? { ...c, estado: 'HECHO' as const } : c);
 
+        this.salteados.set(res.salteadosPendientes ?? 0);
         if (res.siguiente) {
           this.mostrarCorte(res.siguiente);
         } else {
@@ -280,6 +284,101 @@ export class CorteVisorComponent implements OnInit, OnDestroy {
       error: err => {
         this.guardando.set(false);
         this.snack.open(err?.error?.message || 'No se pudo registrar el corte', 'OK', { duration: 7000 });
+      }
+    });
+  }
+
+  // ------------------------------------------------- saltear y volver atrás
+
+  /** ¿Hay algún corte hecho sobre el que se pueda volver? */
+  hayHechos(): boolean {
+    return this.todosLosCortes.some(c => c.estado === 'HECHO');
+  }
+
+  /**
+   * Deja este corte para después. No se pierde: al final de la sábana se
+   * vuelve a ofrecer, y si todavía no se puede hacer va a pendientes.
+   */
+  saltear(): void {
+    const corte = this.corte();
+    if (!corte) return;
+
+    this.dialog.open<SaltearDialogComponent, void, SaltearDialogResult>(
+      SaltearDialogComponent, { disableClose: true, width: '520px' }
+    ).afterClosed().subscribe(res => {
+      if (!res) return;
+      this.guardando.set(true);
+      this.corteService.saltearCorte(corte.scdId, res).subscribe({
+        next: r => this.despuesDeMoverse(r, 'Corte salteado'),
+        error: err => {
+          this.guardando.set(false);
+          this.snack.open(err?.error?.message || 'No se pudo saltear el corte', 'OK', { duration: 6000 });
+        }
+      });
+    });
+  }
+
+  /** Vuelve sobre el último corte hecho para rehacerlo. */
+  volverAlAnterior(): void {
+    this.guardando.set(true);
+    this.corteService.volverAlAnterior(this.sabId).subscribe({
+      next: r => this.despuesDeMoverse(r, 'Volviste sobre el corte anterior'),
+      error: err => {
+        this.guardando.set(false);
+        this.snack.open(err?.error?.message || 'No se pudo volver atrás', 'OK', { duration: 6000 });
+      }
+    });
+  }
+
+  /** Llegó el material: los salteados vuelven a la cola. */
+  retomarSalteados(): void {
+    this.guardando.set(true);
+    this.corteService.retomarSalteados(this.sabId).subscribe({
+      next: r => {
+        this.terminada.set(false);
+        this.despuesDeMoverse(r, 'Los cortes salteados vuelven a la cola');
+      },
+      error: err => {
+        this.guardando.set(false);
+        this.snack.open(err?.error?.message || 'No se pudieron retomar', 'OK', { duration: 6000 });
+      }
+    });
+  }
+
+  /** Cierra la sábana y manda lo que quedó a la lista de pendientes. */
+  cerrarDejandoPendientes(): void {
+    this.guardando.set(true);
+    this.corteService.cerrarConPendientes(this.sabId).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.snack.open('Sábana cerrada. Los cortes que faltaron quedaron en pendientes.',
+          'OK', { duration: 7000 });
+        this.volver();
+      },
+      error: err => {
+        this.guardando.set(false);
+        this.snack.open(err?.error?.message || 'No se pudo cerrar la sábana', 'OK', { duration: 6000 });
+      }
+    });
+  }
+
+  /** Lo común a saltear, volver y retomar: refrescar el visor con lo que haya. */
+  private despuesDeMoverse(r: RegistrarCorteResponse, aviso: string): void {
+    this.guardando.set(false);
+    if (r.sabana) this.sabana.set(r.sabana);
+    this.salteados.set(r.salteadosPendientes ?? 0);
+    this.snack.open(aviso, 'OK', { duration: 3000 });
+
+    // La lista local quedó vieja: se vuelve a pedir para que los «vienen» y el
+    // botón de volver atrás muestren el estado real.
+    this.corteService.getCortes(this.sabId).subscribe(cortes => {
+      this.todosLosCortes = cortes ?? [];
+      if (r.siguiente) {
+        this.mostrarCorte(r.siguiente);
+        this.terminada.set(false);
+      } else {
+        this.corte.set(null);
+        this.terminada.set(true);
       }
     });
   }

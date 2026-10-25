@@ -14,9 +14,19 @@
 
   @if (puedeEditar) {
     <div class="alta">
+      <!-- Dos cosas distintas en la misma lista: lo que se verifica y lo que se
+           hace sobre la máquina. La puesta a punto no tenía dónde anotarse. -->
+      <mat-form-field appearance="outline" class="campo-tipo">
+        <mat-label>Tipo</mat-label>
+        <mat-select [(ngModel)]="nuevoTipo">
+          <mat-option value="CONTROL">Punto de control</mat-option>
+          <mat-option value="PUESTA_A_PUNTO">Puesta a punto</mat-option>
+        </mat-select>
+      </mat-form-field>
       <mat-form-field appearance="outline" class="campo-nombre">
-        <mat-label>Nuevo punto de control</mat-label>
-        <input matInput [(ngModel)]="nuevoNombre" placeholder="CONTROL DE ..."
+        <mat-label>{{ nuevoTipo === 'PUESTA_A_PUNTO' ? 'Nueva puesta a punto' : 'Nuevo punto de control' }}</mat-label>
+        <input matInput [(ngModel)]="nuevoNombre"
+               [placeholder]="nuevoTipo === 'PUESTA_A_PUNTO' ? 'AJUSTE DE ...' : 'CONTROL DE ...'"
                (keyup.enter)="agregar()" />
       </mat-form-field>
       <mat-form-field appearance="outline" class="campo-desc">
@@ -47,6 +57,15 @@
               </button>
             }
           </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="tipo">
+        <th mat-header-cell *matHeaderCellDef>Tipo</th>
+        <td mat-cell *matCellDef="let p">
+          <span class="pastilla-tipo" [class.puesta]="p.tipo === 'PUESTA_A_PUNTO'">
+            {{ p.tipo === 'PUESTA_A_PUNTO' ? 'Puesta a punto' : 'Control' }}
+          </span>
         </td>
       </ng-container>
 

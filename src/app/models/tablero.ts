@@ -5,13 +5,28 @@ export interface Valor {
   secundario?: number | null;
 }
 
+/** Un código asignado que el operario todavía no terminó. */
+export interface EnCola {
+  ordenId: number;
+  nroPlan: string;
+  codigoProducto: string | null;
+  cantidad: number | null;
+  prioridad: number | null;
+  estado: 'PENDIENTE' | 'EN_CURSO' | string;
+}
+
 export interface EnPlanta {
   usuario: string;
-  estado: 'EN_CURSO' | 'PAUSADA' | 'SUSPENDIDA' | string;
+  /** SIN_TAREA: está libre. Es el dato que se busca al mirar el tablero. */
+  estado: 'EN_CURSO' | 'PAUSADA' | 'SUSPENDIDA' | 'SIN_TAREA' | string;
   operacion: string | null;
   nroPlan: string | null;
+  codigoProducto: string | null;
+  producto: string | null;
   puesto: string | null;
   minutos: number | null;
+  /** Lo que tiene esperando, en orden de prioridad. */
+  cola: EnCola[];
 }
 
 export interface Colgada {

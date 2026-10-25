@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -26,7 +27,7 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
   imports: [
     CommonModule, FormsModule, MatTableModule, MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatSlideToggleModule, MatTooltipModule,
-    MatSnackBarModule, MatDialogModule
+    MatSnackBarModule, MatDialogModule, MatSelectModule
   ],
   templateUrl: './puntos-control.component.html',
   styleUrls: ['./puntos-control.component.css']
@@ -44,11 +45,13 @@ export class PuntosControlComponent implements OnInit {
   guardando = signal(false);
   puedeEditar = false;
 
-  columnas = ['orden', 'nombre', 'descripcion', 'usos', 'activo', 'acciones'];
+  columnas = ['orden', 'tipo', 'nombre', 'descripcion', 'usos', 'activo', 'acciones'];
 
   // Alta
   nuevoNombre = '';
   nuevaDescripcion = '';
+  /** Lo que se verifica, o lo que se hace sobre la máquina. */
+  nuevoTipo: 'CONTROL' | 'PUESTA_A_PUNTO' = 'CONTROL';
 
   ngOnInit(): void {
     this.puedeEditar = this.tienePermiso('CALIDAD:WRITE');
@@ -81,6 +84,7 @@ export class PuntosControlComponent implements OnInit {
     this.calidadService.guardarPunto({
       nombre: this.nuevoNombre.trim(),
       descripcion: this.nuevaDescripcion.trim() || null,
+      tipo: this.nuevoTipo,
       activo: true
     }).subscribe({
       next: punto => {

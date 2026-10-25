@@ -9,6 +9,13 @@
   /* Sin esto, un hijo largo estira la grilla y toda la página se corre al costado. */
   max-width: 100%;
   overflow: hidden;
+
+  /* Queda fija arriba: en las tablas largas el menú se perdía al bajar y había
+     que volver hasta arriba de todo para cambiar de pantalla. */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .logo-btn {
@@ -131,4 +138,20 @@
 @keyframes latido {
   0%, 100% { opacity: 1; }
   50% { opacity: .45; }
+}
+
+/* Las NC que esperan validación. Va en la barra y no en una pantalla porque
+   se atiende sin dejar lo que se está haciendo. */
+.nc-pendientes {
+  border-color: #ffb74d !important;
+  color: #b26500 !important;
+  font-size: .82rem;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+  }
 }

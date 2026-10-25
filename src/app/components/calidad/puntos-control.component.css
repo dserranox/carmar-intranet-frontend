@@ -41,3 +41,13 @@ tr.inactivo .nombre { text-decoration: line-through; }
 
 .vacio { padding: 28px; text-align: center; color: rgba(0,0,0,.55); margin: 0; }
 .ayuda { margin: 12px 2px 0; font-size: .82rem; color: rgba(0,0,0,.55); }
+
+/* Control o puesta a punto: dos cosas distintas en la misma lista. */
+.pastilla-tipo {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-size: .74rem; font-weight: 700; white-space: nowrap;
+  background: #e8f1f8; color: #1a3a5c;
+}
+.pastilla-tipo.puesta { background: #ede7f6; color: #512da8; }
+
+.campo-tipo { width: 170px; }

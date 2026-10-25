@@ -16,6 +16,9 @@ import { NotificacionesService } from '../services/notificaciones.service';
 import { rutaDeInicio } from '../shared/inicio';
 import { EntradaDeMenu, menuVisible } from '../shared/pantallas';
 import { TareaAbiertaService } from '../shared/tarea-abierta.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { NoConformidadesService } from '../services/no-conformidades.service';
+import { NcPendientesDialogComponent } from '../components/no-conformidades/nc-pendientes-dialog.component';
 
 @Component({
   selector: 'app-shell',
@@ -24,7 +27,7 @@ import { TareaAbiertaService } from '../shared/tarea-abierta.service';
     CommonModule,
     RouterOutlet, RouterLink, RouterLinkActive,
     MatToolbarModule, MatIconModule, MatButtonModule, MatDividerModule,
-    MatTooltipModule, MatMenuModule
+    MatTooltipModule, MatMenuModule, MatDialogModule
   ],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss']
@@ -34,6 +37,8 @@ export class ShellComponent implements OnInit, AfterViewInit, OnDestroy {
   private router = inject(Router);
   private notificaciones = inject(NotificacionesService);
   private tareas = inject(TareaAbiertaService);
+  private ncService = inject(NoConformidadesService);
+  private dialog = inject(MatDialog);
 
   /** Lo que muestra la campanita. */
   readonly sinLeer = this.notificaciones.sinLeer;
@@ -41,11 +46,42 @@ export class ShellComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly tareaAbierta = this.tareas.actual;
   private reloj?: ReturnType<typeof setInterval>;
 
+  /**
+   * Las no conformidades esperando validación.
+   *
+   * Se muestran en la barra y se atienden en una ventana, sin cambiar de
+   * pantalla: calidad recibe el aviso mientras está haciendo otra cosa y no
+   * tiene por qué suspender su tarea para decidir si una NC procede.
+   */
+  puedeValidarNc = false;
+  ncPendientes = signal(0);
+
   ngOnInit(): void {
     this.notificaciones.refrescarContador();
     this.tareas.consultar().subscribe();
+    this.puedeValidarNc = this.tienePermiso('NC:VALIDAR');
+    this.contarNcPendientes();
     // Sin websockets: se relee cada dos minutos, alcanza para un aviso de planta.
-    this.reloj = setInterval(() => this.notificaciones.refrescarContador(), 120_000);
+    this.reloj = setInterval(() => {
+      this.notificaciones.refrescarContador();
+      this.contarNcPendientes();
+    }, 120_000);
+  }
+
+  private contarNcPendientes(): void {
+    if (!this.puedeValidarNc) return;
+    this.ncService.listar({ estado: 'PENDIENTE' }).subscribe({
+      next: lista => this.ncPendientes.set(lista?.length ?? 0),
+      error: () => { /* si falla, no se muestra el botón y listo */ }
+    });
+  }
+
+  abrirNcPendientes(): void {
+    this.dialog.open(NcPendientesDialogComponent, { width: '660px', maxWidth: '95vw' })
+      .afterClosed().subscribe(() => {
+        this.contarNcPendientes();
+        this.notificaciones.refrescarContador();
+      });
   }
 
   ngOnDestroy(): void {

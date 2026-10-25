@@ -24,6 +24,21 @@
   <!-- Panel de Filtros -->
   <div class="filter-panel">
 
+    <!-- Buscar en todo. Es lo primero porque es lo que más se usa: la mayoría
+         de las veces uno sabe el código o el plan y no quiere armar un filtro. -->
+    <mat-form-field appearance="outline" class="buscador">
+      <mat-icon matPrefix>search</mat-icon>
+      <mat-label>Buscar</mat-label>
+      <input matInput [ngModel]="filterValue" (ngModelChange)="buscar($event)"
+             placeholder="plan, código, producto, cliente o estado" />
+      @if (filterValue) {
+        <button matSuffix mat-icon-button (click)="limpiarBusqueda()" matTooltip="Borrar la búsqueda">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+      <mat-hint>Varias palabras también: «akron ramal»</mat-hint>
+    </mat-form-field>
+
     <!-- Fila 1: selectores simples -->
     <div class="filter-grid">
 
@@ -32,7 +47,7 @@
                            [(ngModel)]="year" (ngModelChange)="load(true)" />
 
       <app-select-buscable class="filter-field" label="Nro. Plan" placeholder="Buscar plan…"
-                           [opciones]="opcionesNroPlan"
+                           [multiple]="true" [conTodos]="false" [opciones]="opcionesNroPlan"
                            [(ngModel)]="filterNroPlan" (ngModelChange)="applyFilters()" />
 
       @if (isAdmin) {
@@ -55,7 +70,7 @@
     <div class="filter-grid">
 
       <app-select-buscable class="filter-field" label="Código" placeholder="Buscar código…"
-                           [opciones]="opcionesCodigo"
+                           [multiple]="true" [conTodos]="false" [opciones]="opcionesCodigo"
                            [(ngModel)]="filterProductoCodigo" (ngModelChange)="applyFilters()" />
 
       @if (puedeVerClientes) {
@@ -66,7 +81,7 @@
 
       @if (isAdmin) {
         <app-select-buscable class="filter-field" label="Producto" placeholder="Buscar producto…"
-                             [opciones]="opcionesProducto"
+                             [multiple]="true" [conTodos]="false" [opciones]="opcionesProducto"
                              [(ngModel)]="filterProductoDescripcion" (ngModelChange)="applyFilters()" />
       }
 
@@ -142,9 +157,12 @@
         <mat-icon>filter_alt_off</mat-icon>
         Limpiar filtros
       </button>
-      <button mat-flat-button color="primary" (click)="load()">
-        <mat-icon>search</mat-icon>
-        Buscar
+      <!-- Esto no busca: vuelve a leer las órdenes del servidor. Se llamaba
+           «Buscar» y confundía, porque el que busca es el campo de arriba. -->
+      <button mat-flat-button color="primary" (click)="load()"
+              matTooltip="Vuelve a leer las órdenes del año, por si alguien cargó algo">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
       </button>
 
       <!-- Cada uno se arma su vista: qué columnas mira y en qué orden. -->

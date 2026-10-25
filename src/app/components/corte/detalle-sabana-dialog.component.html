@@ -1,0 +1,99 @@
+<div class="encabezado">
+  <div class="titulo">
+    <h2>{{ sabana.nombre }}</h2>
+    <span class="tipo" [class.corrugado]="esCorrugado">{{ esCorrugado ? 'CORRUGADO' : 'CABLE' }}</span>
+    <span class="estado" [class]="sabana.estado.toLowerCase()">{{ sabana.estado }}</span>
+  </div>
+  <button mat-icon-button (click)="ref.close()" matTooltip="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div class="barra">
+  <span class="cuenta">
+    {{ hechos() }} de {{ cortes().length }} cortes hechos
+  </span>
+
+  <mat-form-field appearance="outline" class="buscador">
+    <mat-label>Buscar</mat-label>
+    <input matInput [ngModel]="filtro()" (ngModelChange)="filtro.set($event)"
+           placeholder="plan, código, color, largo…">
+    @if (filtro()) {
+      <button matSuffix mat-icon-button (click)="filtro.set('')">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </mat-form-field>
+</div>
+
+<mat-dialog-content>
+  @if (cargando()) {
+    <div class="centrado"><mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner></div>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (visibles().length === 0) {
+    <p class="vacio">
+      @if (filtro()) { Ningún corte coincide con «{{ filtro() }}». }
+      @else { La sábana no tiene cortes. }
+    </p>
+  } @else {
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th class="der">N°</th>
+          <th>Plan</th>
+          <th>Código</th>
+          @if (esCorrugado) {
+            <th>Diámetro</th>
+            <th>Tipo</th>
+            <th class="der">Largo</th>
+            <th class="der">Cant.</th>
+            <th>Programa</th>
+          } @else {
+            <th class="der">Cable</th>
+            <th>Color</th>
+            <th class="der">Secc.</th>
+            <th>Extremo A</th>
+            <th>Terminal A</th>
+            <th class="der">Largo</th>
+            <th>Terminal B</th>
+            <th>Extremo B</th>
+            <th>Impresión</th>
+          }
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of visibles(); track c.scdId) {
+          <tr [class.hecho]="c.estado === 'HECHO'">
+            <td class="der fuerte">{{ c.nroCorte }}</td>
+            <td>{{ c.nroPlan }}</td>
+            <td>{{ c.codigo }}</td>
+            @if (esCorrugado) {
+              <td>{{ c.diametroTxt || '—' }}</td>
+              <td>{{ c.tipoCorrugado || '—' }}</td>
+              <td class="der">{{ c.longitud }}</td>
+              <td class="der">{{ c.cantidad ?? '—' }}</td>
+              <td>{{ c.programa || '—' }}</td>
+            } @else {
+              <td class="der">{{ c.nroCable || '—' }}</td>
+              <td>{{ c.color }}</td>
+              <td class="der">{{ c.seccion }}</td>
+              <td>{{ punta(c.origenA, c.posicionA) }}</td>
+              <td class="chico">{{ c.terminalA || '—' }}</td>
+              <td class="der fuerte">{{ c.longitud }}</td>
+              <td class="chico">{{ c.terminalB || '—' }}</td>
+              <td>{{ punta(c.destinoB, c.posicionB) }}</td>
+              <td class="chico">{{ c.impresion || '—' }}</td>
+            }
+            <td><span [class]="claseEstado(c.estado)">{{ c.estado || 'PENDIENTE' }}</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button color="primary" (click)="ref.close()">Cerrar</button>
+</mat-dialog-actions>

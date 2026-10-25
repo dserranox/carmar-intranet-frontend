@@ -1,5 +1,12 @@
 @use '@angular/material' as mat;
 
+/* Alto de la barra de navegación, que está fija arriba. Lo que quiera quedar
+   pegado debajo de ella —la barra de acciones de Órdenes, por ejemplo— tiene
+   que arrancar acá y no en cero, o se mete abajo del menú. */
+:root {
+  --alto-navbar: 62px;
+}
+
 $theme: mat.define-theme((color: (theme-type: light,
         primary: mat.$azure-palette,
         tertiary: mat.$red-palette )));

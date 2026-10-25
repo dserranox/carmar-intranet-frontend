@@ -12,6 +12,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { TableroService } from '../../services/tablero.service';
 import { Tablero } from '../../models/tablero';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { OrdersService } from '../../services/orders.service';
+import { ElegirOrdenDialogComponent } from '../calidad/elegir-orden-dialog.component';
+import { AsignarDialogComponent } from '../orders/asignar-dialog.component';
 
 /**
  * El tablero del administrador.
@@ -28,7 +32,7 @@ import { Tablero } from '../../models/tablero';
   imports: [
     CommonModule, FormsModule, MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule,
-    MatTooltipModule, MatSnackBarModule
+    MatTooltipModule, MatSnackBarModule, MatDialogModule
   ],
   templateUrl: './tablero.component.html',
   styleUrls: ['./tablero.component.css']
@@ -36,6 +40,8 @@ import { Tablero } from '../../models/tablero';
 export class TableroComponent implements OnInit {
   private servicio = inject(TableroService);
   private snack = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
+  private ordersSvc = inject(OrdersService);
 
   datos = signal<Tablero | null>(null);
   cargando = signal(true);
@@ -136,11 +142,79 @@ export class TableroComponent implements OnInit {
     return margen !== null && margen < 10;
   }
 
+  // ==================== asignar desde el tablero ====================
+  //
+  // El caso de uso es ver quién está libre y mandarle algo. Si para eso hay que
+  // cambiar de pantalla, el tablero deja de servir. El botón solo aparece para
+  // quien ya tiene permiso de asignar.
+
+  get puedeAsignar(): boolean {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return false;
+      const perms = JSON.parse(raw)?.permissions;
+      return Array.isArray(perms) && perms.includes('ASIGNACIONES:WRITE');
+    } catch { return false; }
+  }
+
+  /** Elegir el código y repartirlo, sin salir del tablero. */
+  asignarA(usuario: string): void {
+    this.ordersSvc.listByYear(new Date().getFullYear()).subscribe({
+      next: ordenes => {
+        // Solo lo que se puede trabajar: planificado o en proceso.
+        const elegibles = (ordenes ?? [])
+          .filter(o => ['PLANIFICADO', 'EN PROCESO'].includes((o.situacionClave ?? '').toUpperCase()))
+          .map(o => ({
+            ordenId: o.id,
+            nroPlan: o.ordNroPlan,
+            productoCodigo: o.productoCodigo,
+            productoDescripcion: o.productoDescripcion,
+            clienteRazonSocial: o.clienteRazonSocial ?? null,
+            situacionClave: o.situacionClave,
+            cantidad: o.cantidad,
+            operarios: [],
+            puestos: [],
+            yaControlada: false
+          }));
+
+        if (!elegibles.length) {
+          this.snack.open('No hay órdenes planificadas ni en proceso para asignar', 'OK',
+            { duration: 5000 });
+          return;
+        }
+
+        this.dialog.open(ElegirOrdenDialogComponent, {
+          width: '720px', maxWidth: '95vw',
+          data: { ordenes: elegibles }
+        }).afterClosed().subscribe(elegida => {
+          if (!elegida) return;
+          this.dialog.open(AsignarDialogComponent, {
+            width: '1040px', maxWidth: '96vw',
+            data: {
+              ordenId: elegida.ordenId,
+              nroPlan: elegida.nroPlan,
+              productoCodigo: elegida.productoCodigo,
+              productoDescripcion: elegida.productoDescripcion,
+              cantidad: elegida.cantidad,
+              operarioSugerido: usuario
+            }
+          }).afterClosed().subscribe(asignado => {
+            if (!asignado) return;
+            this.snack.open(`Trabajo asignado a ${usuario}`, 'OK', { duration: 4000 });
+            this.cargar();
+          });
+        });
+      },
+      error: () => this.snack.open('No se pudieron leer las órdenes', 'OK', { duration: 5000 })
+    });
+  }
+
   etiquetaEstado(estado: string): string {
     switch (estado) {
       case 'EN_CURSO': return 'trabajando';
       case 'PAUSADA': return 'en pausa';
       case 'SUSPENDIDA': return 'suspendida';
+      case 'SIN_TAREA': return 'libre';
       default: return estado.toLowerCase();
     }
   }
@@ -165,3 +239,4 @@ export class TableroComponent implements OnInit {
     return `${fecha.getFullYear()}-${pad(fecha.getMonth() + 1)}-${pad(fecha.getDate())}`;
   }
 }
+

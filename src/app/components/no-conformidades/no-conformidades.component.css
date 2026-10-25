@@ -49,3 +49,15 @@ td.desvio { max-width: 420px; }
 .chip.externa { background: #ede7f6; color: #4527a0; }
 
 .vacio { padding: 28px; text-align: center; color: rgba(0,0,0,.55); margin: 0; }
+
+/* ── Estados de validación ──
+   Ámbar para lo que está esperando una decisión, gris para lo que quedó
+   afuera: ni rojo ni verde, porque no procede no es un error de nadie. */
+.chip.pendiente { background: #fff8e1; color: #8a6200; }
+.chip.cerrada   { background: #e8f5e9; color: #2e7d32; }
+.chip.no_procedente,
+.chip.anulada   { background: #eceff1; color: #546e7a; text-decoration: line-through; }
+
+.btn-validar  { color: #2e7d32; }
+.btn-rechazar { color: #8a6200; }
+.btn-anular   { color: #90a4ae; }

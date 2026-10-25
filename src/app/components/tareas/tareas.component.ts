@@ -19,6 +19,9 @@ import { TareasDTO } from '../../models/tarea';
 import { MatDialog } from '@angular/material/dialog';
 import { FinishTaskDialogComponent, FinishTaskDialogResult } from './finish-task-dialog.component';
 import { TiempoProcesoDirective } from '../../directives/tiempo-proceso.directive';
+import {
+  SuspenderDialogComponent, SuspenderDialogData, SuspenderDialogResult
+} from '../corte/suspender-dialog.component';
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver';
 import { OpcionBuscable, SelectBuscableComponent } from '../../shared/select-buscable.component';
@@ -351,6 +354,37 @@ export class TareasComponent implements OnInit {
           this.load();
         },
         error: () => this.snack.open('No se pudo finalizar la tarea', 'OK', { duration: 3000 })
+      });
+    });
+  }
+
+  /**
+   * Suspender la tarea de otro. El caso típico es el operario que se fue sin
+   * cerrarla: el reloj le sigue corriendo y al día siguiente no puede arrancar
+   * nada hasta que alguien la destrabe.
+   *
+   * No se finaliza, se suspende: la cantidad producida la sabe él, no nosotros.
+   */
+  suspenderTarea(row: TareasDTO) {
+    this.dialog.open<SuspenderDialogComponent, SuspenderDialogData, SuspenderDialogResult>(
+      SuspenderDialogComponent, {
+        disableClose: true,
+        width: '480px',
+        data: {
+          titulo: `Suspender la tarea de ${row.username ?? "este operario"}`,
+          nota: 'La tarea queda a medias y el reloj se detiene. El operario la puede retomar '
+              + 'y cerrarla él con la cantidad real. Queda registrado que la suspendiste vos.',
+          botonCancelar: 'Dejarla como está'
+        }
+      }).afterClosed().subscribe(res => {
+      if (!res) return;
+      this.tasksService.suspenderTareaDeOtro(row.id, res.motivo).subscribe({
+        next: () => {
+          this.snack.open('Tarea suspendida', 'OK', { duration: 3000 });
+          this.load();
+        },
+        error: err => this.snack.open(
+          err?.error?.message || 'No se pudo suspender la tarea', 'OK', { duration: 5000 })
       });
     });
   }

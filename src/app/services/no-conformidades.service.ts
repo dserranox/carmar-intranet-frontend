@@ -27,6 +27,21 @@ export class NoConformidadesService {
       : this.http.post<NoConformidad>(this.baseUrl, nc);
   }
 
+  /** Sí era una no conformidad: desde acá cuenta en los indicadores. */
+  validar(ncfId: number): Observable<NoConformidad> {
+    return this.http.post<NoConformidad>(`${this.baseUrl}/${ncfId}/validar`, {});
+  }
+
+  /** No era una no conformidad. Queda con el motivo, afuera de los indicadores. */
+  rechazar(ncfId: number, motivo: string): Observable<NoConformidad> {
+    return this.http.post<NoConformidad>(`${this.baseUrl}/${ncfId}/rechazar`, { motivo });
+  }
+
+  /** Estaba mal cargada o repetida. No se borra: el número queda reservado. */
+  anular(ncfId: number, motivo: string): Observable<NoConformidad> {
+    return this.http.post<NoConformidad>(`${this.baseUrl}/${ncfId}/anular`, { motivo });
+  }
+
   cerrar(ncfId: number): Observable<NoConformidad> {
     return this.http.post<NoConformidad>(`${this.baseUrl}/${ncfId}/cerrar`, {});
   }

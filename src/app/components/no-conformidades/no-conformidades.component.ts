@@ -13,6 +13,9 @@ import {
   NoConformidad, ORIGENES_EXTERNOS, ORIGENES_INTERNOS, etiquetaOrigen
 } from '../../models/no-conformidad';
 import { OpcionBuscable, SelectBuscableComponent } from '../../shared/select-buscable.component';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+import { MotivoDialogComponent, MotivoDialogData } from '../../shared/motivo-dialog.component';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 /** Seguimiento: qué no conformidades hay, de dónde salieron y cómo van. */
 @Component({
@@ -20,7 +23,7 @@ import { OpcionBuscable, SelectBuscableComponent } from '../../shared/select-bus
   standalone: true,
   imports: [
     CommonModule, FormsModule, DatePipe, MatTableModule, MatIconModule,
-    MatButtonModule, MatTooltipModule, MatSnackBarModule, SelectBuscableComponent
+    MatButtonModule, MatTooltipModule, MatSnackBarModule, MatDialogModule, SelectBuscableComponent
   ],
   templateUrl: './no-conformidades.component.html',
   styleUrls: ['./no-conformidades.component.css']
@@ -29,6 +32,7 @@ export class NoConformidadesComponent implements OnInit {
   private servicio = inject(NoConformidadesService);
   private snack = inject(MatSnackBar);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   todas = signal<NoConformidad[]>([]);
   cargando = signal(false);
@@ -41,8 +45,11 @@ export class NoConformidadesComponent implements OnInit {
   columnas = ['numero', 'fecha', 'tipo', 'origen', 'producto', 'descripcion', 'responsables', 'estado', 'acciones'];
 
   opcionesEstado: OpcionBuscable[] = [
+    { valor: 'PENDIENTE', texto: 'Pendiente de validación' },
     { valor: 'ABIERTA', texto: 'Abierta' },
-    { valor: 'CERRADA', texto: 'Cerrada' }
+    { valor: 'CERRADA', texto: 'Cerrada' },
+    { valor: 'NO_PROCEDENTE', texto: 'No procedente' },
+    { valor: 'ANULADA', texto: 'Anulada' }
   ];
   opcionesTipo: OpcionBuscable[] = [
     { valor: 'INTERNA', texto: 'Interna' },
@@ -55,10 +62,77 @@ export class NoConformidadesComponent implements OnInit {
   cerradas = computed(() => this.todas().filter(n => n.estado === 'CERRADA').length);
   sinAccion = computed(() => this.todas()
     .filter(n => n.estado === 'ABIERTA' && !n.accionInmediata).length);
+  /** Reportadas que todavía nadie confirmó que sean no conformidades. */
+  pendientes = computed(() => this.todas().filter(n => n.estado === 'PENDIENTE').length);
+
+  /** Calidad, jefe de producción y administrador deciden si una NC procede. */
+  puedeValidar = false;
 
   ngOnInit(): void {
     this.puedeEscribir = this.tienePermiso('NOCONFORMIDADES:WRITE');
+    this.puedeValidar = this.tienePermiso('NC:VALIDAR');
     this.cargar();
+  }
+
+  // ------------------------------------------------- validación y anulación
+
+  validar(nc: NoConformidad): void {
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '460px',
+      data: {
+        titulo: `Validar la no conformidad N° ${nc.numero}`,
+        mensaje: 'Confirmás que esto es una no conformidad. A partir de ahora cuenta en los '
+               + 'indicadores y se avisa al resto. ¿Seguimos?',
+        botonConfirmar: 'Validar',
+        botonCancelar: 'Volver',
+        peligroso: false
+      }
+    }).afterClosed().subscribe(ok => {
+      if (!ok) return;
+      this.servicio.validar(nc.ncfId!).subscribe({
+        next: () => { this.snack.open('No conformidad validada', 'OK', { duration: 3000 }); this.cargar(); },
+        error: err => this.snack.open(err?.error?.message || 'No se pudo validar', 'OK', { duration: 5000 })
+      });
+    });
+  }
+
+  rechazar(nc: NoConformidad): void {
+    this.dialog.open<MotivoDialogComponent, MotivoDialogData, string>(MotivoDialogComponent, {
+      data: {
+        titulo: `La N° ${nc.numero} no procede`,
+        nota: 'No se borra: queda registrada con tu motivo y afuera de los indicadores. '
+            + 'Quien la cargó recibe el aviso.',
+        etiqueta: 'Por qué no procede',
+        botonConfirmar: 'No procede',
+        botonCancelar: 'Volver'
+      }
+    }).afterClosed().subscribe(motivo => {
+      if (!motivo) return;
+      this.servicio.rechazar(nc.ncfId!, motivo).subscribe({
+        next: () => { this.snack.open('Marcada como no procedente', 'OK', { duration: 3000 }); this.cargar(); },
+        error: err => this.snack.open(err?.error?.message || 'No se pudo rechazar', 'OK', { duration: 5000 })
+      });
+    });
+  }
+
+  anular(nc: NoConformidad): void {
+    this.dialog.open<MotivoDialogComponent, MotivoDialogData, string>(MotivoDialogComponent, {
+      data: {
+        titulo: `Anular la no conformidad N° ${nc.numero}`,
+        nota: 'Para una NC mal cargada o repetida. No se borra y el número queda reservado: '
+            + 'va a seguir estando a la vista, anulada y con tu motivo.',
+        etiqueta: 'Por qué se anula',
+        botonConfirmar: 'Anular',
+        botonCancelar: 'Volver',
+        peligroso: true
+      }
+    }).afterClosed().subscribe(motivo => {
+      if (!motivo) return;
+      this.servicio.anular(nc.ncfId!, motivo).subscribe({
+        next: () => { this.snack.open('No conformidad anulada', 'OK', { duration: 3000 }); this.cargar(); },
+        error: err => this.snack.open(err?.error?.message || 'No se pudo anular', 'OK', { duration: 5000 })
+      });
+    });
   }
 
   private tienePermiso(permiso: string): boolean {

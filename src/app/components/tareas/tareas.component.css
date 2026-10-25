@@ -214,3 +214,6 @@ table {
 }
 
 .pausa-cel { color: #b26a00; }
+
+/* Suspender la tarea de otro no es destructivo como finalizar: va en ámbar. */
+.btn-suspender { color: #ef6c00; }

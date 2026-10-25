@@ -22,6 +22,11 @@ export interface AsignarDialogData {
   productoCodigo?: string;
   productoDescripcion?: string;
   cantidad?: number | null;
+  /**
+   * Cuando se entra desde el tablero ya se sabe a quién se le va a dar: viene
+   * puesto para no tener que buscarlo de nuevo en la lista.
+   */
+  operarioSugerido?: string;
 }
 
 /**
@@ -87,7 +92,11 @@ export class AsignarDialogComponent implements OnInit {
 
   agregarFila(): void {
     this.filas.push({
-      operacionIds: [], operario: "", cantidad: this.cantidadSugerida(), nroMaquina: null, puesto: ""
+      operacionIds: [],
+      operario: this.data.operarioSugerido ?? "",
+      cantidad: this.cantidadSugerida(),
+      nroMaquina: null,
+      puesto: ""
     });
   }
 

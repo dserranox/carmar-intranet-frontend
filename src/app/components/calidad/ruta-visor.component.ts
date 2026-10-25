@@ -17,6 +17,7 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import {
   SuspenderDialogComponent, SuspenderDialogResult
 } from '../corte/suspender-dialog.component';
+import { MotivoDialogComponent, MotivoDialogData } from '../../shared/motivo-dialog.component';
 
 /**
  * La recorrida en la mano: el responsable elige una orden abierta y va marcando
@@ -273,6 +274,47 @@ export class RutaVisorComponent implements OnInit, OnDestroy {
    * Hace falta porque cerrarla exige órdenes controladas, y con el candado puesto
    * una recorrida colgada dejaría a calidad sin poder usar el resto de la app.
    */
+  /**
+   * Para la recorrida sin darla por perdida. Se cierra la tarea, así que el
+   * responsable de calidad queda libre para hacer otra cosa, y al volver la
+   * retoma donde quedó.
+   */
+  pausarRuta(): void {
+    const r = this.ruta();
+    if (!r) return;
+    this.dialog.open<MotivoDialogComponent, MotivoDialogData, string>(MotivoDialogComponent, {
+      data: {
+        titulo: 'Pausar la recorrida',
+        nota: 'El reloj se para y quedás libre para hacer otra cosa. La recorrida te espera '
+            + 'y la retomás desde acá cuando vuelvas.',
+        etiqueta: 'Por qué la pausás',
+        botonConfirmar: 'Pausar',
+        botonCancelar: 'Seguir controlando'
+      }
+    }).afterClosed().subscribe(motivo => {
+      if (!motivo) return;
+      this.calidadService.pausarRuta(r.rcaId, motivo).subscribe({
+        next: () => {
+          this.snack.open('Recorrida en pausa. La retomás cuando quieras.', 'OK', { duration: 5000 });
+          this.ruteador.navigate(['/calidad']);
+        },
+        error: err => this.snack.open(err?.error?.message || 'No se pudo pausar', 'OK', { duration: 6000 })
+      });
+    });
+  }
+
+  retomarRuta(): void {
+    const r = this.ruta();
+    if (!r) return;
+    this.calidadService.retomarRuta(r.rcaId).subscribe({
+      next: actualizada => {
+        this.ruta.set(actualizada);
+        this.snack.open('Recorrida retomada', 'OK', { duration: 3000 });
+      },
+      error: err => this.snack.open(err?.error?.message || 'No se pudo retomar', 'OK', { duration: 6000 })
+    });
+  }
+
   suspenderRuta(): void {
     const r = this.ruta();
     if (!r) return;

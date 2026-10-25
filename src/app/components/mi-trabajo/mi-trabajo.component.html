@@ -103,6 +103,17 @@
               <mat-icon>bedtime</mat-icon>
               Suspender tarea
             </button>
+
+            <!-- Con la tarea frenada se puede volver al listado y arrancar otro
+                 código. Mientras el reloj corre no: primero hay que pausar o
+                 suspender, que es la regla de siempre. -->
+            @if (!tareaCorriendo) {
+              <button mat-stroked-button class="btn-salir" (click)="volverAlListado()"
+                      matTooltip="Volver a tu lista para arrancar con otro código">
+                <mat-icon>exit_to_app</mat-icon>
+                Salir
+              </button>
+            }
           </div>
 
           <!-- Los controles que el operario hace mientras produce. Cada uno es
