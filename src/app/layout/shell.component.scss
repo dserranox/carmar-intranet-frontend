@@ -142,6 +142,22 @@
 
 /* Las NC que esperan validación. Va en la barra y no en una pantalla porque
    se atiende sin dejar lo que se está haciendo. */
+/* El botón de control a pedido: se usa con alguien esperando al lado, así que
+   tiene que encontrarse de un vistazo y no competir con el aviso de las NC. */
+.control-a-pedido {
+  border-color: #26a69a !important;
+  color: #00695c !important;
+  font-size: .82rem;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+  }
+}
+
 .nc-pendientes {
   border-color: #ffb74d !important;
   color: #b26500 !important;

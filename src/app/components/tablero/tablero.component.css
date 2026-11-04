@@ -138,6 +138,15 @@
 .tabla-planta .pastilla.SIN_TAREA { background: #eceff1; color: #607d8b; }
 /* El contador de «sin tarea» del encabezado ya los cuenta; acá se ven quiénes son. */
 
+/* El motivo se lee de corrido en una línea; el texto completo va en el tooltip,
+   así una explicación larga no deforma la tabla. */
+.tabla-planta .motivo { max-width: 210px; }
+.tabla-planta .texto-motivo {
+  display: block; max-width: 210px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: .8rem; color: rgba(0, 0, 0, .6);
+}
+
 .tabla-planta .cola { max-width: 280px; }
 .chip-cola {
   display: inline-block; margin: 1px 3px 1px 0; padding: 1px 8px;

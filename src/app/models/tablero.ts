@@ -25,6 +25,10 @@ export interface EnPlanta {
   producto: string | null;
   puesto: string | null;
   minutos: number | null;
+  /** La categoría de la pausa, cuando la tiene. */
+  subtipoMotivo: string | null;
+  /** El texto de quien la paró, o el que dejó el cierre de jornada. */
+  motivo: string | null;
   /** Lo que tiene esperando, en orden de prioridad. */
   cola: EnCola[];
 }

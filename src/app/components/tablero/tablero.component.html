@@ -85,7 +85,7 @@
         <table class="tabla tabla-planta">
           <thead>
             <tr>
-              <th>Operario</th><th>Estado</th><th>Actividad</th>
+              <th>Operario</th><th>Estado</th><th>Motivo</th><th>Actividad</th>
               <th>Código</th><th>Plan</th><th>Puesto</th>
               <th class="der">Hace</th><th>En cola</th>
               @if (puedeAsignar) { <th></th> }
@@ -96,6 +96,13 @@
               <tr [class.libre]="p.estado === 'SIN_TAREA'">
                 <td class="fuerte">{{ p.usuario }}</td>
                 <td><span class="pastilla" [class]="p.estado">{{ etiquetaEstado(p.estado) }}</span></td>
+                <!-- Por qué está parado. Sin esto el tablero dice que hay cuatro
+                     suspendidas y hay que ir a preguntarle a cada uno. -->
+                <td class="motivo">
+                  @if (motivoDe(p); as m) {
+                    <span class="texto-motivo" [matTooltip]="m">{{ m }}</span>
+                  } @else { — }
+                </td>
                 <td>{{ p.operacion ?? '—' }}</td>
                 <td class="fuerte">{{ p.codigoProducto ?? '—' }}</td>
                 <td>{{ p.nroPlan ?? '—' }}</td>

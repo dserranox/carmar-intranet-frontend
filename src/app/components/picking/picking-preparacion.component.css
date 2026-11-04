@@ -82,6 +82,25 @@
   flex: 0 0 auto;
 }
 
+/* ── Pausa ──
+   Tiene que verse de lejos que el reloj está parado: si el operario cree que
+   sigue corriendo, va a preparar líneas en un rato que nadie está contando. */
+.aviso-pausa {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-radius: 10px;
+  background: #ede7f6; color: #4527a0; flex: 0 0 auto;
+}
+.aviso-pausa mat-icon { font-size: 28px; width: 28px; height: 28px; flex: 0 0 auto; }
+.texto-pausa { display: flex; flex-direction: column; gap: 2px; }
+.titulo-pausa { font-size: .95rem; font-weight: 800; letter-spacing: .5px; }
+.sub-pausa { font-size: .84rem; opacity: .85; }
+
+/* El reloj parado deja de ser verde: el color solo significa «está corriendo». */
+.reloj-caja.pausada .reloj { color: #4527a0; }
+.reloj-caja.pausada .rotulo-reloj { color: #4527a0; }
+
+.btn-pausa { color: #4527a0 !important; }
+
 /* ── Líneas ── */
 .lineas { flex: 1; overflow-y: auto; padding-right: 4px; }
 

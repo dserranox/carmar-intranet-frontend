@@ -11,7 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { TableroService } from '../../services/tablero.service';
-import { Tablero } from '../../models/tablero';
+import { EnPlanta, Tablero } from '../../models/tablero';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { OrdersService } from '../../services/orders.service';
 import { ElegirOrdenDialogComponent } from '../calidad/elegir-orden-dialog.component';
@@ -229,9 +229,31 @@ export class TableroComponent implements OnInit {
       case 'FIN_JORNADA': return 'Terminó la jornada';
       case 'OTRA_TAREA': return 'Lo pasaron a otra tarea';
       case 'TAREA': return 'Dejó la tarea';
+      case 'CONSULTA_TECNICA': return 'Consulta técnica';
+      case 'FIN_JORNADA_AUTO': return 'Cierre de jornada';
+      case 'SUSPENDIDA_POR_SUPERVISION': return 'La suspendió supervisión';
       case 'OTROS': return 'Otros';
       default: return clave;
     }
+  }
+
+  /**
+   * Por qué está parado, en una sola línea.
+   *
+   * La categoría y el texto libre se guardan por separado y no siempre vienen
+   * los dos: la pausa trae categoría, la suspensión suele traer sólo el texto
+   * que escribió quien la paró. Se muestra lo que haya, sin repetir.
+   */
+  motivoDe(p: EnPlanta): string | null {
+    if (p.estado === 'EN_CURSO' || p.estado === 'SIN_TAREA') return null;
+
+    const etiqueta = p.subtipoMotivo ? this.etiquetaMotivo(p.subtipoMotivo) : null;
+    const texto = p.motivo?.trim() || null;
+    if (etiqueta && texto) {
+      return texto.toLowerCase().startsWith(etiqueta.toLowerCase())
+        ? texto : `${etiqueta} · ${texto}`;
+    }
+    return etiqueta ?? texto;
   }
 
   private aISO(fecha: Date): string {

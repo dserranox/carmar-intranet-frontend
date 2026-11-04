@@ -118,3 +118,31 @@ export interface PuntoControlAbm {
   /** CONTROL: se verifica. PUESTA_A_PUNTO: se hace sobre la máquina o el puesto. */
   tipo?: 'CONTROL' | 'PUESTA_A_PUNTO';
 }
+
+/** Los tres controles que calidad hace cuando se le acercan a pedírselos. */
+export type TipoControlAPedido = 'VISUAL' | 'LIBERACION' | 'PUESTA_A_PUNTO';
+
+/**
+ * El control a pedido que está corriendo. Mientras dura, la tarea que el
+ * responsable venía haciendo queda en pausa y vuelve sola al cerrarlo.
+ */
+export interface ControlAPedido {
+  tareaId: number;
+  tipo: TipoControlAPedido;
+  tipoNombre: string;
+  fechaInicio: string;
+  ordenId: number | null;
+  nroPlan: string | null;
+  codigoProducto: string | null;
+  descripcionProducto: string | null;
+  /** A qué tarea vuelve cuando termine, para avisárselo antes de empezar. */
+  vuelveA: string | null;
+  vuelveAPlan: string | null;
+}
+
+export interface CerrarControlAPedido {
+  conforme: boolean;
+  observaciones?: string;
+  solicitante?: string;
+  puesto?: string;
+}

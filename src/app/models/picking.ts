@@ -1,4 +1,4 @@
-export type EstadoPicking = 'PENDIENTE' | 'EN_CURSO' | 'COMPLETO' | 'INCOMPLETO';
+export type EstadoPicking = 'PENDIENTE' | 'EN_CURSO' | 'PAUSADA' | 'COMPLETO' | 'INCOMPLETO';
 export type EstadoLinea = 'PENDIENTE' | 'RETIRADO' | 'PARCIAL' | 'FALTANTE';
 export type MotivoFaltante = 'SIN_STOCK' | 'NO_ENCONTRADO' | 'OTRO';
 
@@ -38,7 +38,11 @@ export interface Picking {
   operario?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  /** Lo trabajado, ya sin las pausas. Lo lleva el servidor. */
   segundos?: number;
+  fechaPausa?: string;
+  subtipoPausa?: string;
+  motivoPausa?: string;
   observaciones?: string;
   fechaCarga?: string;
   usuarioCarga?: string;

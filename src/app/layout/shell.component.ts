@@ -19,6 +19,7 @@ import { TareaAbiertaService } from '../shared/tarea-abierta.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NoConformidadesService } from '../services/no-conformidades.service';
 import { NcPendientesDialogComponent } from '../components/no-conformidades/nc-pendientes-dialog.component';
+import { ControlAPedidoDialogComponent } from '../components/calidad/control-a-pedido-dialog.component';
 
 @Component({
   selector: 'app-shell',
@@ -56,10 +57,19 @@ export class ShellComponent implements OnInit, AfterViewInit, OnDestroy {
   puedeValidarNc = false;
   ncPendientes = signal(0);
 
+  /**
+   * El botón de control a pedido.
+   *
+   * Va siempre a la vista, no detrás de un menú: cuando se usa hay alguien
+   * parado al lado esperando. Lo ve quien puede registrar controles.
+   */
+  puedeControlar = false;
+
   ngOnInit(): void {
     this.notificaciones.refrescarContador();
     this.tareas.consultar().subscribe();
     this.puedeValidarNc = this.tienePermiso('NC:VALIDAR');
+    this.puedeControlar = this.tienePermiso('CALIDAD:WRITE');
     this.contarNcPendientes();
     // Sin websockets: se relee cada dos minutos, alcanza para un aviso de planta.
     this.reloj = setInterval(() => {
@@ -74,6 +84,19 @@ export class ShellComponent implements OnInit, AfterViewInit, OnDestroy {
       next: lista => this.ncPendientes.set(lista?.length ?? 0),
       error: () => { /* si falla, no se muestra el botón y listo */ }
     });
+  }
+
+  /**
+   * El control se hace en una ventana sobre la pantalla donde esté, igual que
+   * la validación de una NC: el servidor pausa su tarea, le abre el reloj del
+   * plan que controla y al cerrar vuelve sola la que estaba.
+   */
+  abrirControlAPedido(): void {
+    this.dialog.open(ControlAPedidoDialogComponent, { width: '720px', maxWidth: '95vw' })
+      .afterClosed().subscribe(() => {
+        this.tareas.consultar().subscribe();
+        this.notificaciones.refrescarContador();
+      });
   }
 
   abrirNcPendientes(): void {

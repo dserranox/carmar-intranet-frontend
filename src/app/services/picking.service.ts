@@ -41,6 +41,15 @@ export class PickingService {
     return this.http.post<Picking>(`${this.baseUrl}/${pckId}/iniciar`, {});
   }
 
+  /** Para el reloj del picking. La pausa no cuenta como tiempo de preparación. */
+  pausar(pckId: number, subtipo: string, motivo?: string): Observable<Picking> {
+    return this.http.post<Picking>(`${this.baseUrl}/${pckId}/pausar`, { subtipo, motivo });
+  }
+
+  retomar(pckId: number): Observable<Picking> {
+    return this.http.post<Picking>(`${this.baseUrl}/${pckId}/retomar`, {});
+  }
+
   finalizar(pckId: number, segundos?: number): Observable<Picking> {
     return this.http.post<Picking>(`${this.baseUrl}/${pckId}/finalizar`, { segundos });
   }

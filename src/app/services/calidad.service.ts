@@ -2,7 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ControlRuta, OrdenAbierta, PuntoControl, PuntoControlAbm, ResumenCalidad, RutaCalidad } from '../models/calidad';
+import {
+  CerrarControlAPedido, ControlAPedido, ControlRuta, OrdenAbierta, PuntoControl,
+  PuntoControlAbm, ResumenCalidad, RutaCalidad, TipoControlAPedido
+} from '../models/calidad';
 
 @Injectable({ providedIn: 'root' })
 export class CalidadService {
@@ -114,5 +117,26 @@ export class CalidadService {
 
   suspenderRuta(rcaId: number, motivo: string): Observable<RutaCalidad> {
     return this.http.post<RutaCalidad>(`${this.baseUrl}/rutas/${rcaId}/suspender`, { motivo });
+  }
+
+  // ------------------------------------------- control a pedido
+
+  /** El que haya quedado abierto: 204 si no hay ninguno. */
+  controlAPedidoAbierto(): Observable<ControlAPedido | null> {
+    return this.http.get<ControlAPedido | null>(`${this.baseUrl}/control-a-pedido`);
+  }
+
+  /** Arranca el control sobre un plan; lo que venía haciendo queda en pausa. */
+  iniciarControlAPedido(ordenId: number, tipo: TipoControlAPedido): Observable<ControlAPedido> {
+    return this.http.post<ControlAPedido>(`${this.baseUrl}/control-a-pedido`, { ordenId, tipo });
+  }
+
+  cerrarControlAPedido(tareaId: number, datos: CerrarControlAPedido): Observable<ControlAPedido> {
+    return this.http.post<ControlAPedido>(
+      `${this.baseUrl}/control-a-pedido/${tareaId}/cerrar`, datos);
+  }
+
+  cancelarControlAPedido(tareaId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/control-a-pedido/${tareaId}`);
   }
 }

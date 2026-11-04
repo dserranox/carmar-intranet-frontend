@@ -12,12 +12,23 @@ import { PickingService } from '../../services/picking.service';
 import { Picking, PickingLinea } from '../../models/picking';
 import { FaltanteDialogComponent, FaltanteDialogData, FaltanteDialogResult } from './faltante-dialog.component';
 import { CantidadDialogComponent, CantidadDialogData } from './cantidad-dialog.component';
+import { PausaDialogComponent, PausaDialogResult } from '../corte/pausa-dialog.component';
 
 /** Las líneas de una misma ubicación, para recorrer el almacén una sola vez. */
 interface Tramo {
   ubicacion: string;
   lineas: PickingLinea[];
 }
+
+/** Los mismos motivos de pausa que usa el resto de la planta. */
+const ETIQUETAS_PAUSA: Record<string, string> = {
+  CONSULTA_TECNICA: 'Consulta técnica',
+  CONSULTA_CALIDAD: 'Consulta de calidad',
+  FALTA_MATERIAL: 'Falta de material',
+  MANTENIMIENTO: 'Mantenimiento',
+  DESCANSO: 'Descanso',
+  OTROS: 'Otros'
+};
 
 /**
  * La pantalla que usa el operario de logística en la tablet de 10" horizontal.
@@ -74,13 +85,10 @@ export class PickingPreparacionComponent implements OnInit, OnDestroy {
 
   private mostrar(p: Picking): void {
     this.picking.set(p);
-    // Si venía de antes, el reloj arranca desde lo que ya llevaba.
-    if (p.fechaInicio && p.estado === 'EN_CURSO') {
-      const desde = new Date(p.fechaInicio).getTime();
-      this.segundos.set(Math.max(0, Math.floor((Date.now() - desde) / 1000)));
-    } else {
-      this.segundos.set(p.segundos ?? 0);
-    }
+    // El reloj lo lleva el servidor y ya viene descontadas las pausas, así que
+    // acá sólo se dibuja. Antes se calculaba contra la fecha de inicio, que
+    // contaba también el rato que el picking estuvo parado.
+    this.segundos.set(p.segundos ?? 0);
   }
 
   // ------------------------------------------------------------- agrupado
@@ -109,9 +117,16 @@ export class PickingPreparacionComponent implements OnInit, OnDestroy {
     (this.picking()?.lineas ?? []).filter(l => l.estado === 'FALTANTE' || l.estado === 'PARCIAL'));
 
   get enCurso(): boolean { return this.picking()?.estado === 'EN_CURSO'; }
+  get enPausa(): boolean { return this.picking()?.estado === 'PAUSADA'; }
   get cerrado(): boolean { return this.picking()?.estado === 'COMPLETO'; }
   get incompleto(): boolean { return this.picking()?.estado === 'INCOMPLETO'; }
-  get puedeTocar(): boolean { return !this.cerrado && !this.incompleto; }
+  /** En pausa no se prepara: el trabajo hecho ahí no lo estaría contando nadie. */
+  get puedeTocar(): boolean { return !this.cerrado && !this.incompleto && !this.enPausa; }
+
+  /** El texto del motivo, para el cartel de pausa. */
+  etiquetaPausa(subtipo: string): string {
+    return ETIQUETAS_PAUSA[subtipo] ?? 'Pausa';
+  }
 
   get reloj(): string {
     const s = this.segundos();
@@ -131,6 +146,40 @@ export class PickingPreparacionComponent implements OnInit, OnDestroy {
       error: err => {
         this.guardando.set(false);
         this.snack.open(err?.error?.message || 'No se pudo iniciar', 'OK', { duration: 6000 });
+      }
+    });
+  }
+
+  /**
+   * Para el reloj con un motivo.
+   *
+   * El rato que el operario espera un material, atiende una consulta o almuerza
+   * no es tiempo de preparación. Si entrara en el total, el tiempo del plan
+   * dejaría de servir para comparar un picking con otro.
+   */
+  pausar(): void {
+    this.dialog.open<PausaDialogComponent, void, PausaDialogResult>(
+      PausaDialogComponent, { disableClose: true, width: '500px' }
+    ).afterClosed().subscribe(res => {
+      if (!res) return;
+      this.guardando.set(true);
+      this.pickingService.pausar(this.pckId, res.subtipo, res.motivo).subscribe({
+        next: p => { this.mostrar(p); this.guardando.set(false); },
+        error: err => {
+          this.guardando.set(false);
+          this.snack.open(err?.error?.message || 'No se pudo pausar', 'OK', { duration: 6000 });
+        }
+      });
+    });
+  }
+
+  retomar(): void {
+    this.guardando.set(true);
+    this.pickingService.retomar(this.pckId).subscribe({
+      next: p => { this.mostrar(p); this.guardando.set(false); },
+      error: err => {
+        this.guardando.set(false);
+        this.snack.open(err?.error?.message || 'No se pudo reanudar', 'OK', { duration: 6000 });
       }
     });
   }

@@ -112,8 +112,10 @@ export class CorteService {
     return this.http.post<SabanaImportResult>(`${this.baseUrl}/sabanas/importar`, form, { params });
   }
 
-  asignar(sabId: number, operario: string | null, nroMaquina?: number): Observable<SabanaResumen> {
-    return this.http.put<SabanaResumen>(`${this.baseUrl}/sabanas/${sabId}/asignar`, { operario, nroMaquina });
+  asignar(sabId: number, operario: string | null, nroMaquina?: number,
+          motivo?: string): Observable<SabanaResumen> {
+    return this.http.put<SabanaResumen>(`${this.baseUrl}/sabanas/${sabId}/asignar`,
+      { operario, nroMaquina, motivo });
   }
 
   eliminar(sabId: number): Observable<void> {

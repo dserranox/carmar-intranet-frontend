@@ -116,13 +116,14 @@ export class PickingComponent implements OnInit {
   textoBoton(p: Picking): string {
     if (p.estado === 'PENDIENTE') return 'Preparar';
     if (p.estado === 'EN_CURSO') return 'Continuar';
+    if (p.estado === 'PAUSADA') return 'Reanudar';
     if (p.estado === 'INCOMPLETO') return 'Ver faltantes';
     return 'Ver';
   }
 
   etiquetaEstado(estado: string): string {
     const etiquetas: Record<string, string> = {
-      PENDIENTE: 'PENDIENTE', EN_CURSO: 'EN CURSO',
+      PENDIENTE: 'PENDIENTE', EN_CURSO: 'EN CURSO', PAUSADA: 'EN PAUSA',
       COMPLETO: 'COMPLETO', INCOMPLETO: 'INCOMPLETO'
     };
     return etiquetas[estado] ?? estado;

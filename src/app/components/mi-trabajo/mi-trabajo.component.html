@@ -175,17 +175,19 @@
             <mat-icon>pause_presentation</mat-icon>
             Suspender
           </button>
-          <span class="nota">Al terminar el código se habilita el próximo de tu lista.</span>
+          <span class="nota">Al terminar seguís con el código que quieras de tu lista.</span>
         </div>
       }
     </section>
 
     <!-- Cola -->
     <section class="cola">
-      <h3>Después seguís con</h3>
+      <h3>Tus otros códigos</h3>
+      <p class="cola-ayuda">Podés seguir con el que quieras. El número es el orden
+        que sugirió el administrador.</p>
 
       @if (!siguientes().length) {
-        <p class="cola-vacia">No hay más códigos en tu cola.</p>
+        <p class="cola-vacia">No tenés otros códigos asignados.</p>
       }
 
       <div class="lista">
@@ -205,9 +207,13 @@
                 }
               </span>
             </div>
-            @if (s.estado === 'SUSPENDIDA') {
-              <button mat-stroked-button (click)="retomar(s)">Retomar</button>
-            }
+            <button mat-stroked-button (click)="elegirCodigo(s)"
+                    [disabled]="relojCorriendo"
+                    [matTooltip]="relojCorriendo
+                      ? 'Pausá o suspendé la tarea que tenés abierta para cambiar de código'
+                      : ''">
+              {{ s.estado === 'SUSPENDIDA' ? 'Retomar' : 'Empezar' }}
+            </button>
           </article>
         }
       </div>

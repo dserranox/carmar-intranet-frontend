@@ -328,10 +328,50 @@ export class CorteComponent implements OnInit {
     this.forzar = false;
   }
 
+  /**
+   * Cambia el operario de una sábana.
+   *
+   * Con la sábana todavía sin empezar es un cambio de planilla y se hace de una.
+   * Con cortes hechos ya no: la sábana no vuelve a empezar —el que entra sigue con
+   * los cortes que quedaron pendientes— pero el tiempo del que la venía cortando
+   * se cierra en ese momento, y el nuevo arranca su propio reloj. Eso queda en la
+   * hoja de vida del lote, así que se pide el motivo y se dice en pantalla qué va
+   * a pasar antes de confirmarlo.
+   */
   asignar(sabana: SabanaResumen, username: string): void {
-    this.corteService.asignar(sabana.sabId, username || null, sabana.nroMaquina).subscribe({
+    if (!sabana.cortesHechos) {
+      this.guardarAsignacion(sabana, username);
+      return;
+    }
+
+    const quien = sabana.operario || 'el operario anterior';
+    const aQuien = username || 'nadie (queda sin asignar)';
+    const ref = this.dialog.open<MotivoDialogComponent, MotivoDialogData, string>(
+      MotivoDialogComponent, {
+        data: {
+          titulo: 'Pasar la sábana a otro operario',
+          nota: `${quien} lleva ${sabana.cortesHechos} de ${sabana.totalCortes} cortes. `
+              + `La sábana no vuelve a empezar: ${aQuien} sigue con los que quedan. `
+              + `El tiempo de ${quien} se cierra ahora con lo que hizo.`,
+          etiqueta: 'Por qué se reasigna',
+          botonConfirmar: 'Reasignar'
+        }
+      });
+
+    ref.afterClosed().subscribe(motivo => {
+      if (motivo) this.guardarAsignacion(sabana, username, motivo);
+    });
+  }
+
+  private guardarAsignacion(sabana: SabanaResumen, username: string, motivo?: string): void {
+    this.corteService.asignar(sabana.sabId, username || null, sabana.nroMaquina, motivo).subscribe({
       next: () => { this.snack.open('Sábana asignada', 'OK', { duration: 3000 }); this.cargar(); },
-      error: err => this.snack.open(err?.error?.message || 'No se pudo asignar', 'OK', { duration: 5000 })
+      error: err => {
+        this.snack.open(err?.error?.message || 'No se pudo asignar', 'OK', { duration: 7000 });
+        // El select ya muestra el operario nuevo aunque el servidor haya dicho que
+        // no: se recarga para que la tarjeta vuelva a decir la verdad.
+        this.cargar();
+      }
     });
   }
 

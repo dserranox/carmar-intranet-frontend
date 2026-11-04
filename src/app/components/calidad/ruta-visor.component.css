@@ -10,11 +10,22 @@
 /* ---------------------------------------------------- barra */
 .barra {
   display: flex; align-items: center; gap: 14px;
+  flex-wrap: wrap; row-gap: 8px;
   padding: 8px 12px; border-radius: 12px;
   background: #00695c; color: #fff;
   flex: 0 0 auto;
 }
 .barra .volver { color: #fff; }
+
+/* Los botones con contorno de Material vienen con texto gris oscuro: sobre el
+   verde de la barra, en la tablet, no se leen. */
+.barra .pausar,
+.barra .suspender,
+.barra .cerrar[mat-stroked-button],
+.barra .retomar[mat-stroked-button] {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .7);
+}
 .identidad { display: flex; flex-direction: column; line-height: 1.15; }
 .identidad .titulo { font-size: 1.15rem; font-weight: 700; }
 .identidad .sub { font-size: .78rem; opacity: .85; }
@@ -40,9 +51,15 @@
 /* ---------------------------------------------------- cuerpo */
 .cuerpo {
   flex: 1; min-height: 0;
-  display: grid; grid-template-columns: 220px 1fr; gap: 12px;
+  display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 12px;
   margin-top: 10px;
 }
+
+/* Sin esto, una columna de grilla no se achica por debajo del contenido que
+   lleva adentro: la columna crece, el `overflow: hidden` del visor recorta lo
+   que sobra, y en la tablet quedaban los botones OK/KO afuera de la pantalla
+   sin ninguna forma de llegar a ellos. */
+.cuerpo > * { min-width: 0; }
 
 /* --- columna de órdenes --- */
 .ordenes {
@@ -84,11 +101,17 @@
   padding: 10px 14px;
 }
 
+/* La cabecera se parte en dos renglones antes que empujar la pantalla a lo
+   ancho: el plan y los campos del puesto tienen que entrar siempre. */
 .cabecera-orden {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px 16px; flex-wrap: wrap;
   flex: 0 0 auto; padding-bottom: 6px; border-bottom: 1px solid rgba(0,0,0,.08);
 }
-.cabecera-orden .datos { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.cabecera-orden .datos {
+  display: flex; align-items: baseline; gap: 10px;
+  min-width: 0; flex: 1 1 260px;
+}
 .cabecera-orden .plan { font-size: 1.3rem; font-weight: 700; color: #00695c; }
 .cabecera-orden .codigo {
   font-size: .95rem; font-weight: 600; color: #1a1a2e;
@@ -96,10 +119,11 @@
 }
 .cabecera-orden .desc {
   font-size: .8rem; color: rgba(0,0,0,.55);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 380px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0; flex: 0 1 380px;
 }
-.donde { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
-.mini { width: 150px; }
+.donde { display: flex; align-items: center; gap: 8px; flex: 0 1 auto; flex-wrap: wrap; }
+.mini { width: 150px; max-width: 100%; }
 .mini ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
 
 /* Los puntos se reparten el alto disponible: entran los cinco sin scroll. */

@@ -205,7 +205,16 @@ export class MiTrabajoComponent implements OnInit, OnDestroy {
     });
   }
 
-  retomar(asignacion: Asignacion): void {
+  /**
+   * Pasa a otro código de la lista, esté pendiente o suspendido.
+   *
+   * El orden que puso el administrador es una sugerencia, no una fila: en la planta
+   * decide el material que llegó o la máquina que quedó libre, así que el operario
+   * elige con cuál sigue. El servidor nunca pidió ese orden —sólo exige que no haya
+   * otra tarea corriendo—, así que esto no afloja ningún control real.
+   */
+  elegirCodigo(asignacion: Asignacion): void {
+    if (this.relojCorriendo) return;
     this.seleccionadaId.set(asignacion.asgId);
   }
 
@@ -214,7 +223,7 @@ export class MiTrabajoComponent implements OnInit, OnDestroy {
    * con el reloj corriendo no se sale, que es la regla de toda la app.
    */
   volverAlListado(): void {
-    if (this.tareaCorriendo) return;
+    if (this.relojCorriendo) return;
     this.seleccionadaId.set(null);
     this.cargar();
   }
@@ -229,6 +238,16 @@ export class MiTrabajoComponent implements OnInit, OnDestroy {
   get tareaPausada(): boolean { return this.estadoTarea === 'PAUSADA'; }
   get tareaSuspendida(): boolean { return this.estadoTarea === 'SUSPENDIDA'; }
   get tareaCorriendo(): boolean { return this.estadoTarea === 'EN_CURSO'; }
+
+  /**
+   * El reloj corriendo de verdad, para los botones que están afuera del bloque de
+   * la tarea abierta.
+   *
+   * `estadoTarea` devuelve EN_CURSO cuando no hay ninguna tarea, lo que alcanza
+   * adentro de los `@if (tareaAbierta())` pero miente afuera: sin tarea, con
+   * `tareaCorriendo` el candado queda cerrado justo cuando tiene que estar abierto.
+   */
+  get relojCorriendo(): boolean { return !!this.tareaAbierta() && this.tareaCorriendo; }
 
   alternarPausa(): void {
     const asignacion = this.actual();

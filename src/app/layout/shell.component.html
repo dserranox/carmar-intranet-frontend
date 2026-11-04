@@ -40,6 +40,17 @@
       <mat-icon>refresh</mat-icon>
     </button>
 
+    <!-- Siempre a la vista para calidad: al responsable se le acercan a pedirle
+         una liberación o una puesta a punto mientras está produciendo, y el
+         operario está parado al lado esperando. -->
+    @if (puedeControlar) {
+      <button mat-stroked-button class="control-a-pedido" (click)="abrirControlAPedido()"
+              matTooltip="Registrar un control que te pidieron: pausa lo que estás haciendo y vuelve solo">
+        <mat-icon>fact_check</mat-icon>
+        Control
+      </button>
+    }
+
     <!-- Para calidad, el jefe y el administrador: las NC que esperan validación
          se atienden en una ventana, sin salir de la pantalla ni suspender la
          tarea que esté corriendo. -->

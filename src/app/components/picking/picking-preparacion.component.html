@@ -41,11 +41,26 @@
             <mat-icon>play_arrow</mat-icon>
             Iniciar
           </button>
-        } @else if (enCurso) {
-          <div class="reloj-caja">
-            <span class="rotulo-reloj">PREPARANDO</span>
+        } @else if (enCurso || enPausa) {
+          <div class="reloj-caja" [class.pausada]="enPausa">
+            <span class="rotulo-reloj">{{ enPausa ? 'EN PAUSA' : 'PREPARANDO' }}</span>
             <span class="reloj">{{ reloj }}</span>
           </div>
+
+          @if (enPausa) {
+            <button mat-flat-button color="primary" class="btn-grande"
+                    [disabled]="guardando()" (click)="retomar()">
+              <mat-icon>play_arrow</mat-icon>
+              Reanudar
+            </button>
+          } @else {
+            <button mat-stroked-button class="btn-grande btn-pausa"
+                    [disabled]="guardando()" (click)="pausar()">
+              <mat-icon>pause</mat-icon>
+              Pausa
+            </button>
+          }
+
           <button mat-flat-button color="primary" class="btn-grande"
                   [disabled]="guardando() || sinTocar() > 0" (click)="finalizar()"
                   [matTooltip]="sinTocar() > 0 ? 'Quedan ' + sinTocar() + ' líneas sin tocar' : ''">
@@ -67,6 +82,21 @@
   }
 
   @if (picking(); as p) {
+
+    @if (enPausa) {
+      <section class="aviso-pausa">
+        <mat-icon>pause_circle</mat-icon>
+        <div class="texto-pausa">
+          <span class="titulo-pausa">
+            EN PAUSA — {{ etiquetaPausa(p.subtipoPausa || '') }}
+          </span>
+          <span class="sub-pausa">
+            @if (p.motivoPausa) { {{ p.motivoPausa }} · }
+            El reloj está parado. Reanudá para seguir preparando.
+          </span>
+        </div>
+      </section>
+    }
 
     @if (incompleto) {
       <section class="aviso-entrega">

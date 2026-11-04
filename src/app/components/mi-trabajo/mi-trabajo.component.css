@@ -131,6 +131,9 @@
 }
 .cola h3 { margin: 0 0 6px; font-size: .95rem; color: rgba(0, 0, 0, .7); }
 .cola-vacia { color: rgba(0, 0, 0, .5); font-size: .88rem; margin: 0; }
+/* El orden del administrador dejó de ser obligatorio: hay que decirlo donde se ve
+   la lista, o el número de al lado se sigue leyendo como una fila. */
+.cola-ayuda { color: rgba(0, 0, 0, .55); font-size: .82rem; margin: -4px 0 8px; }
 .lista { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; min-height: 0; }
 
 .item {
